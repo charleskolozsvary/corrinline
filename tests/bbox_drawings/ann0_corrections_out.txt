@@ -9,7 +9,7 @@ bbox_drawings/ann0_edit_selections_0.pdf
             "another reply"
         ]
     },
-    "selection": "stand the failure of the “Flat Orbit Conjecture” in higher curvature regimes1<StrikeOut>.</StrikeOut>"
+    "PDF selection": "stand the failure of the “Flat Orbit Conjecture” in higher curvature regimes1<StrikeOut>.</StrikeOut>"
 }
 
 bbox_drawings/ann0_edit_selections_1.pdf
@@ -20,7 +20,7 @@ bbox_drawings/ann0_edit_selections_1.pdf
         "comment": ". <period: put foootnote after period>",
         "responses": []
     },
-    "selection": "stand the failure of the “Flat Orbit Conjecture” in higher curvature regimes<Caret></Caret>1."
+    "PDF selection": "stand the failure of the “Flat Orbit Conjecture” in higher curvature regimes<Caret></Caret>1."
 }
 
 bbox_drawings/ann0_edit_selections_2.pdf
@@ -31,7 +31,7 @@ bbox_drawings/ann0_edit_selections_2.pdf
         "comment": "Flat orbit conjecture",
         "responses": []
     },
-    "selection": "stand the failure of the <Replace>“Flat Orbit Conjecture”</Replace> in higher curvature regimes1."
+    "PDF selection": "stand the failure of the <Replace>“Flat Orbit Conjecture”</Replace> in higher curvature regimes1."
 }
 
 bbox_drawings/ann0_edit_selections_3.pdf
@@ -42,7 +42,7 @@ bbox_drawings/ann0_edit_selections_3.pdf
         "comment": "<close up space>",
         "responses": []
     },
-    "selection": "function is trivially constant when X is Euclidean, but varies dramatically in non<StrikeOut>-</StrikeOut>"
+    "PDF selection": "function is trivially constant when X is Euclidean, but varies dramatically in non<StrikeOut>-</StrikeOut>"
 }
 
 bbox_drawings/ann0_edit_selections_4.pdf
@@ -53,7 +53,7 @@ bbox_drawings/ann0_edit_selections_4.pdf
         "comment": "",
         "responses": []
     },
-    "selection": "StabG(x) = {g ∈G | g · x = x}<StrikeOut>,</StrikeOut>"
+    "PDF selection": "StabG(x) = {g ∈G | g · x = x}<StrikeOut>,</StrikeOut>"
 }
 
 bbox_drawings/ann0_edit_selections_5.pdf
@@ -64,7 +64,7 @@ bbox_drawings/ann0_edit_selections_5.pdf
         "comment": "765489",
         "responses": []
     },
-    "selection": "L. H. was supported by NSF grant No. <Replace>314159357</Replace>. F. E. thanks the Department of Linguistics"
+    "PDF selection": "L. H. was supported by NSF grant No. <Replace>314159357</Replace>. F. E. thanks the Department of Linguistics"
 }
 
 bbox_drawings/ann0_edit_selections_6.pdf
@@ -75,7 +75,7 @@ bbox_drawings/ann0_edit_selections_6.pdf
         "comment": "The first author",
         "responses": []
     },
-    "selection": "<Replace>L. H.</Replace> was supported by NSF grant No. 314159357. F. E. thanks the Department of Linguistics"
+    "PDF selection": "<Replace>L. H.</Replace> was supported by NSF grant No. 314159357. F. E. thanks the Department of Linguistics"
 }
 
 bbox_drawings/ann0_edit_selections_7.pdf
@@ -86,7 +86,7 @@ bbox_drawings/ann0_edit_selections_7.pdf
         "comment": "please move to Acknowledgments section.",
         "responses": []
     },
-    "selection": "<Highlight>L. H. was supported by NSF grant No. 314159357. F. E. thanks the Department of Linguistics</Highlight>"
+    "PDF selection": "<Highlight>L. H. was supported by NSF grant No. 314159357. F. E. thanks the Department of Linguistics</Highlight>"
 }
 
 bbox_drawings/ann0_edit_selections_8.pdf
@@ -97,7 +97,7 @@ bbox_drawings/ann0_edit_selections_8.pdf
         "comment": "p <small cap>",
         "responses": []
     },
-    "selection": "2. Background and <Replace>P</Replace>reliminaries"
+    "PDF selection": "2. Background and <Replace>P</Replace>reliminaries"
 }
 
 bbox_drawings/ann0_edit_selections_9.pdf
@@ -110,7 +110,7 @@ bbox_drawings/ann0_edit_selections_9.pdf
             "a reply to a replace annotation"
         ]
     },
-    "selection": "Figure 2. Low orbit foliations centered at x0<Replace>. E</Replace>ach ellipse repre-"
+    "PDF selection": "Figure 2. Low orbit foliations centered at x0<Replace>. E</Replace>ach ellipse repre-"
 }
 
 bbox_drawings/ann0_edit_selections_10.pdf
@@ -121,7 +121,7 @@ bbox_drawings/ann0_edit_selections_10.pdf
         "comment": "",
         "responses": []
     },
-    "selection": "sents an orbit of constant ∆(x, λ)<StrikeOut>.</StrikeOut>"
+    "PDF selection": "sents an orbit of constant ∆(x, λ)<StrikeOut>.</StrikeOut>"
 }
 
 bbox_drawings/ann0_edit_selections_11.pdf
@@ -132,7 +132,7 @@ bbox_drawings/ann0_edit_selections_11.pdf
         "comment": "",
         "responses": []
     },
-    "selection": "Figure 1. A schematic of local orbit curvature under λ-perturbation<StrikeOut>.</StrikeOut>"
+    "PDF selection": "Figure 1. A schematic of local orbit curvature under λ-perturbation<StrikeOut>.</StrikeOut>"
 }
 
 bbox_drawings/ann0_edit_selections_12.pdf
@@ -143,7 +143,7 @@ bbox_drawings/ann0_edit_selections_12.pdf
         "comment": "if and only if",
         "responses": []
     },
-    "selection": "Then the orbit foliation Fλ(X) is quasi-uniform <Replace>if</Replace>f"
+    "PDF selection": "Then the orbit foliation Fλ(X) is quasi-uniform <Replace>if</Replace>f"
 }
 
 bbox_drawings/ann0_edit_selections_13.pdf
@@ -154,7 +154,7 @@ bbox_drawings/ann0_edit_selections_13.pdf
         "comment": "",
         "responses": []
     },
-    "selection": "<StrikeOut>(</StrikeOut>The proof is omitted for space reasons; see Appendix B.)"
+    "PDF selection": "<StrikeOut>(</StrikeOut>The proof is omitted for space reasons; see Appendix B.)"
 }
 
 bbox_drawings/ann0_edit_selections_14.pdf
@@ -165,7 +165,7 @@ bbox_drawings/ann0_edit_selections_14.pdf
         "comment": "",
         "responses": []
     },
-    "selection": "(The proof is omitted for space reasons; see Appendix B.<StrikeOut>)</StrikeOut>"
+    "PDF selection": "(The proof is omitted for space reasons; see Appendix B.<StrikeOut>)</StrikeOut>"
 }
 
 bbox_drawings/ann0_edit_selections_15.pdf
@@ -176,7 +176,7 @@ bbox_drawings/ann0_edit_selections_15.pdf
         "comment": "COMP: set typewriter font <\\texttt{}>",
         "responses": []
     },
-    "selection": "We implemented a simple prototype in <Highlight>Julia 1.10</Highlight> to visualize Fλ(X) for synthetic"
+    "PDF selection": "We implemented a simple prototype in <Highlight>Julia 1.10</Highlight> to visualize Fλ(X) for synthetic"
 }
 
 bbox_drawings/ann0_edit_selections_16.pdf
@@ -187,7 +187,7 @@ bbox_drawings/ann0_edit_selections_16.pdf
         "comment": "small cap",
         "responses": []
     },
-    "selection": "5. Numerical <Highlight>E</Highlight>xperiments"
+    "PDF selection": "5. Numerical <Highlight>E</Highlight>xperiments"
 }
 
 bbox_drawings/ann0_edit_selections_17.pdf
@@ -198,7 +198,7 @@ bbox_drawings/ann0_edit_selections_17.pdf
         "comment": "lowercase",
         "responses": []
     },
-    "selection": "4.1. Numerical <Highlight>S</Highlight>imulation. Following [3], we can simulate the orbit structure"
+    "PDF selection": "4.1. Numerical <Highlight>S</Highlight>imulation. Following [3], we can simulate the orbit structure"
 }
 
 bbox_drawings/ann0_edit_selections_18.pdf
@@ -209,7 +209,7 @@ bbox_drawings/ann0_edit_selections_18.pdf
         "comment": "lowercase",
         "responses": []
     },
-    "selection": "4. Applications and <Highlight>E</Highlight>xamples"
+    "PDF selection": "4. Applications and <Highlight>E</Highlight>xamples"
 }
 
 bbox_drawings/ann0_edit_selections_19.pdf
@@ -220,7 +220,7 @@ bbox_drawings/ann0_edit_selections_19.pdf
         "comment": "Move caption to top of table",
         "responses": []
     },
-    "selection": "<Highlight>Table 1. Empirical orbit metrics under λ-iteration.</Highlight>"
+    "PDF selection": "<Highlight>Table 1. Empirical orbit metrics under λ-iteration.</Highlight>"
 }
 
 bbox_drawings/ann0_edit_selections_20.pdf
@@ -231,7 +231,7 @@ bbox_drawings/ann0_edit_selections_20.pdf
         "comment": "Figure",
         "responses": []
     },
-    "selection": "A peculiar observation (<Replace>Fig.</Replace> 5) was that for large λ, the orbit clusters exhibited a"
+    "PDF selection": "A peculiar observation (<Replace>Fig.</Replace> 5) was that for large λ, the orbit clusters exhibited a"
 }
 
 bbox_drawings/ann0_edit_selections_21.pdf
@@ -242,7 +242,7 @@ bbox_drawings/ann0_edit_selections_21.pdf
         "comment": "put footnote after period",
         "responses": []
     },
-    "selection": "double-lobed structure reminiscent of quasi-periodic tori in Hamiltonian systems<Highlight>2.</Highlight>"
+    "PDF selection": "double-lobed structure reminiscent of quasi-periodic tori in Hamiltonian systems<Highlight>2.</Highlight>"
 }
 
 bbox_drawings/ann0_edit_selections_22.pdf
@@ -253,7 +253,7 @@ bbox_drawings/ann0_edit_selections_22.pdf
         "comment": "Equation",
         "responses": []
     },
-    "selection": "geometric invariant for the foliation type. However, <Replace>Eq.</Replace> (7) reveals an unexpected"
+    "PDF selection": "geometric invariant for the foliation type. However, <Replace>Eq.</Replace> (7) reveals an unexpected"
 }
 
 bbox_drawings/ann0_edit_selections_23.pdf
@@ -264,7 +264,7 @@ bbox_drawings/ann0_edit_selections_23.pdf
         "comment": "(5) <pls link>",
         "responses": []
     },
-    "selection": "geometric invariant for the foliation type. However, Eq. <Replace>(7)</Replace> reveals an unexpected"
+    "PDF selection": "geometric invariant for the foliation type. However, Eq. <Replace>(7)</Replace> reveals an unexpected"
 }
 
 bbox_drawings/ann0_edit_selections_24.pdf
@@ -275,7 +275,7 @@ bbox_drawings/ann0_edit_selections_24.pdf
         "comment": "<link>",
         "responses": []
     },
-    "selection": "We hypothesize (Hypothesis <Highlight>5.1</Highlight>) that this anomaly corresponds to a hidden"
+    "PDF selection": "We hypothesize (Hypothesis <Highlight>5.1</Highlight>) that this anomaly corresponds to a hidden"
 }
 
 bbox_drawings/ann0_edit_selections_25.pdf
@@ -286,7 +286,7 @@ bbox_drawings/ann0_edit_selections_25.pdf
         "comment": "remove new paragraph: continue the last paragraph with this sentence.",
         "responses": []
     },
-    "selection": "<Highlight>We hypothesize</Highlight> (Hypothesis 5.1) that this anomaly corresponds to a hidden"
+    "PDF selection": "<Highlight>We hypothesize</Highlight> (Hypothesis 5.1) that this anomaly corresponds to a hidden"
 }
 
 bbox_drawings/ann0_edit_selections_26.pdf
@@ -297,7 +297,7 @@ bbox_drawings/ann0_edit_selections_26.pdf
         "comment": "; at",
         "responses": []
     },
-    "selection": "resonance near λ = φ2 ≈2.618<Replace>. At</Replace> that point, the curvature-weighted orbit integral"
+    "PDF selection": "resonance near λ = φ2 ≈2.618<Replace>. At</Replace> that point, the curvature-weighted orbit integral"
 }
 
 bbox_drawings/ann0_edit_selections_27.pdf
@@ -308,7 +308,7 @@ bbox_drawings/ann0_edit_selections_27.pdf
         "comment": "does this look right?",
         "responses": []
     },
-    "selection": "resonance <Highlight>near λ = φ2 ≈</Highlight>2.618. At that point, the curvature-weighted orbit integral"
+    "PDF selection": "resonance <Highlight>near λ = φ2 ≈</Highlight>2.618. At that point, the curvature-weighted orbit integral"
 }
 
 bbox_drawings/ann0_edit_selections_28.pdf
@@ -319,7 +319,7 @@ bbox_drawings/ann0_edit_selections_28.pdf
         "comment": "AU: is this necessary?",
         "responses": []
     },
-    "selection": "<Highlight>2A referee pointed out that this might be a discretization artifact, but we were unable to</Highlight>"
+    "PDF selection": "<Highlight>2A referee pointed out that this might be a discretization artifact, but we were unable to</Highlight>"
 }
 
 bbox_drawings/ann0_edit_selections_29.pdf
@@ -330,7 +330,7 @@ bbox_drawings/ann0_edit_selections_29.pdf
         "comment": "place footnote after period",
         "responses": []
     },
-    "selection": "will be discussed in a forthcoming note by the first author<Highlight>3.</Highlight>"
+    "PDF selection": "will be discussed in a forthcoming note by the first author<Highlight>3.</Highlight>"
 }
 
 bbox_drawings/ann0_edit_selections_30.pdf
@@ -341,7 +341,7 @@ bbox_drawings/ann0_edit_selections_30.pdf
         "comment": "place footnote after comma",
         "responses": []
     },
-    "selection": "Although the convergence of this expansion is questionable<Highlight>4,</Highlight> the leading term suf-"
+    "PDF selection": "Although the convergence of this expansion is questionable<Highlight>4,</Highlight> the leading term suf-"
 }
 
 bbox_drawings/ann0_edit_selections_31.pdf
@@ -352,7 +352,7 @@ bbox_drawings/ann0_edit_selections_31.pdf
         "comment": "",
         "responses": []
     },
-    "selection": "⟨fi, fj⟩φ = δij(1 + λφ)<StrikeOut>,</StrikeOut>"
+    "PDF selection": "⟨fi, fj⟩φ = δij(1 + λφ)<StrikeOut>,</StrikeOut>"
 }
 
 bbox_drawings/ann0_edit_selections_32.pdf
@@ -363,7 +363,7 @@ bbox_drawings/ann0_edit_selections_32.pdf
         "comment": "<link>",
         "responses": []
     },
-    "selection": "fices to justify Theorem <Highlight>4.3.</Highlight>"
+    "PDF selection": "fices to justify Theorem <Highlight>4.3.</Highlight>"
 }
 
 bbox_drawings/ann0_edit_selections_33.pdf
@@ -374,7 +374,7 @@ bbox_drawings/ann0_edit_selections_33.pdf
         "comment": "",
         "responses": []
     },
-    "selection": "Laplace–Beltrami operator and applying the φ-orthogonality condition<StrikeOut>,</StrikeOut>"
+    "PDF selection": "Laplace–Beltrami operator and applying the φ-orthogonality condition<StrikeOut>,</StrikeOut>"
 }
 
 bbox_drawings/ann0_edit_selections_34.pdf
@@ -385,7 +385,7 @@ bbox_drawings/ann0_edit_selections_34.pdf
         "comment": "",
         "responses": []
     },
-    "selection": "Figure 6. Convergence of displacement difference ∥∆n −∆n−1∥<StrikeOut>.</StrikeOut>"
+    "PDF selection": "Figure 6. Convergence of displacement difference ∥∆n −∆n−1∥<StrikeOut>.</StrikeOut>"
 }
 
 bbox_drawings/ann0_edit_selections_35.pdf
@@ -396,7 +396,7 @@ bbox_drawings/ann0_edit_selections_35.pdf
         "comment": ",",
         "responses": []
     },
-    "selection": "Department of Quadratics, University of Belarus, 3 Corporal Way, Genevive<Caret></Caret> 06578,"
+    "PDF selection": "Department of Quadratics, University of Belarus, 3 Corporal Way, Genevive<Caret></Caret> 06578,"
 }
 
 bbox_drawings/ann0_edit_selections_36.pdf
@@ -407,7 +407,7 @@ bbox_drawings/ann0_edit_selections_36.pdf
         "comment": ",",
         "responses": []
     },
-    "selection": "Circle, Washington<Caret></Caret> 12765, USA"
+    "PDF selection": "Circle, Washington<Caret></Caret> 12765, USA"
 }
 
 bbox_drawings/ann0_edit_selections_37.pdf
@@ -418,6 +418,6 @@ bbox_drawings/ann0_edit_selections_37.pdf
         "comment": "; and Department of Mathematics, Princeton University, Nassau Street, Princeton New Jersey, 02854",
         "responses": []
     },
-    "selection": "Circle, Washington 12765, USA<Caret></Caret>"
+    "PDF selection": "Circle, Washington 12765, USA<Caret></Caret>"
 }
 

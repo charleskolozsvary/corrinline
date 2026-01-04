@@ -2,6 +2,9 @@ import argparse
 import logging
 import re
 
+## DISCLAIMER: it's possible that it's much easier to track the box positions of words with lualatex
+## than pdflatex with pylatexenc, but this appears to be working well enough as-is
+
 # simple TeX parser
 from TexSoup import TexSoup 
 # more complex TeX parser and converter
@@ -12,6 +15,7 @@ from itertools import count
 from pathlib import Path
 
 import sys
+import os
 import subprocess
 
 METADATA_FIELDS = ['title', 'author', 'address', 'email', 'thanks', 'subjclass', 'keywords', 'datereceived', 'daterevised', 'abstract']
@@ -42,7 +46,7 @@ TEX_POINTS_TO_PDF_POINTS_CONVERSION_RATIO = 72 / 72.27
 ## in boxinfoToPDFRectangle()
 WORD_BOX_WIDTH_TOLERANCE = 1
 
-def sourceAsString(filename: str) -> str:
+def sourceAsString(filename: Path) -> str:
     with open(filename, 'r', encoding = 'utf-8') as f:
         tex_file_str = f.read()
     return tex_file_str
@@ -76,27 +80,34 @@ def getEnunciations(soup) -> set[str]:
         enunciation_names.add(str(thm.args[0].string))
     return enunciation_names
 
-def runPdflatex(tex_str: str, tex_basename: str, output_dir: Path, runs: int = 2) -> subprocess.CompletedProcess:
+def runPDFlatex(tex_filename: Path, runs: int = 2) -> subprocess.CompletedProcess:
     """Run pdflatex. Run twice by default to resolve cross-references"""
-    with open(output_dir / tex_basename, 'w', encoding='utf-8') as f:
-        f.write(tex_str)
-    
     result = None
+    tex_filename_dir = tex_filename.parent
     for i in range(runs):
         logging.info(f"Running pdflatex (pass {i+1}/{runs})")
         result = subprocess.run(
-            ['pdflatex', '-interaction=nonstopmode', tex_basename],
-            cwd=output_dir,
+            ['pdflatex', '-interaction=nonstopmode', tex_filename.name],
+            cwd=tex_filename_dir,
             capture_output=True, # see result.stdout, result.stderr
             text=True,
             encoding='latin-1'
         )
         
         if result.returncode != 0:
-            logging.error(f"pdflatex failed on pass {i+1} of {tex_basename}: {result.stderr}.")
+            logging.error(f"pdflatex failed on pass {i+1} of {tex_filename.name}: {result.stderr}.")
             sys.exit(1)
         
     return result
+
+def writeStringToFile(string: str, filename: Path):
+    with open(filename, 'w', encoding = 'utf-8') as f:
+        f.write(string)
+    return 0
+
+def transferTeXFiles(tex_filename: Path, files_to: Path, move_or_copy: str):
+    tex_file_dot_star = f"{tex_filename.stem}.*"
+    os.system(f"{move_or_copy} {tex_filename.parent / tex_file_dot_star} {files_to}")
 
 def runDiffpdf(first_fname: str, second_fname: str, output_dir: Path) -> subprocess.CompletedProcess:
     first_stem = Path(first_fname).stem
@@ -159,11 +170,8 @@ def markNode(latex_node, allowed_environments: set[str]) -> str:
                 return node.latex_verbatim()
         elif node.isNodeType(LatexCharsNode):
             verb_str = node.latex_verbatim()
-            ## mark every word in safe envs
-            ## I'm tempted to not worry about inserting between punctuation, but that will probably go poorly?
-            ## will definitely need to revamp how I'm finding text in the bibliography though. I might just segment it by bib or bibitem and then search each one
-            ## invdividually for a string difference kind of thing.
-            marked_str, num_subs = re.subn(r"(?<=[\t\n ])\b[a-zA-Z]+\b(?=[\t\n ])", lambda m: markStr(m.group(0)), verb_str)
+            ## mark every span in safe envs
+            marked_str, num_subs = re.subn(r"(?<=[\t ])[a-zA-Z0-9!?.,;:\-()]+(?=[\t ])", lambda m: markStr(m.group(0)), verb_str)
             logging.debug(f"marked {num_subs} words in {verb_str}")
             return marked_str
         elif node.isNodeType(LatexGroupNode):
@@ -280,8 +288,9 @@ def getWordBoxes(boxpositions_file_name: str, tot_num_boxes):
     logging.info(f"Used {num_used_boxes}/{tot_num_boxes} marked boxes.")
     return page_rectangles
 
-def segment(tex_filename: str) -> str:
+def segment(tex_filename: str):
     r"""Return the TeX source that appears on outputted pages and as the arguments to certain dedicated commands or environments. Page-level partitioning is achieved with a hook to \shipout and frequent use of \mark. There's probably a better way, but this works..."""
+    tex_filename = Path(tex_filename)
     
     tex_str = sourceAsString(tex_filename)
     latex_context = LatexContextDb()
@@ -304,10 +313,10 @@ def segment(tex_filename: str) -> str:
     preamble_str = ''.join([node.latex_verbatim() for node in preambleNodes])
     logging.info("Done.")
 
-    mark_out_file = f'boxpositions_{Path(tex_filename).stem}.txt'
+    mark_out_filename = f'boxpositions_{tex_filename.stem}.txt'
     tex_write_commands = fr"""
 \newwrite\markfile
-\immediate\openout\markfile={mark_out_file}
+\immediate\openout\markfile={mark_out_filename}
 """
     markbox_def = r"""
 \newcommand{\markbox}[2]{%
@@ -327,21 +336,28 @@ def segment(tex_filename: str) -> str:
     
     marked_tex = preamble_str + tex_write_commands + markbox_def + marked_document
 
+    ## save at first the marked file to the same directory as the input tex_filename, then move it after pdflatex
+    marked_filename = tex_filename.parent / f"{tex_filename.stem}_marked{tex_filename.suffix}"
+    writeStringToFile(marked_tex, marked_filename)
+
+    process1 = runPDFlatex(tex_filename)
+    process2 = runPDFlatex(marked_filename)
+
     tmp_dir = Path('tmp_segmentsource')
     Path.mkdir(tmp_dir, exist_ok = True)
-    orig_filename = Path(tex_filename).name    
-    marked_filename = Path(tex_filename).stem+'_marked.tex'
 
-    def pdfFname(tex_fname):
-        return Path(tex_fname).stem+'.pdf'
+    transferTeXFiles(tex_filename, tmp_dir, 'cp')
+    transferTeXFiles(marked_filename, tmp_dir, 'mv')
+    ## move boxpositions file
+    os.system(f"mv {tex_filename.parent / mark_out_filename} {tmp_dir}")
 
-    process1 = runPdflatex(tex_str, orig_filename, tmp_dir)
-    process2 = runPdflatex(marked_tex, marked_filename, tmp_dir)
-    process3 = runDiffpdf(pdfFname(orig_filename), pdfFname(marked_filename), tmp_dir)
-
+    def pdfFname(tex_fname: Path):
+        return f"{tex_fname.stem}.pdf"    
+    
+    process3 = runDiffpdf(pdfFname(tex_filename), pdfFname(marked_filename), tmp_dir)
     
     ## temporary
-    return marked_tex, tmp_dir / mark_out_file, num_marks
+    return marked_tex, tmp_dir / mark_out_filename, num_marks
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog = 'python segmentsource.py',
@@ -357,5 +373,3 @@ if __name__ == '__main__':
     logging.basicConfig(level=_level, format='%(asctime)s - %(levelname)s - %(message)s')
 
     segment(filename)
-
-    

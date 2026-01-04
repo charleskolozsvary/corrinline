@@ -6,7 +6,7 @@ from pathlib import Path
 
 def drawWordBoxes(pdf_filename, page_word_rectangles, output_dir):
     save_file_name = Path(output_dir) / f'{Path(pdf_filename).stem}_word_boxes.pdf'
-    logging.info(f"Drawing word boxes to {save_file_name}")
+    logging.info(f"Drawing word boxes on {pdf_filename} to {save_file_name}... (this can take a while)")
     doc = pymupdf.open(pdf_filename)
     for pg_no in page_word_rectangles:
         page = doc[pg_no]
@@ -30,6 +30,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('filename')
     parser.add_argument("-d", "--debug", action="store_true", help='debugging output')
+    parser.add_argument("-db", "--drawboxes", action = "store_true", help='draw individual boxes')
     
     args = parser.parse_args()
     _level = logging.DEBUG if args.debug else logging.INFO
@@ -40,7 +41,8 @@ if __name__ == '__main__':
     page_word_rectangles = getWordBoxes(boxpositions_filename, num_boxes)
     output_dir = 'bbox_drawings'
     pdf_file_name = Path(args.filename).parent / f'{Path(args.filename).stem}.pdf' 
-    
-    drawWordBoxes(pdf_file_name, page_word_rectangles, output_dir)
+
+    if args.drawboxes:
+        drawWordBoxes(pdf_file_name, page_word_rectangles, output_dir)
 
     # logging.info(page_word_rectangles)
