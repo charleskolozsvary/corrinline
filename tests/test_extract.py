@@ -1,5 +1,6 @@
 import pymupdf
 import argparse
+import logging
 from texpdfedits.extract import getRobustAnnots, getCorrections, PDF_ANNOT_TEXT, PDF_ANNOT_CARET, PDF_ANNOT_STRIKE_OUT
 from pathlib import Path
 
@@ -115,12 +116,15 @@ def drawEdits(filename, output_dir, unique_ending = 'edit_selections'):
     return 0
     
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(prog = 'python draw_bbs.py',
-                                     description = 'Draw various bounding boxes')
+    parser = argparse.ArgumentParser()
     parser.add_argument('filename')
+    parser.add_argument("-d", "--debug", action="store_true", help='debugging output')
+    
     args = parser.parse_args()
-    filename = args.filename
+    _level = logging.DEBUG if args.debug else logging.INFO
+    logging.basicConfig(level=_level, format='%(asctime)s - %(levelname)s - %(message)s')    
 
+    filename = args.filename
     doc = pymupdf.open(filename)
     
     annots = getRobustAnnots(doc) # from extract.py

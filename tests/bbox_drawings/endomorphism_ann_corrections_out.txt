@@ -371,7 +371,7 @@ bbox_drawings/endomorphism_ann_edit_selections_33.pdf
         "comment": "AU: does the \"H\" and \"G\" need to be bold in math, or are you just setting it like that to match the rest of the subsection heading? The very next appearance of $H^\\ast_{\\mathbb{C}G}$ is not bold.",
         "responses": []
     },
-    "selection": "<Highlight>∗</Highlight>"
+    "selection": "2.2. Graded endomorphisms on <Highlight>H∗\nCG</Highlight>"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_34.pdf
@@ -503,7 +503,7 @@ bbox_drawings/endomorphism_ann_edit_selections_45.pdf
         "comment": "Theorem 3.1. <COMP: pls link>",
         "responses": []
     },
-    "selection": "×<Replace></Replace>"
+    "selection": "∗\n×. <Replace>The following</Replace>"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_46.pdf
@@ -514,7 +514,7 @@ bbox_drawings/endomorphism_ann_edit_selections_46.pdf
         "comment": "rom",
         "responses": []
     },
-    "selection": "<Highlight></Highlight>Q"
+    "selection": "<Highlight>(1)</Highlight> Either ϕ(u) = au for some a ∈Q, or ϕ(u) ∈H∗\nC"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_47.pdf
@@ -547,7 +547,7 @@ bbox_drawings/endomorphism_ann_edit_selections_49.pdf
         "comment": "rom",
         "responses": []
     },
-    "selection": "G<Highlight></Highlight>"
+    "selection": "∗\nCG. By Theorem 2.3 part <Highlight>(ii)</Highlight>,"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_50.pdf
@@ -569,7 +569,7 @@ bbox_drawings/endomorphism_ann_edit_selections_51.pdf
         "comment": "rom",
         "responses": []
     },
-    "selection": "CG<Highlight></Highlight>"
+    "selection": "∗\nCG. Using the observations given above it is convenient to prove part <Highlight>(2)</Highlight> first."
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_52.pdf
@@ -646,7 +646,7 @@ bbox_drawings/endomorphism_ann_edit_selections_58.pdf
         "comment": "P",
         "responses": []
     },
-    "selection": "<Replace></Replace>∗"
+    "selection": "<Replace>p</Replace>roof of part (1): Since ϕ is a graded endomorphism on H∗\n×"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_59.pdf
@@ -657,7 +657,7 @@ bbox_drawings/endomorphism_ann_edit_selections_59.pdf
         "comment": "rom and COMP pls LINK",
         "responses": []
     },
-    "selection": "<Highlight></Highlight>∗"
+    "selection": "proof of part <Highlight>(1)</Highlight>: Since ϕ is a graded endomorphism on H∗\n×"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_60.pdf
@@ -668,7 +668,7 @@ bbox_drawings/endomorphism_ann_edit_selections_60.pdf
         "comment": ".",
         "responses": []
     },
-    "selection": "<Replace></Replace>∗"
+    "selection": "proof of part (1)<Replace>:</Replace> Since ϕ is a graded endomorphism on H∗\n×"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_61.pdf
@@ -679,7 +679,7 @@ bbox_drawings/endomorphism_ann_edit_selections_61.pdf
         "comment": "",
         "responses": []
     },
-    "selection": "×<StrikeOut></StrikeOut>"
+    "selection": "∗\n×, <StrikeOut>therefore</StrikeOut>"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_62.pdf
@@ -734,7 +734,7 @@ bbox_drawings/endomorphism_ann_edit_selections_66.pdf
         "comment": "rom",
         "responses": []
     },
-    "selection": "<Highlight></Highlight>Q"
+    "selection": "<Highlight>(1)</Highlight> Either ϕ(u) = au for some a ∈Q, or ϕ(u) ∈H∗\nC"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_67.pdf
@@ -800,7 +800,7 @@ bbox_drawings/endomorphism_ann_edit_selections_72.pdf
         "comment": "Proposition 3.5 <COMP: link>",
         "responses": []
     },
-    "selection": "CG<Replace></Replace>"
+    "selection": "2\nCG. <Replace>The following proposition</Replace> provides such examples when m is even"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_73.pdf
@@ -877,7 +877,7 @@ bbox_drawings/endomorphism_ann_edit_selections_79.pdf
         "comment": ",",
         "responses": []
     },
-    "selection": "∗∗<Caret></Caret>"
+    "selection": "subring Fix(θ∗) of H∗\n×<Caret></Caret>"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_80.pdf
@@ -888,7 +888,7 @@ bbox_drawings/endomorphism_ann_edit_selections_80.pdf
         "comment": ",",
         "responses": []
     },
-    "selection": "∗∗<Caret></Caret>"
+    "selection": "to the fixed subring Fix(θ∗) of H∗\n×<Caret></Caret>"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_81.pdf
@@ -910,7 +910,7 @@ bbox_drawings/endomorphism_ann_edit_selections_82.pdf
         "comment": "COMP: set text roman as per journal style <global for examples>",
         "responses": []
     },
-    "selection": "<Highlight>Example 3.10. If m odd, n > 2 and k = 1, then P(m, n, 1) is fibered by the</Highlight>"
+    "selection": "<Highlight>complex projective space CP n−1 over the real projective space RP m. In this case,</Highlight>"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_83.pdf
@@ -965,7 +965,7 @@ bbox_drawings/endomorphism_ann_edit_selections_87.pdf
         "comment": "remove no indent",
         "responses": []
     },
-    "selection": "<Highlight></Highlight>˜∗˜∗∗"
+    "selection": "<Highlight>Suppose that</Highlight> ˜f ∗(u) = Q, then the image set Im ˜f ∗⊆H∗\nC"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_88.pdf
@@ -1229,7 +1229,7 @@ bbox_drawings/endomorphism_ann_edit_selections_111.pdf
         "comment": ",",
         "responses": []
     },
-    "selection": "i=0 2in,k<Caret></Caret>2i n,kn,k2"
+    "selection": "�d\ni=0 d2i(−1)i = χ(RGn,k)<Caret></Caret> where d2i = dim H2i(CGn,k; Q) = dim Hi(RGn,k; Z2)."
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_112.pdf
@@ -1295,7 +1295,7 @@ bbox_drawings/endomorphism_ann_edit_selections_117.pdf
         "comment": ",",
         "responses": []
     },
-    "selection": "G<Replace></Replace>"
+    "selection": "2i\nCG<Replace>.</Replace>"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_118.pdf
@@ -1317,7 +1317,7 @@ bbox_drawings/endomorphism_ann_edit_selections_119.pdf
         "comment": "close up space between L(f, g) and this first equals sign",
         "responses": []
     },
-    "selection": "<Highlight> </Highlight>"
+    "selection": "<Highlight>= �</Highlight>d\ni="
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_120.pdf
@@ -1339,7 +1339,7 @@ bbox_drawings/endomorphism_ann_edit_selections_121.pdf
         "comment": ",",
         "responses": []
     },
-    "selection": "G<Caret></Caret> "
+    "selection": "2i\nCG<Caret></Caret> and the last equation holds by using Lemma 4.5."
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_122.pdf
@@ -1361,7 +1361,7 @@ bbox_drawings/endomorphism_ann_edit_selections_123.pdf
         "comment": "",
         "responses": []
     },
-    "selection": "G<StrikeOut></StrikeOut>"
+    "selection": "∗\nCG<StrikeOut>,</StrikeOut> such that"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_124.pdf
@@ -1372,7 +1372,7 @@ bbox_drawings/endomorphism_ann_edit_selections_124.pdf
         "comment": "",
         "responses": []
     },
-    "selection": "<StrikeOut></StrikeOut>"
+    "selection": "×\n∗; Q) satisfying<StrikeOut>:</StrikeOut>"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_125.pdf
@@ -1416,7 +1416,7 @@ bbox_drawings/endomorphism_ann_edit_selections_128.pdf
         "comment": "rom",
         "responses": []
     },
-    "selection": "<Highlight></Highlight>"
+    "selection": "<Highlight>(2)</Highlight> ˜f∗(x) = λix + ϑ ⊗y, for some y ∈HCG\n2i−"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_129.pdf
@@ -1427,7 +1427,7 @@ bbox_drawings/endomorphism_ann_edit_selections_129.pdf
         "comment": "rom",
         "responses": []
     },
-    "selection": "<Highlight></Highlight>"
+    "selection": "<Highlight>(1)</Highlight> ˜f∗(x) ∈ϑ ⊗HCG\n2i−"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_130.pdf
@@ -1438,7 +1438,7 @@ bbox_drawings/endomorphism_ann_edit_selections_130.pdf
         "comment": ".",
         "responses": []
     },
-    "selection": " <Caret></Caret>"
+    "selection": "CG\n2i , i > 0 if ˜f ∗(u) = µu, µ ∈Q<Caret></Caret>"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_131.pdf
@@ -1471,7 +1471,7 @@ bbox_drawings/endomorphism_ann_edit_selections_133.pdf
         "comment": ",",
         "responses": []
     },
-    "selection": "<Caret></Caret>"
+    "selection": "CG\n2i , ∀i > 0<Caret></Caret>"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_134.pdf
@@ -1548,7 +1548,7 @@ bbox_drawings/endomorphism_ann_edit_selections_140.pdf
         "comment": "center equations",
         "responses": []
     },
-    "selection": "<Highlight></Highlight>"
+    "selection": "<Highlight>˜f∗(x) = λix + ϑ ⊗y, for some y ∈HCG\n2i−m, ∀x ∈HCG\n2i</Highlight>"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_141.pdf
@@ -1570,7 +1570,7 @@ bbox_drawings/endomorphism_ann_edit_selections_142.pdf
         "comment": ",",
         "responses": []
     },
-    "selection": "2i+m<Replace></Replace>"
+    "selection": "CG\n2i+m<Replace>.</Replace>"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_143.pdf
@@ -1636,7 +1636,7 @@ bbox_drawings/endomorphism_ann_edit_selections_148.pdf
         "comment": "rom",
         "responses": []
     },
-    "selection": "<Highlight></Highlight>"
+    "selection": "<Highlight>(2)</Highlight> ˜f ∗(u) = µu, µ ∈Q if ˜f ∗(H∗\nC"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_149.pdf
@@ -1658,7 +1658,7 @@ bbox_drawings/endomorphism_ann_edit_selections_150.pdf
         "comment": "rom",
         "responses": []
     },
-    "selection": "<Highlight></Highlight>"
+    "selection": "∗\nCG. Since ˜f ∗is graded and by <Highlight>(2)</Highlight>"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_151.pdf
@@ -1669,7 +1669,7 @@ bbox_drawings/endomorphism_ann_edit_selections_151.pdf
         "comment": "rom",
         "responses": []
     },
-    "selection": "<Highlight>(1)</Highlight> The lift ˜f stabilizes a copy of Grassmannian, i.e., ˜f({x0}×CGn,k) ⊆{x0}×"
+    "selection": "<Highlight>(2)</Highlight> The map p1 ◦˜f ∗◦i1 : H∗\nC"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_152.pdf
@@ -1757,7 +1757,7 @@ bbox_drawings/endomorphism_ann_edit_selections_159.pdf
         "comment": "rom",
         "responses": []
     },
-    "selection": "<Highlight></Highlight>"
+    "selection": "<Highlight>(1)</Highlight> ˜g∗(H∗\nC"
 }
 
 bbox_drawings/endomorphism_ann_edit_selections_160.pdf

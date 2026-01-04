@@ -22,6 +22,8 @@ EXTRACT_TEXT_BUFFER_WIDTH = 2 # also in pymupdf points
 ## the line the annot intersects
 NUM_SURROUNDING_LINES = 1
 
+NORMALIZATION_HEIGHT_PROPORTION = 1/3 # bottom and top thirds
+
 class Annot:
     """Revised version of pymupdf's Annot which fixes the bounding box of the Caret annotation and isn't fragile. See getRobustAnnots()"""
     def __init__ (self, _pageno, _type, _info, _xref, _irt_xref, _rect, _line_bb, _surr_lines):
@@ -91,7 +93,7 @@ class Edit:
                 "comment": self.message['comment'],
                 "responses": self.message['responses']
             },
-            "selection": self.selection
+            "PDF selection": self.selection
         }, indent=4, ensure_ascii=False)
     
     def __repr__ (self):
@@ -114,29 +116,50 @@ def normalizeLineRectYs(line_bb, line_bbs):
         return line_rect # nothing to normalize
 
     if num_isec_lines > 3:
-        logging.warning(f"line {line_bb} intersected more than two other lines, {line_bbs}---something odd is going on...")
-        ## see endomorphism_ann page 13 --- serious mess we'll have to make sense of...
-    
+        logging.debug(f"""line {line_bb} intersected {len(intersecting_lines)} other lines,
+        {intersecting_lines}, which is more than usual, but it shouldn't be a problem""")
+
+    ## sorting the lines by y0 or y1 is an arbitrary decision, but our logic should give identical results in either case
+    ## so that would be a good thing to test. 
     lines_by_y1 = list(sorted(intersecting_lines, key = lambda bb: bb[3]))
     idx = lines_by_y1.index(line_rect)
 
     lines_before = lines_by_y1[:idx]
-    lines_after = lines_by_y1[idx+1:]
-    ## plus or minus half a point to prevent intersection
-    buff = 0.5
+    lines_after = lines_by_y1[idx+1:]    
+
+    ## new line normalization >>>
+    ## add a filter so that we only keep
+    ## (1) lines before whose baselines (y1s) are *above* the bottom_thresh 
+    ## (2) lines after  whose toplines  (y0s) are *below* the top_thresh
+
+    ## of course, if line_bb itself is already quite compromised (say, it extends very far into the line
+    ## above or below it) this doesn't work too well but I think it's the best I can do right now
+    thresh_height_proportion = line_rect.height * NORMALIZATION_HEIGHT_PROPORTION
+    bottom_thresh = line_rect.y1 - thresh_height_proportion
+    top_thresh = line_rect.y0 + thresh_height_proportion
     
-    ## set y0 of line to below lowest baseline of lines before
-    if lines_before != []:
-        normalized_y0 = max(lines_before, key = lambda bb: bb[3])[3] + buff
+    lines_before = list(filter(lambda bb: bb[3] < bottom_thresh, lines_before))
+    lines_after = list(filter(lambda bb: bb[1] > top_thresh, lines_after))
+    ## <<<
+
+    ## plus or minus half a point to prevent intersection
+    buff = 0.25
+    
+    ## set y0 to below lowest baseline of lines before
+    if lines_before == []:
+        normalized_y0 = line_rect.y0        
     else:
-        normalized_y0 = line_rect.y0
+        normalized_y0 = max(lines_before, key = lambda bb: bb[3])[3] + buff
+        logging.debug(f"Lines before = {lines_before}")
+        logging.debug(f"normalized_y0 = {normalized_y0}")        
 
     ## set y1 of line to above highest topline of lines after            
-    if lines_after != []:
-        normalized_y1 = min(lines_after,  key = lambda bb: bb[1])[1] - buff
+    if lines_after == []:
+        normalized_y1 = line_rect.y1        
     else:
-        normalized_y1 = line_rect.y1
-
+        normalized_y1 = min(lines_after,  key = lambda bb: bb[1])[1] - buff
+        logging.debug(f"Lines after = {lines_after}")
+        logging.debug(f"normalized_y1 = {normalized_y1}")
 
     return pymupdf.Rect(line_rect.x0, normalized_y0, line_rect.x1, normalized_y1)         
 
@@ -156,11 +179,11 @@ def getAnnotAndSurrLineRects(annot_type, annot_info, annot_rect, page_lines):
 
     if num_lines_isec_annot > 1:
         ## this very much seems to only happen with caret annotation rectangles
-        logging.debug("Annot intersects more than one line bbox:", annot_info)        
+        logging.debug(f"Annot intersects more than one line bbox: {annot_info}")        
 
     if num_lines_isec_annot > 2 and annot_type == PDF_ANNOT_CARET:
         logging.warning(f"""A caret annotation, {annot_info}, intersected more than two lines.
-        This is very unusual.""")
+        This is somewhat unusual. There's probably a lot of tall inline math near the annotation""")
 
     ## bb (bounding box)/rectangle = (x0, y0, x1, y1)
     ## where x0,y0 is top left and x1, y1 is bottom right
@@ -177,26 +200,37 @@ def getAnnotAndSurrLineRects(annot_type, annot_info, annot_rect, page_lines):
     ## although in the what I believe to be impossible situation where the line above the line the caret is
     ## inserted extends so far down into the caret's line that the caret intersects the line above,
     ## this would fail. But again, I have never seen that happen and I have good reason to suspect that it won't
+
+    ## we make our "chosen line", annot_line_bb, the one which has the highest y1 which is below some threshold based on the annotation's
+    ## y info
+    threshold = annot_rect.y0 + (annot_rect.height)/4
+    lines_that_intersect_annot = list(filter(lambda bb: bb[3] > threshold, lines_that_intersect_annot))
     
-    highest_y1_line_bb = list(sorted(lines_that_intersect_annot, key = lambda bb: bb[3]))[0]
+    annot_line_bb = list(sorted(lines_that_intersect_annot, key = lambda bb: bb[3]))[0]
+
+    if annot_line_bb == []:
+        logging.warning(f"""None of the lines that intersected the annotation '{annot_info}'
+        had a baseline below the annotations vertical midpoint. Returning no surrounding lines,
+        just the original annotation rectangle""")
+        return annot_rect, None, None
         
     ## fix caret rect
     if annot_type == PDF_ANNOT_CARET:
         raised_rect = pymupdf.Rect(annot_rect.top_left, annot_rect.bottom_right)
-        raised_rect.y1 = highest_y1_line_bb[3]
+        raised_rect.y1 = annot_line_bb[3]
         annot_rect = raised_rect
 
     lines_by_y0 = list(sorted(page_lines, key = lambda bb: bb[1]))
-    idx = lines_by_y0.index(highest_y1_line_bb)
+    idx = lines_by_y0.index(annot_line_bb)
 
     lines_before = lines_by_y0[:idx][-NUM_SURROUNDING_LINES:]
     lines_after = lines_by_y0[idx+1:][:NUM_SURROUNDING_LINES]
-
-    highest_y1_line_bb = normalizeLineRectYs(highest_y1_line_bb, page_lines)
+    
+    annot_line_bb = normalizeLineRectYs(annot_line_bb, page_lines)
     lines_before = list(map(lambda l: normalizeLineRectYs(l, page_lines), lines_before))
     lines_after = list(map(lambda l: normalizeLineRectYs(l, page_lines), lines_after))
 
-    return annot_rect, highest_y1_line_bb, {'lines before': lines_before, 'lines_after': lines_after}
+    return annot_rect, annot_line_bb, {'lines before': lines_before, 'lines_after': lines_after}
     
 
 def getRobustAnnots(doc):
@@ -266,9 +300,13 @@ def getSelection(ann, doc):
     buff = EXTRACT_TEXT_BUFFER_WIDTH
     selection_name = ann.type[1]
     page = doc[ann.pageno]
-    x0, y0, x1, y1 = ann.line_bb
+    ## if there's no supplied line_bb for the annotation, just extend the annotation's rectangle across the width of the page
+    if ann.line_bb == None:
+        x0, y0, x1, y1 = 0, ann.rect.y0, page.rect.width, ann.rect.y1
+    else:
+        x0, y0, x1, y1 = ann.line_bb
 
-    ## as of this moment, surrounding lines are not added
+    ## as of this moment, surrounding lines are not added/considered
     
     if selection_name == PDF_ANNOT_CARET[1]:
         insertion_point_x = ann.rect.x0 + ann.rect.width/2
