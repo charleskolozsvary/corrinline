@@ -220,7 +220,7 @@ bbox_drawings/ann0_edit_selections_19.pdf
         "comment": "Move caption to top of table",
         "responses": []
     },
-    "selection": "<Highlight>1.6\n1.589\n-0.403\nTable 1. Empirical orbit metrics under λ-iteration.</Highlight>"
+    "selection": "<Highlight>Table 1. Empirical orbit metrics under λ-iteration.</Highlight>"
 }
 
 bbox_drawings/ann0_edit_selections_20.pdf
@@ -253,7 +253,7 @@ bbox_drawings/ann0_edit_selections_22.pdf
         "comment": "Equation",
         "responses": []
     },
-    "selection": "geometric invariant for the foliation type. However, \n <Replace>Eq.</Replace> (7) reveals an unexpected"
+    "selection": "geometric invariant for the foliation type. However, <Replace>Eq.</Replace> (7) reveals an unexpected"
 }
 
 bbox_drawings/ann0_edit_selections_23.pdf
@@ -264,7 +264,7 @@ bbox_drawings/ann0_edit_selections_23.pdf
         "comment": "(5) <pls link>",
         "responses": []
     },
-    "selection": "geometric invariant for the foliation type. However, Eq. \n <Replace>(7)</Replace> reveals an unexpected"
+    "selection": "geometric invariant for the foliation type. However, Eq. <Replace>(7)</Replace> reveals an unexpected"
 }
 
 bbox_drawings/ann0_edit_selections_24.pdf
@@ -297,7 +297,7 @@ bbox_drawings/ann0_edit_selections_26.pdf
         "comment": "; at",
         "responses": []
     },
-    "selection": "geometric invariant for the fol\nresonance near λ = φ2 ≈2.618<Replace>iatio\n. At</Replace>n type. However, Eq. (7) reveals an unexpected\n that point, the curvature-weighted orbit integral"
+    "selection": "resonance near λ = φ2 ≈2.618<Replace>. At</Replace> that point, the curvature-weighted orbit integral"
 }
 
 bbox_drawings/ann0_edit_selections_27.pdf
@@ -308,7 +308,7 @@ bbox_drawings/ann0_edit_selections_27.pdf
         "comment": "does this look right?",
         "responses": []
     },
-    "selection": "geometric \nresonance <Highlight>invariant for t\nnear λ = φ2 ≈</Highlight>he foliation type. However, Eq. (7) reveals an unexpected\n2.618. At that point, the curvature-weighted orbit integral"
+    "selection": "resonance <Highlight>near λ = φ2 ≈</Highlight>2.618. At that point, the curvature-weighted orbit integral"
 }
 
 bbox_drawings/ann0_edit_selections_28.pdf

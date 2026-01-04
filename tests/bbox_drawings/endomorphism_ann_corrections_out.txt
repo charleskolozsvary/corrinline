@@ -1,0 +1,1883 @@
+bbox_drawings/endomorphism_ann_edit_selections_0.pdf
+0 {
+    "pageno": 0,
+    "type": "Highlight",
+    "message": {
+        "comment": "lowercase",
+        "responses": []
+    },
+    "selection": "R<Highlight>ATIONAL COHOMOLOGY ENDOMORPHISMS OF PRODUCT</Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_1.pdf
+1 {
+    "pageno": 0,
+    "type": "Highlight",
+    "message": {
+        "comment": "lowercase",
+        "responses": []
+    },
+    "selection": "OF SPHERE WITH G<Highlight>RASSMANNIAN AND COINCIDENCE</Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_2.pdf
+2 {
+    "pageno": 0,
+    "type": "Replace",
+    "message": {
+        "comment": "classes",
+        "responses": []
+    },
+    "selection": "nal homotopy <Replace>class</Replace> of self-maps are completely determined by the induced graded"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_3.pdf
+3 {
+    "pageno": 0,
+    "type": "Replace",
+    "message": {
+        "comment": "AU: \"a/the complex Grassmannian\" or \"complex Grassmannians\"?",
+        "responses": []
+    },
+    "selection": "phisms of the rational cohomology algebra of <Replace>complex Grassmannian</Replace>. Their results"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_4.pdf
+4 {
+    "pageno": 0,
+    "type": "Replace",
+    "message": {
+        "comment": "AU: again, should \"Grassmannian\" be plural---\"Grassmannians\"? The \"which\" would suggest that.",
+        "responses": []
+    },
+    "selection": "the rational cohomology algebra of <Replace>complex Grassmannian</Replace> which are nonzero on"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_5.pdf
+5 {
+    "pageno": 0,
+    "type": "Caret",
+    "message": {
+        "comment": ",",
+        "responses": []
+    },
+    "selection": "spaces<Caret></Caret> G/H, where G is a compact connected Lie group and H is a closed subgroup"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_6.pdf
+6 {
+    "pageno": 0,
+    "type": "Replace",
+    "message": {
+        "comment": "for the",
+        "responses": []
+    },
+    "selection": "of maximal rank. This is a topic of interest <Replace>since</Replace> past fifty years and are studied"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_7.pdf
+7 {
+    "pageno": 0,
+    "type": "Replace",
+    "message": {
+        "comment": "is",
+        "responses": []
+    },
+    "selection": "of maximal rank. This is a topic of interest since past fifty years and <Replace>are</Replace> studied"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_8.pdf
+8 {
+    "pageno": 0,
+    "type": "Replace",
+    "message": {
+        "comment": "singely",
+        "responses": [
+            "COMP: ignore"
+        ]
+    },
+    "selection": "CGn,k because the sphere Sm has a simple, <Replace>singly</Replace> generated cohomology algebra,"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_9.pdf
+9 {
+    "pageno": 0,
+    "type": "Caret",
+    "message": {
+        "comment": ", <COMP: insert comma>",
+        "responses": []
+    },
+    "selection": "and<Caret></Caret> in particular, fixed-point theory."
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_10.pdf
+10 {
+    "pageno": 0,
+    "type": "StrikeOut",
+    "message": {
+        "comment": "",
+        "responses": []
+    },
+    "selection": "2020 Mathematics Subject Classification. Primary<StrikeOut>:</StrikeOut> 55S37, 08A35, 55M20; Secondary: 14M15."
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_11.pdf
+11 {
+    "pageno": 0,
+    "type": "StrikeOut",
+    "message": {
+        "comment": "",
+        "responses": []
+    },
+    "selection": "2020 Mathematics Subject Classification. Primary: 55S37, 08A35, 55M20; Secondary<StrikeOut>:</StrikeOut> 14M15."
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_12.pdf
+12 {
+    "pageno": 0,
+    "type": "Replace",
+    "message": {
+        "comment": "C",
+        "responses": []
+    },
+    "selection": "Key words and phrases. <Replace>c</Replace>ohomology endomorphisms, complex Grassmann manifolds, general-"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_13.pdf
+13 {
+    "pageno": 0,
+    "type": "Replace",
+    "message": {
+        "comment": "14M16.",
+        "responses": []
+    },
+    "selection": "2020 Mathematics Subject Classification. Primary: 55S37, 08A35, 55M20; Secondary: <Replace>14M15.</Replace>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_14.pdf
+14 {
+    "pageno": 1,
+    "type": "StrikeOut",
+    "message": {
+        "comment": "",
+        "responses": []
+    },
+    "selection": "by certain Chern classes c1, . . . , ck (resp. u). Now<StrikeOut>,</StrikeOut> we are ready to state one of the"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_15.pdf
+15 {
+    "pageno": 1,
+    "type": "Highlight",
+    "message": {
+        "comment": "roman",
+        "responses": []
+    },
+    "selection": "<Highlight>(1)</Highlight> If k < n −k,"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_16.pdf
+16 {
+    "pageno": 1,
+    "type": "Caret",
+    "message": {
+        "comment": ". <COMP: insert period>",
+        "responses": []
+    },
+    "selection": "ϕ(ci) = λici, ∀i ∈{1, 2, . . . , k}<Caret></Caret>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_17.pdf
+17 {
+    "pageno": 1,
+    "type": "Replace",
+    "message": {
+        "comment": "AU: \"that $\\phi$ is\"?",
+        "responses": []
+    },
+    "selection": "If k = n −k, there is an additional possibility <Replace>of ϕ that it</Replace> is induced by the"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_18.pdf
+18 {
+    "pageno": 1,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "<Highlight>(2)</Highlight> The image of H∗(Sm; Q) under ϕ lies in H∗(Sm; Q) or in H∗(CGn,k; Q)"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_19.pdf
+19 {
+    "pageno": 1,
+    "type": "Highlight",
+    "message": {
+        "comment": "COMP: commas before and after \"i.e.\"",
+        "responses": []
+    },
+    "selection": "<Highlight>i.e.</Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_20.pdf
+20 {
+    "pageno": 1,
+    "type": "Highlight",
+    "message": {
+        "comment": "AU: <global> \"the Grassmannian\"?",
+        "responses": []
+    },
+    "selection": "if a continuous function on Sm × CGn,k stabilizes a copy of <Highlight>Grassmannian</Highlight> then the"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_21.pdf
+21 {
+    "pageno": 1,
+    "type": "Replace",
+    "message": {
+        "comment": "the same",
+        "responses": []
+    },
+    "selection": "if g is the identity map, then the coincidence property is <Replace>same</Replace> as the fixed-point"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_22.pdf
+22 {
+    "pageno": 1,
+    "type": "Replace",
+    "message": {
+        "comment": "[GH1, Theorem 2] <COMP: use \\cite>",
+        "responses": []
+    },
+    "selection": "We have generalized <Replace>Theorem 2 of [GH1]</Replace> to the setting of coincidence theory and"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_23.pdf
+23 {
+    "pageno": 2,
+    "type": "StrikeOut",
+    "message": {
+        "comment": "",
+        "responses": []
+    },
+    "selection": "From now on<StrikeOut>,</StrikeOut> we denote the indexing set {1, 2, . . . , k} by I."
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_24.pdf
+24 {
+    "pageno": 2,
+    "type": "Highlight",
+    "message": {
+        "comment": "COMP: pls link",
+        "responses": []
+    },
+    "selection": "In <Highlight>Section 2</Highlight> we develop the necessary background and recall some relevant results."
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_25.pdf
+25 {
+    "pageno": 2,
+    "type": "Highlight",
+    "message": {
+        "comment": "COMP: pls link",
+        "responses": []
+    },
+    "selection": "are applied in Section <Highlight>4</Highlight> to obtain the coincidence-theoretic results."
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_26.pdf
+26 {
+    "pageno": 2,
+    "type": "Highlight",
+    "message": {
+        "comment": "<global for remarks per journal style> lightface ",
+        "responses": []
+    },
+    "selection": "<Highlight>Remark 2.1.</Highlight> We can assume k ≤n −k for CGn,k as CGn,k is homeomorphic to"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_27.pdf
+27 {
+    "pageno": 2,
+    "type": "Replace",
+    "message": {
+        "comment": "2.1 <rom>",
+        "responses": []
+    },
+    "selection": "Remark <Replace>2.1</Replace>. We can assume k ≤n −k for CGn,k as CGn,k is homeomorphic to"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_28.pdf
+28 {
+    "pageno": 2,
+    "type": "Highlight",
+    "message": {
+        "comment": "<global for remarks per journal style> set text roman",
+        "responses": []
+    },
+    "selection": "<Highlight>Remark 2.1. We can assume k ≤n −k for CGn,k as CGn,k is homeomorphic to</Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_29.pdf
+29 {
+    "pageno": 2,
+    "type": "Replace",
+    "message": {
+        "comment": ". That is,",
+        "responses": []
+    },
+    "selection": "U(k) × U(n −k) <Replace>that is</Replace>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_30.pdf
+30 {
+    "pageno": 3,
+    "type": "Replace",
+    "message": {
+        "comment": "[ST1, Theorem A']",
+        "responses": []
+    },
+    "selection": "Theorem 2.2 (<Replace>[ST1], Theorem A\n′</Replace>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_31.pdf
+31 {
+    "pageno": 3,
+    "type": "Caret",
+    "message": {
+        "comment": ",",
+        "responses": []
+    },
+    "selection": "of Q-derivations of H∗(G/H; Q) which decreases the degree by i > 0<Caret></Caret> where G is a"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_32.pdf
+32 {
+    "pageno": 3,
+    "type": "StrikeOut",
+    "message": {
+        "comment": "",
+        "responses": []
+    },
+    "selection": "connected, compact Lie group and H is a closed subgroup of maximal rank. Then<StrikeOut>,</StrikeOut>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_33.pdf
+33 {
+    "pageno": 3,
+    "type": "Highlight",
+    "message": {
+        "comment": "AU: does the \"H\" and \"G\" need to be bold in math, or are you just setting it like that to match the rest of the subsection heading? The very next appearance of $H^\\ast_{\\mathbb{C}G}$ is not bold.",
+        "responses": []
+    },
+    "selection": "<Highlight>∗</Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_34.pdf
+34 {
+    "pageno": 3,
+    "type": "Replace",
+    "message": {
+        "comment": "[GH1, Theorem 1]",
+        "responses": []
+    },
+    "selection": "Theorem 2.3 (<Replace>[GH1], Theorem 1</Replace>, [Ho1], Theorem 1.1). (i) Assume that the hy-"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_35.pdf
+35 {
+    "pageno": 3,
+    "type": "Replace",
+    "message": {
+        "comment": "[Ho1, Theorem 1.1]",
+        "responses": []
+    },
+    "selection": "Theorem 2.3 ([GH1], Theorem 1, <Replace>[Ho1], Theorem 1.1</Replace>). (i) Assume that the hy-"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_36.pdf
+36 {
+    "pageno": 3,
+    "type": "Replace",
+    "message": {
+        "comment": "(i) <rom>",
+        "responses": []
+    },
+    "selection": "Theorem 2.3 ([GH1], Theorem 1, [Ho1], Theorem 1.1). <Replace>(i)</Replace> Assume that the hy-"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_37.pdf
+37 {
+    "pageno": 3,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "<Highlight>(ii)</Highlight> Assume that the hypothesis (4) is satisfied. Then, we have"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_38.pdf
+38 {
+    "pageno": 3,
+    "type": "Highlight",
+    "message": {
+        "comment": "AU: put the two \"where\" statements in parentheses and connect them with \"and\"? So something like \"(where $...$ and the involution $...$ on $...$ is induced from the standard conjugation on $...$)\"",
+        "responses": []
+    },
+    "selection": "<Highlight>classical Dold manifolds P(m, n) := Sm × CP n/∼where (s, L) ∼(−s, ¯L), where</Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_39.pdf
+39 {
+    "pageno": 4,
+    "type": "Highlight",
+    "message": {
+        "comment": "AU: again does math need to be bold?",
+        "responses": []
+    },
+    "selection": "2.4. Rational cohomology of <Highlight>P(Sm, CGn,k)</Highlight>. The GDS P(Sm, CGn,k) is defined"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_40.pdf
+40 {
+    "pageno": 4,
+    "type": "StrikeOut",
+    "message": {
+        "comment": "",
+        "responses": []
+    },
+    "selection": "for which<StrikeOut>,</StrikeOut> Sm is equipped with the free action generated by the antipodal map"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_41.pdf
+41 {
+    "pageno": 4,
+    "type": "Caret",
+    "message": {
+        "comment": ",",
+        "responses": []
+    },
+    "selection": "α<Caret></Caret> and the involution σ : L �→¯L on CGn,k is induced from the standard complex"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_42.pdf
+42 {
+    "pageno": 4,
+    "type": "Highlight",
+    "message": {
+        "comment": "COMP: insert comma at end of equation",
+        "responses": []
+    },
+    "selection": "<Highlight>Q[u, c1, . . . , ck]</Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_43.pdf
+43 {
+    "pageno": 4,
+    "type": "Replace",
+    "message": {
+        "comment": "3.14",
+        "responses": []
+    },
+    "selection": "Theorem 2.4 ([MS2, Theorem <Replace>3.13</Replace>]). The cohomology algebra H∗(P(m, n, k); Q)"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_44.pdf
+44 {
+    "pageno": 4,
+    "type": "Highlight",
+    "message": {
+        "comment": "no indent at the start of para",
+        "responses": []
+    },
+    "selection": "<Highlight>A description of</Highlight> the cohomology algebra H∗(P(m, n, k); Q), as a quotient of a"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_45.pdf
+45 {
+    "pageno": 4,
+    "type": "Replace",
+    "message": {
+        "comment": "Theorem 3.1. <COMP: pls link>",
+        "responses": []
+    },
+    "selection": "×<Replace></Replace>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_46.pdf
+46 {
+    "pageno": 5,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "<Highlight></Highlight>Q"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_47.pdf
+47 {
+    "pageno": 5,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "<Highlight>(2)</Highlight> There exists λ ∈Q\\{0} such that"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_48.pdf
+48 {
+    "pageno": 5,
+    "type": "Highlight",
+    "message": {
+        "comment": "insert period at the end of equation (11)",
+        "responses": []
+    },
+    "selection": "<Highlight>H∗</Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_49.pdf
+49 {
+    "pageno": 5,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "G<Highlight></Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_50.pdf
+50 {
+    "pageno": 5,
+    "type": "StrikeOut",
+    "message": {
+        "comment": "",
+        "responses": []
+    },
+    "selection": "we have<StrikeOut>,</StrikeOut>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_51.pdf
+51 {
+    "pageno": 5,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "CG<Highlight></Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_52.pdf
+52 {
+    "pageno": 5,
+    "type": "Highlight",
+    "message": {
+        "comment": "P",
+        "responses": []
+    },
+    "selection": "<Highlight>p</Highlight>roof of part (2): Using (12) and (13), it is sufficient to prove that Pi = 0, ∀i ∈I."
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_53.pdf
+53 {
+    "pageno": 5,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "proof of part <Highlight>(2)</Highlight>: Using (12) and (13), it is sufficient to prove that Pi = 0, ∀i ∈I."
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_54.pdf
+54 {
+    "pageno": 5,
+    "type": "StrikeOut",
+    "message": {
+        "comment": ". <COMP: period; also set heading as proof environment if not already>",
+        "responses": []
+    },
+    "selection": "proof of part (2)<StrikeOut>:</StrikeOut> Using (12) and (13), it is sufficient to prove that Pi = 0, ∀i ∈I."
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_55.pdf
+55 {
+    "pageno": 6,
+    "type": "Caret",
+    "message": {
+        "comment": ", <COMP: comma>",
+        "responses": []
+    },
+    "selection": "= (ϕ1(x) + uPx)(ϕ1(y) + uPy) −ϕ1(x)ϕ1(y)<Caret></Caret>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_56.pdf
+56 {
+    "pageno": 6,
+    "type": "Highlight",
+    "message": {
+        "comment": "COMP: center both lines",
+        "responses": []
+    },
+    "selection": "<Highlight>D(tϕ1(x)) = tD(ϕ1(x)),\nD(ϕ1(x) + ϕ1(y)) = D(ϕ1(x)) + D(ϕ1(y)),</Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_57.pdf
+57 {
+    "pageno": 6,
+    "type": "Caret",
+    "message": {
+        "comment": ",",
+        "responses": []
+    },
+    "selection": "Theorem 2.2, we get that D is a zero derivation. In particular<Caret></Caret>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_58.pdf
+58 {
+    "pageno": 6,
+    "type": "Replace",
+    "message": {
+        "comment": "P",
+        "responses": []
+    },
+    "selection": "<Replace></Replace>∗"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_59.pdf
+59 {
+    "pageno": 6,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom and COMP pls LINK",
+        "responses": []
+    },
+    "selection": "<Highlight></Highlight>∗"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_60.pdf
+60 {
+    "pageno": 6,
+    "type": "Replace",
+    "message": {
+        "comment": ".",
+        "responses": []
+    },
+    "selection": "<Replace></Replace>∗"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_61.pdf
+61 {
+    "pageno": 6,
+    "type": "StrikeOut",
+    "message": {
+        "comment": "",
+        "responses": []
+    },
+    "selection": "×<StrikeOut></StrikeOut>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_62.pdf
+62 {
+    "pageno": 6,
+    "type": "Caret",
+    "message": {
+        "comment": ",",
+        "responses": []
+    },
+    "selection": "On the other hand, when n = 2, CGn,k is either a point or S2<Caret></Caret> and the classifi-"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_63.pdf
+63 {
+    "pageno": 6,
+    "type": "StrikeOut",
+    "message": {
+        "comment": "",
+        "responses": []
+    },
+    "selection": "case where ϕ(c1) = µu. To address this, we use <StrikeOut>part (i) of</StrikeOut> Theorem 2.3 which leads"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_64.pdf
+64 {
+    "pageno": 6,
+    "type": "Replace",
+    "message": {
+        "comment": "2.3(i) <COMP: keep \"2.3\" linked>",
+        "responses": []
+    },
+    "selection": "case where ϕ(c1) = µu. To address this, we use part (i) of Theorem <Replace>2.3</Replace> which leads"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_65.pdf
+65 {
+    "pageno": 6,
+    "type": "Replace",
+    "message": {
+        "comment": "Proposition 3.3 <COMP: pls link>",
+        "responses": []
+    },
+    "selection": "to <Replace>the following proposition</Replace>."
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_66.pdf
+66 {
+    "pageno": 6,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "<Highlight></Highlight>Q"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_67.pdf
+67 {
+    "pageno": 6,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "<Highlight>(2)</Highlight> ϕ(c) = uP, ∀i > 1, where P ∈H2i−m"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_68.pdf
+68 {
+    "pageno": 6,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "Proof. <Highlight>(1)</Highlight>: The proof of part (1) is exactly the same as the proof of part (1) of"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_69.pdf
+69 {
+    "pageno": 6,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "Proof. (1): The proof of part <Highlight>(1)</Highlight> is exactly the same as the proof of part (1) of"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_70.pdf
+70 {
+    "pageno": 6,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "Proof. (1): The proof of part (1) is exactly the same as the proof of part <Highlight>(1)</Highlight> of"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_71.pdf
+71 {
+    "pageno": 6,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "<Highlight>(2)</Highlight>: Using (11), we have that the map ϕ is a graded endomorphism on H∗"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_72.pdf
+72 {
+    "pageno": 7,
+    "type": "Replace",
+    "message": {
+        "comment": "Proposition 3.5 <COMP: link>",
+        "responses": []
+    },
+    "selection": "CG<Replace></Replace>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_73.pdf
+73 {
+    "pageno": 7,
+    "type": "Replace",
+    "message": {
+        "comment": "(2) <COMP: roman>",
+        "responses": []
+    },
+    "selection": "Proof. The proof of this corollary is similar to the proof of part <Replace>2</Replace> of Theorem 3.1."
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_74.pdf
+74 {
+    "pageno": 7,
+    "type": "Highlight",
+    "message": {
+        "comment": "COMP: set display math",
+        "responses": []
+    },
+    "selection": "<Highlight>Apply induction on r and replace CGn,k with ˆX := S2m1 × · · · × S2mi−1 × S2mi+1 ×</Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_75.pdf
+75 {
+    "pageno": 7,
+    "type": "Highlight",
+    "message": {
+        "comment": "COMP: comma at end of equation",
+        "responses": []
+    },
+    "selection": "S2mj = SO(2mj + 1)/SO(2mj<Highlight>)</Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_76.pdf
+76 {
+    "pageno": 7,
+    "type": "Replace",
+    "message": {
+        "comment": "S",
+        "responses": []
+    },
+    "selection": "in <Replace>Subs</Replace>ection 2.4. The following remark helps us to describe endomorphisms of"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_77.pdf
+77 {
+    "pageno": 8,
+    "type": "Replace",
+    "message": {
+        "comment": ",",
+        "responses": []
+    },
+    "selection": "H∗(Sm × CGn,k; Q)<Replace>.</Replace>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_78.pdf
+78 {
+    "pageno": 8,
+    "type": "Replace",
+    "message": {
+        "comment": "Corollaries 3.8 and 3.9. <COMP: link>",
+        "responses": []
+    },
+    "selection": "<Replace>two corollaries.</Replace>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_79.pdf
+79 {
+    "pageno": 8,
+    "type": "Caret",
+    "message": {
+        "comment": ",",
+        "responses": []
+    },
+    "selection": "∗∗<Caret></Caret>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_80.pdf
+80 {
+    "pageno": 8,
+    "type": "Caret",
+    "message": {
+        "comment": ",",
+        "responses": []
+    },
+    "selection": "∗∗<Caret></Caret>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_81.pdf
+81 {
+    "pageno": 8,
+    "type": "Highlight",
+    "message": {
+        "comment": "AU: do you mean \"with\" instead of \"in\" or to say \"Corollary 3.8 from Theorem 3.1\"? ",
+        "responses": []
+    },
+    "selection": "<Highlight>Using Theorem 3.1 in Corollary 3.8, and Proposition 3.3 in Corollary 3.9</Highlight> along"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_82.pdf
+82 {
+    "pageno": 8,
+    "type": "Highlight",
+    "message": {
+        "comment": "COMP: set text roman as per journal style <global for examples>",
+        "responses": []
+    },
+    "selection": "<Highlight>Example 3.10. If m odd, n > 2 and k = 1, then P(m, n, 1) is fibered by the</Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_83.pdf
+83 {
+    "pageno": 8,
+    "type": "Replace",
+    "message": {
+        "comment": "where (AU: okay?)",
+        "responses": []
+    },
+    "selection": "λ ∈Q, <Replace>and</Replace> λ2 ̸= −1."
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_84.pdf
+84 {
+    "pageno": 8,
+    "type": "Replace",
+    "message": {
+        "comment": "Corollary 3.11 <COMP: link>",
+        "responses": []
+    },
+    "selection": "<Replace>The following corollary</Replace> helps us to understand the relationship between the"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_85.pdf
+85 {
+    "pageno": 9,
+    "type": "Highlight",
+    "message": {
+        "comment": "COMP: remove no indent",
+        "responses": []
+    },
+    "selection": "<Highlight>By Theorem</Highlight> 3.1, ˜f ∗(ci) is of the form given in (2) of Theorem 3.1. Also,"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_86.pdf
+86 {
+    "pageno": 9,
+    "type": "Highlight",
+    "message": {
+        "comment": "comma at end of equation",
+        "responses": []
+    },
+    "selection": "˜f ∗(u) <Highlight>= Q</Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_87.pdf
+87 {
+    "pageno": 9,
+    "type": "Highlight",
+    "message": {
+        "comment": "remove no indent",
+        "responses": []
+    },
+    "selection": "<Highlight></Highlight>˜∗˜∗∗"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_88.pdf
+88 {
+    "pageno": 9,
+    "type": "Caret",
+    "message": {
+        "comment": ",",
+        "responses": []
+    },
+    "selection": "This is a contradiction to the assumption that f ∗is an automorphism because<Caret></Caret>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_89.pdf
+89 {
+    "pageno": 9,
+    "type": "Replace",
+    "message": {
+        "comment": "Theorem 3.12 <COMP: link>",
+        "responses": []
+    },
+    "selection": "<Replace>The following theorem</Replace> provides a criterion for the image of the spherical coho-"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_90.pdf
+90 {
+    "pageno": 9,
+    "type": "Replace",
+    "message": {
+        "comment": "of the",
+        "responses": []
+    },
+    "selection": "lizes a copy <Replace>of </Replace> Grassmannian {x0} × CGn,k for some x0 ∈Sm. Then the induced"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_91.pdf
+91 {
+    "pageno": 9,
+    "type": "StrikeOut",
+    "message": {
+        "comment": "",
+        "responses": []
+    },
+    "selection": "pi the i-th projection map on Sm × CGn,k for i = 1, 2 and s : Sm \\ {x0} →D <StrikeOut>is</StrikeOut> the"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_92.pdf
+92 {
+    "pageno": 9,
+    "type": "Highlight",
+    "message": {
+        "comment": "COMP: insert period at end of equation",
+        "responses": []
+    },
+    "selection": "Sm × <Highlight>CGn,</Highlight>k"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_93.pdf
+93 {
+    "pageno": 9,
+    "type": "Highlight",
+    "message": {
+        "comment": "remove paragraph indent",
+        "responses": []
+    },
+    "selection": "<Highlight>Si</Highlight>nce, the quotient map q has Brouwer degree 1, the induced map on ratio-"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_94.pdf
+94 {
+    "pageno": 9,
+    "type": "StrikeOut",
+    "message": {
+        "comment": "",
+        "responses": []
+    },
+    "selection": "Since<StrikeOut>,</StrikeOut> the quotient map q has Brouwer degree 1, the induced map on ratio-"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_95.pdf
+95 {
+    "pageno": 9,
+    "type": "Caret",
+    "message": {
+        "comment": ",",
+        "responses": []
+    },
+    "selection": "nal cohomology q∗: H∗(Sm; Z) →H∗(Tm; Z) sends u �→1 · u1u2 . . . um<Caret></Caret> where ui"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_96.pdf
+96 {
+    "pageno": 10,
+    "type": "Replace",
+    "message": {
+        "comment": ":",
+        "responses": []
+    },
+    "selection": "The induced diagram in cohomology implies the following commutative diagram<Replace>.</Replace>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_97.pdf
+97 {
+    "pageno": 10,
+    "type": "Highlight",
+    "message": {
+        "comment": "COMP: insert period at end of equation",
+        "responses": []
+    },
+    "selection": "<Highlight>f ∗(u)</Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_98.pdf
+98 {
+    "pageno": 10,
+    "type": "Replace",
+    "message": {
+        "comment": "S",
+        "responses": []
+    },
+    "selection": "P(m, n, k) defined in <Replace>Subs</Replace>ection 2.4."
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_99.pdf
+99 {
+    "pageno": 10,
+    "type": "Replace",
+    "message": {
+        "comment": "for",
+        "responses": []
+    },
+    "selection": "space X. The pair (X, g) is said to have the coincidence property (<Replace>in</Replace> short, CP)"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_100.pdf
+100 {
+    "pageno": 10,
+    "type": "Replace",
+    "message": {
+        "comment": "Definition 4.2 <COMP: link>",
+        "responses": []
+    },
+    "selection": "reduces to that of a fixed point, resulting in <Replace>the following definition</Replace>."
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_101.pdf
+101 {
+    "pageno": 10,
+    "type": "Replace",
+    "message": {
+        "comment": "either (AU: okay?)",
+        "responses": []
+    },
+    "selection": "generalized Dold space P(S, X). Then (P(S, X), g) does not have the CP if <Replace>one</Replace> of"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_102.pdf
+102 {
+    "pageno": 10,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "<Highlight>(1)</Highlight> The continuous map g is a fiber bundle map and the pair (Y, p ◦g ◦s) does"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_103.pdf
+103 {
+    "pageno": 10,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "<Highlight>(2)</Highlight> There exists a σ-equivariant map f (i.e. f ◦σ = σ ◦f) on X and a α × σ-"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_104.pdf
+104 {
+    "pageno": 10,
+    "type": "Replace",
+    "message": {
+        "comment": "an",
+        "responses": []
+    },
+    "selection": "(2) There exists a σ-equivariant map f (i.e. f ◦σ = σ ◦f) on X and <Replace>a</Replace> α × σ-"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_105.pdf
+105 {
+    "pageno": 10,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "Proof. <Highlight>(1)</Highlight> Suppose that the pair (Y, p ◦g ◦s) does not have the CP. Then there"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_106.pdf
+106 {
+    "pageno": 11,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "<Highlight>(2)</Highlight> Let G denote the group of deck transformations of the double covering π :"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_107.pdf
+107 {
+    "pageno": 11,
+    "type": "Replace",
+    "message": {
+        "comment": "the",
+        "responses": []
+    },
+    "selection": "from <Replace>a</Replace> general observation that if for two G-equivariant maps ˜ϕ, ˜ψ on S × X, the"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_108.pdf
+108 {
+    "pageno": 11,
+    "type": "Replace",
+    "message": {
+        "comment": "(for any $t \\in G$)",
+        "responses": []
+    },
+    "selection": "maps ˜ϕ and t · ˜ψ have no point of coincidence<Replace>, for any t ∈G</Replace>; then the maps they"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_109.pdf
+109 {
+    "pageno": 11,
+    "type": "Replace",
+    "message": {
+        "comment": "Lemma 4.5 <COMP: link>",
+        "responses": []
+    },
+    "selection": "now prove <Replace>the following lemma</Replace> (cf. Theorem 2, [GH1]) to prove Proposition 4.6."
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_110.pdf
+110 {
+    "pageno": 11,
+    "type": "Replace",
+    "message": {
+        "comment": "[GH1, Theorem 2]",
+        "responses": []
+    },
+    "selection": "now prove the following lemma (cf. <Replace>Theorem 2, [GH1]</Replace>) to prove Proposition 4.6."
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_111.pdf
+111 {
+    "pageno": 12,
+    "type": "Caret",
+    "message": {
+        "comment": ",",
+        "responses": []
+    },
+    "selection": "i=0 2in,k<Caret></Caret>2i n,kn,k2"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_112.pdf
+112 {
+    "pageno": 12,
+    "type": "Caret",
+    "message": {
+        "comment": ",",
+        "responses": []
+    },
+    "selection": "root theorem<Caret></Caret> p|1 and q|1. Hence, λ = ±1, which is a contradiction. Therefore, we"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_113.pdf
+113 {
+    "pageno": 12,
+    "type": "Caret",
+    "message": {
+        "comment": ",",
+        "responses": []
+    },
+    "selection": "Denote the i-th homology groups Hi(CGn,k; Q), Hi(Sm; Q)<Caret></Caret> and Hi(Sm×CGn,k; Q),"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_114.pdf
+114 {
+    "pageno": 12,
+    "type": "Highlight",
+    "message": {
+        "comment": "COMP: break after semicolon",
+        "responses": []
+    },
+    "selection": "Denote the i-th homology groups Hi(CGn,k; Q), Hi(Sm; Q) and Hi(Sm×CGn,k<Highlight>; Q),</Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_115.pdf
+115 {
+    "pageno": 12,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "nal cohomology algebra. Using Theorem 2.3 part <Highlight>(i)</Highlight>, there exist a nonzero rational"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_116.pdf
+116 {
+    "pageno": 12,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "Theorem 2.3 part <Highlight>(i)</Highlight>, there exists µ ∈Q such that"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_117.pdf
+117 {
+    "pageno": 12,
+    "type": "Replace",
+    "message": {
+        "comment": ",",
+        "responses": []
+    },
+    "selection": "G<Replace></Replace>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_118.pdf
+118 {
+    "pageno": 12,
+    "type": "Highlight",
+    "message": {
+        "comment": "COMP: adjust to fit within margin",
+        "responses": []
+    },
+    "selection": "D◦g∗◦D−1◦f∗(x) = <Highlight>D◦g∗◦D−1(µix) = µiD◦g∗(D−1x) = µiD(λd−iD−1x) = µiλd−ix.</Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_119.pdf
+119 {
+    "pageno": 12,
+    "type": "Highlight",
+    "message": {
+        "comment": "close up space between L(f, g) and this first equals sign",
+        "responses": []
+    },
+    "selection": "<Highlight> </Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_120.pdf
+120 {
+    "pageno": 12,
+    "type": "Highlight",
+    "message": {
+        "comment": "insert comma at end of equation",
+        "responses": []
+    },
+    "selection": "(∵λ <Highlight>= 0)</Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_121.pdf
+121 {
+    "pageno": 12,
+    "type": "Caret",
+    "message": {
+        "comment": ",",
+        "responses": []
+    },
+    "selection": "G<Caret></Caret> "
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_122.pdf
+122 {
+    "pageno": 12,
+    "type": "Caret",
+    "message": {
+        "comment": ",",
+        "responses": []
+    },
+    "selection": "δvq(vp) = δqp<Caret></Caret> where δqp is the Kronecker delta function. Without loss of generality,"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_123.pdf
+123 {
+    "pageno": 12,
+    "type": "StrikeOut",
+    "message": {
+        "comment": "",
+        "responses": []
+    },
+    "selection": "G<StrikeOut></StrikeOut>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_124.pdf
+124 {
+    "pageno": 13,
+    "type": "StrikeOut",
+    "message": {
+        "comment": "",
+        "responses": []
+    },
+    "selection": "<StrikeOut></StrikeOut>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_125.pdf
+125 {
+    "pageno": 13,
+    "type": "Replace",
+    "message": {
+        "comment": "The Poincaré",
+        "responses": []
+    },
+    "selection": "<Replace>Poincar´e</Replace> duality on Sm × CGn,k can be described in terms of the duality on"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_126.pdf
+126 {
+    "pageno": 13,
+    "type": "Replace",
+    "message": {
+        "comment": "Lemmas 4.7 and 4.8 <COMP: link>",
+        "responses": []
+    },
+    "selection": "We are now ready to establish <Replace>the following lemmas</Replace>, which will be useful in the"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_127.pdf
+127 {
+    "pageno": 13,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "<Highlight>(1)</Highlight> Either ˜f∗(ϑ ⊗x) = µλi(ϑ ⊗x), ∀x ∈HCG"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_128.pdf
+128 {
+    "pageno": 13,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "<Highlight></Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_129.pdf
+129 {
+    "pageno": 14,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "<Highlight></Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_130.pdf
+130 {
+    "pageno": 14,
+    "type": "Caret",
+    "message": {
+        "comment": ".",
+        "responses": []
+    },
+    "selection": " <Caret></Caret>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_131.pdf
+131 {
+    "pageno": 14,
+    "type": "Highlight",
+    "message": {
+        "comment": "adjust to fit equation within margin",
+        "responses": []
+    },
+    "selection": "<Highlight>˜f ∗(δvp) =\n�\najpδϑ⊗vj, ∀vp ∈HCG\n2i ,\n˜f ∗(δϑ⊗1) = µδϑ⊗1,\n˜f ∗(δϑ⊗vp) = 0, ∀vp ∈HCG\n2i .</Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_132.pdf
+132 {
+    "pageno": 14,
+    "type": "Highlight",
+    "message": {
+        "comment": "AU: \", which concludes the ...\" or \". That concludes the ...\"?",
+        "responses": []
+    },
+    "selection": "<Highlight>that</Highlight> concludes the result."
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_133.pdf
+133 {
+    "pageno": 14,
+    "type": "Caret",
+    "message": {
+        "comment": ",",
+        "responses": []
+    },
+    "selection": "<Caret></Caret>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_134.pdf
+134 {
+    "pageno": 14,
+    "type": "Replace",
+    "message": {
+        "comment": "Theorems 4.9 and 4.10 <COMP: link>",
+        "responses": []
+    },
+    "selection": "<Replace>The following theorems</Replace> provide a criteria for the existence of coincidence"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_135.pdf
+135 {
+    "pageno": 14,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "<Highlight>(1)</Highlight> g∗is an automorphism of H∗(P(m, n, k); Q)."
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_136.pdf
+136 {
+    "pageno": 14,
+    "type": "Replace",
+    "message": {
+        "comment": ",",
+        "responses": []
+    },
+    "selection": "(1) g∗is an automorphism of H∗(P(m, n, k); Q)<Replace>.</Replace>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_137.pdf
+137 {
+    "pageno": 14,
+    "type": "Replace",
+    "message": {
+        "comment": ",",
+        "responses": []
+    },
+    "selection": "(2) ˜f ∗(c1) ̸= au, a ∈Q<Replace>.</Replace>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_138.pdf
+138 {
+    "pageno": 14,
+    "type": "Replace",
+    "message": {
+        "comment": ",",
+        "responses": []
+    },
+    "selection": "(3) deg(p ◦g ◦s) ̸= −deg(p ◦f ◦s) if m is odd<Replace>.</Replace>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_139.pdf
+139 {
+    "pageno": 15,
+    "type": "Replace",
+    "message": {
+        "comment": "et al.",
+        "responses": []
+    },
+    "selection": "M. MANDAL <Replace>AND D. SETIA</Replace>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_140.pdf
+140 {
+    "pageno": 15,
+    "type": "Highlight",
+    "message": {
+        "comment": "center equations",
+        "responses": []
+    },
+    "selection": "<Highlight></Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_141.pdf
+141 {
+    "pageno": 15,
+    "type": "Highlight",
+    "message": {
+        "comment": "center equations",
+        "responses": []
+    },
+    "selection": "<Highlight>D˜g∗D−1 ˜f∗(x) = µ1λiλd−i\nx + ϑ ⊗y′ for some y′ ∈HCG</Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_142.pdf
+142 {
+    "pageno": 15,
+    "type": "Replace",
+    "message": {
+        "comment": ",",
+        "responses": []
+    },
+    "selection": "2i+m<Replace></Replace>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_143.pdf
+143 {
+    "pageno": 15,
+    "type": "Replace",
+    "message": {
+        "comment": "denotes",
+        "responses": []
+    },
+    "selection": "′ = 0 or µ = 0 depending on the image of ˜f∗(ϑ ⊗x). Recall that d2i <Replace>denote</Replace>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_144.pdf
+144 {
+    "pageno": 15,
+    "type": "StrikeOut",
+    "message": {
+        "comment": "",
+        "responses": []
+    },
+    "selection": "Using <StrikeOut>the</StrikeOut> Lemma 4.5 and the fact that λ1 ̸= 0, the sum"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_145.pdf
+145 {
+    "pageno": 15,
+    "type": "Replace",
+    "message": {
+        "comment": ".",
+        "responses": []
+    },
+    "selection": "d2i(λ/λ1)i ̸= 0<Replace>,</Replace>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_146.pdf
+146 {
+    "pageno": 15,
+    "type": "Highlight",
+    "message": {
+        "comment": "center equations or align equal signs",
+        "responses": []
+    },
+    "selection": "<Highlight>D˜g∗D−1(θ ◦˜f)∗(x) = µ1(−λ)iλd−i\nx + ϑ ⊗y′′ for some y′′ ∈HCG</Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_147.pdf
+147 {
+    "pageno": 15,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "<Highlight>(1)</Highlight> g∗is an automorphism of H∗(P(m, n, k); Q)."
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_148.pdf
+148 {
+    "pageno": 16,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "<Highlight></Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_149.pdf
+149 {
+    "pageno": 16,
+    "type": "Highlight",
+    "message": {
+        "comment": "remove no indent",
+        "responses": []
+    },
+    "selection": "<Highlight>Let us</Highlight> consider the other case when ˜f ∗(c1) = au, a ∈Q, using Theorem 3.3 we"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_150.pdf
+150 {
+    "pageno": 16,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "<Highlight></Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_151.pdf
+151 {
+    "pageno": 16,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "<Highlight>(1)</Highlight> The lift ˜f stabilizes a copy of Grassmannian, i.e., ˜f({x0}×CGn,k) ⊆{x0}×"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_152.pdf
+152 {
+    "pageno": 16,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "hypothesis <Highlight>(2)</Highlight> considered in Theorem 4.9 or Theorem 4.10. Some of them are as"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_153.pdf
+153 {
+    "pageno": 16,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "Hence condition <Highlight>(2)</Highlight> of Theorem 4.10 may be omitted, and one obtains the following"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_154.pdf
+154 {
+    "pageno": 17,
+    "type": "Highlight",
+    "message": {
+        "comment": "break before \"continuous\"",
+        "responses": []
+    },
+    "selection": "both even. Assume m > 2k, and the hypothesis (3) is satisfied. Then, for any <Highlight>con-</Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_155.pdf
+155 {
+    "pageno": 17,
+    "type": "Highlight",
+    "message": {
+        "comment": "break before math",
+        "responses": []
+    },
+    "selection": "tinuous function g on P(m, n, k) that induces an automorphism on <Highlight>H∗(P(m, n, k); Q),</Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_156.pdf
+156 {
+    "pageno": 17,
+    "type": "Highlight",
+    "message": {
+        "comment": "remove no indent",
+        "responses": []
+    },
+    "selection": "<Highlight>In particular,</Highlight> for g = id, the space P(m, n, k) has the fixed-point property."
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_157.pdf
+157 {
+    "pageno": 17,
+    "type": "Highlight",
+    "message": {
+        "comment": "break before inline math",
+        "responses": []
+    },
+    "selection": "In Theorem 4.10, the first assumption that g∗is an automorphism of <Highlight>H∗(P(m, n, k); Q)</Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_158.pdf
+158 {
+    "pageno": 17,
+    "type": "Replace",
+    "message": {
+        "comment": "Proposition 4.13 <COMP: link>",
+        "responses": []
+    },
+    "selection": "can be relaxed by assuming µ is nonzero, which leads to <Replace>the following proposition</Replace>."
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_159.pdf
+159 {
+    "pageno": 17,
+    "type": "Highlight",
+    "message": {
+        "comment": "rom",
+        "responses": []
+    },
+    "selection": "<Highlight></Highlight>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_160.pdf
+160 {
+    "pageno": 17,
+    "type": "Replace",
+    "message": {
+        "comment": "Acknowledgment",
+        "responses": []
+    },
+    "selection": "<Replace>Acknowledgements</Replace>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_161.pdf
+161 {
+    "pageno": 17,
+    "type": "Replace",
+    "message": {
+        "comment": "p. 102",
+        "responses": []
+    },
+    "selection": "<Replace>pp. http://gateway.proquest.com/openurl?url_ver=Z39.88-2004&rft_val_fmt=info:ofi/</Replace>"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_162.pdf
+162 {
+    "pageno": 17,
+    "type": "Replace",
+    "message": {
+        "comment": "pp. 181--183",
+        "responses": []
+    },
+    "selection": "Math. Soc. 88 (1983), no. 1, <Replace>181–183</Replace>, https://doi.org/10.2307/2045137."
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_163.pdf
+163 {
+    "pageno": 18,
+    "type": "Highlight",
+    "message": {
+        "comment": "F",
+        "responses": []
+    },
+    "selection": "<Highlight>f</Highlight>ixed"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_164.pdf
+164 {
+    "pageno": 18,
+    "type": "Highlight",
+    "message": {
+        "comment": "P",
+        "responses": []
+    },
+    "selection": "<Highlight>p</Highlight>oint"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_165.pdf
+165 {
+    "pageno": 18,
+    "type": "Highlight",
+    "message": {
+        "comment": "P",
+        "responses": []
+    },
+    "selection": "<Highlight>p</Highlight>roperty"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_166.pdf
+166 {
+    "pageno": 18,
+    "type": "Highlight",
+    "message": {
+        "comment": "M",
+        "responses": []
+    },
+    "selection": "<Highlight>m</Highlight>anifolds,"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_167.pdf
+167 {
+    "pageno": 18,
+    "type": "Caret",
+    "message": {
+        "comment": ",",
+        "responses": []
+    },
+    "selection": "Indian Institute of Technology Kanpur, Kanpur<Caret></Caret> 208016, India"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_168.pdf
+168 {
+    "pageno": 18,
+    "type": "Caret",
+    "message": {
+        "comment": ",",
+        "responses": []
+    },
+    "selection": "Institute of Mathematics, Polish Academy of Sciences, Krak´ow<Caret></Caret> 31-027, Poland"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_169.pdf
+169 {
+    "pageno": 18,
+    "type": "Replace",
+    "message": {
+        "comment": " at the",
+        "responses": []
+    },
+    "selection": "Institute of Mathematics<Replace>,</Replace> Polish Academy of Sciences, Krak´ow 31-027, Poland"
+}
+
+bbox_drawings/endomorphism_ann_edit_selections_170.pdf
+170 {
+    "pageno": 18,
+    "type": "Replace",
+    "message": {
+        "comment": "_",
+        "responses": []
+    },
+    "selection": "Email address: manasm<Replace>.</Replace>imsc@gmail.com"
+}
+

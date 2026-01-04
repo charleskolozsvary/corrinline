@@ -2,6 +2,7 @@ import pymupdf
 import json
 import argparse
 import logging
+import sys
 from copy import deepcopy
 
 PDF_ANNOT_TEXT = (0, 'Text')
@@ -16,16 +17,22 @@ SELECT_TEXT_ANNOTS = {"Replace", "StrikeOut", "Highlight", "Underline"}
 CARET_BUFF = 2 # in pymupdf points
 EXTRACT_TEXT_BUFFER_WIDTH = 2 # also in pymupdf points
 
+## set surrounding lines to at most the line above and below
+## if set to two, include two lines above and two lines below
+## the line the annot intersects
+NUM_SURROUNDING_LINES = 1
+
 class Annot:
     """Revised version of pymupdf's Annot which fixes the bounding box of the Caret annotation and isn't fragile. See getRobustAnnots()"""
-    def __init__ (self, _pageno, _type, _info, _xref, _irt_xref, _rect, _intersecting_line_bb):
+    def __init__ (self, _pageno, _type, _info, _xref, _irt_xref, _rect, _line_bb, _surr_lines):
         self.pageno = _pageno        
         self.type = _type
         self.info = _info                
         self.xref = _xref
         self.irt_xref = _irt_xref
         self.rect = _rect
-        self.intersecting_line_bb = _intersecting_line_bb
+        self.line_bb = _line_bb
+        self.surr_lines = _surr_lines
         
     def __str__ (self):
         return str({'pageno':self.pageno,
@@ -43,7 +50,7 @@ class Edit:
     """
     Represents the information necessary to carry out an edit. An edit has the following attributes:
     
-    "pageno":    page number in the PDF the annotation appears on
+    "pageno":    page number in the PDF the annotation appears on (won't ultimately be fed to the model)
     
     "type":      annotation type
                  The Edit types are mostly a subset of the Annot types (full list at
@@ -62,10 +69,10 @@ class Edit:
       "pageno" : 1, 
       "type" : "Replace" 
       "message": {
-                   "comment": "Equation (1)", 
+                   "comment": "Theorem 3.14", 
                    "responses": ["COMP: pls link"]
                  }
-      "selection": "Next we prove that <Replace>(1)</Replace> is a consequence of"
+      "selection": "We now prove the <Replace>following theorem</Replace>."
     }
 
     """
@@ -90,6 +97,108 @@ class Edit:
     def __repr__ (self):
         return str(self)
 
+def normalizeLineRectYs(line_bb, line_bbs):
+    """Every now and then I  see the top of one line extend into the line above it,
+    which is what this definition addresses, but I have never seen the bottom of a line
+    extend into the line below it, though I also handle this here just in case.
+    
+    Rect corrdinates = (x0, y0, x1, y1)"""
+    line_rect = pymupdf.Rect(line_bb)
+    intersecting_lines = list(filter(lambda l: line_rect.intersects(l), line_bbs))
+    num_isec_lines = len(intersecting_lines)
+    if line_rect not in intersecting_lines:
+        logging.error(f"""line_rect {line_rect} is not in intersecting_lines, {intersecting_lines}.
+        It should always intersect itself. Exiting...""")
+        sys.exit(1)
+    if num_isec_lines == 1:
+        return line_rect # nothing to normalize
+
+    if num_isec_lines > 3:
+        logging.warning(f"line {line_bb} intersected more than two other lines, {line_bbs}---something odd is going on...")
+        ## see endomorphism_ann page 13 --- serious mess we'll have to make sense of...
+    
+    lines_by_y1 = list(sorted(intersecting_lines, key = lambda bb: bb[3]))
+    idx = lines_by_y1.index(line_rect)
+
+    lines_before = lines_by_y1[:idx]
+    lines_after = lines_by_y1[idx+1:]
+    ## plus or minus half a point to prevent intersection
+    buff = 0.5
+    
+    ## set y0 of line to below lowest baseline of lines before
+    if lines_before != []:
+        normalized_y0 = max(lines_before, key = lambda bb: bb[3])[3] + buff
+    else:
+        normalized_y0 = line_rect.y0
+
+    ## set y1 of line to above highest topline of lines after            
+    if lines_after != []:
+        normalized_y1 = min(lines_after,  key = lambda bb: bb[1])[1] - buff
+    else:
+        normalized_y1 = line_rect.y1
+
+
+    return pymupdf.Rect(line_rect.x0, normalized_y0, line_rect.x1, normalized_y1)         
+
+def getAnnotAndSurrLineRects(annot_type, annot_info, annot_rect, page_lines):
+    """Return a corrected annotation bounding box (if its a caret)
+       And the (normalized) bounding boxes of the line the annotation appears on and the line(s) above and
+       below it (if present).
+    """
+    lines_that_intersect_annot = list(filter(lambda l: annot_rect.intersects(l), page_lines))
+    num_lines_isec_annot = len(lines_that_intersect_annot)
+    
+    if num_lines_isec_annot < 1:
+        ## might turn this into a warning and just ignore the annotation, but this really shouldn't ever happen...
+        logging.error(f"""Annotation {annot_info} of type {annot_type} and with rectangle {annot_rect}
+        did not intersect any PDF line bounding boxes. Exiting...""")
+        sys.exit(1)
+
+    if num_lines_isec_annot > 1:
+        ## this very much seems to only happen with caret annotation rectangles
+        logging.debug("Annot intersects more than one line bbox:", annot_info)        
+
+    if num_lines_isec_annot > 2 and annot_type == PDF_ANNOT_CARET:
+        logging.warning(f"""A caret annotation, {annot_info}, intersected more than two lines.
+        This is very unusual.""")
+
+    ## bb (bounding box)/rectangle = (x0, y0, x1, y1)
+    ## where x0,y0 is top left and x1, y1 is bottom right
+    
+    ## PDF coordinate system is with (0,0) as the top left corner of the page,
+    ## (page width, page height) as the bottom right corner
+
+    ## by highest I mean highest up the page, closer to y = 0
+
+    ## so in the case of a caret, we set its y1 to the value of the line it is inserted on.
+    ## as far as I can tell, this is always the line the caret annotation rectangle intersects which
+    ## has the highest baseline. Typically the caret only intersects at most two lines:
+    ## the line it's on and the line below it.
+    ## although in the what I believe to be impossible situation where the line above the line the caret is
+    ## inserted extends so far down into the caret's line that the caret intersects the line above,
+    ## this would fail. But again, I have never seen that happen and I have good reason to suspect that it won't
+    
+    highest_y1_line_bb = list(sorted(lines_that_intersect_annot, key = lambda bb: bb[3]))[0]
+        
+    ## fix caret rect
+    if annot_type == PDF_ANNOT_CARET:
+        raised_rect = pymupdf.Rect(annot_rect.top_left, annot_rect.bottom_right)
+        raised_rect.y1 = highest_y1_line_bb[3]
+        annot_rect = raised_rect
+
+    lines_by_y0 = list(sorted(page_lines, key = lambda bb: bb[1]))
+    idx = lines_by_y0.index(highest_y1_line_bb)
+
+    lines_before = lines_by_y0[:idx][-NUM_SURROUNDING_LINES:]
+    lines_after = lines_by_y0[idx+1:][:NUM_SURROUNDING_LINES]
+
+    highest_y1_line_bb = normalizeLineRectYs(highest_y1_line_bb, page_lines)
+    lines_before = list(map(lambda l: normalizeLineRectYs(l, page_lines), lines_before))
+    lines_after = list(map(lambda l: normalizeLineRectYs(l, page_lines), lines_after))
+
+    return annot_rect, highest_y1_line_bb, {'lines before': lines_before, 'lines_after': lines_after}
+    
+
 def getRobustAnnots(doc):
     """
     The bounding boxes of the original caret annotations often extend below the line they
@@ -103,31 +212,20 @@ def getRobustAnnots(doc):
     robust_annots = {pageno:[] for pageno in range(doc.page_count)}
     for pageno, page in enumerate(doc):
         blocks = page.get_text('dict', sort=True)['blocks']
-        line_bbs = [line['bbox'] for block in blocks for line in block['lines']]
+        page_lines = [line['bbox'] for block in blocks for line in block['lines']]
         for annot in page.annots():
-            annotRect = annot.rect
-            intersecting_line_bbs = list(filter(lambda l: annotRect.intersects(l), line_bbs))
-
             if annot.type == PDF_ANNOT_TEXT:
-                robust_annots[pageno].append(Annot(pageno,annot.type,annot.info,annot.xref,annot.irt_xref,annotRect,None))
+                robust_annots[pageno].append(Annot(pageno, annot.type, annot.info, annot.xref, annot.irt_xref, annot_rect, None, None))
                 continue
-
-            assert len(intersecting_line_bbs) > 0, "len(intersecting_line_bbs) <= 0 should not happen: it should always intersect at least one"
-            
-            ## bbbox = (x0, y0, x1, y1)
-            highest_baseline_line_bb = sorted(intersecting_line_bbs, key = lambda bb : bb[3])[0]
-
-            ## fix caret rect
-            if annot.type == PDF_ANNOT_CARET: 
-                raisedRect = pymupdf.Rect(annotRect.top_left, annotRect.bottom_right)
-                raisedRect.y1 = highest_baseline_line_bb[3]
-                annotRect = raisedRect
-
-            if len(intersecting_line_bbs) > 1:
-                logging.debug("Annot intersects with more than one line bbox:", annot.info)
-                
-            robust_annots[pageno].append(Annot(pageno,annot.type,annot.info,annot.xref,annot.irt_xref,annotRect,highest_baseline_line_bb))
-
+            annot_rect, line_bb, surrounding_lines = getAnnotAndSurrLineRects(annot.type, annot.info, annot.rect, page_lines)
+            robust_annots[pageno].append(Annot(pageno,
+                                               annot.type,
+                                               annot.info,
+                                               annot.xref,
+                                               annot.irt_xref,
+                                               annot_rect,
+                                               line_bb,
+                                               surrounding_lines))
     return robust_annots
 
 def getAllResponses(robust_annots):
@@ -168,7 +266,9 @@ def getSelection(ann, doc):
     buff = EXTRACT_TEXT_BUFFER_WIDTH
     selection_name = ann.type[1]
     page = doc[ann.pageno]
-    x0, y0, x1, y1 = ann.intersecting_line_bb
+    x0, y0, x1, y1 = ann.line_bb
+
+    ## as of this moment, surrounding lines are not added
     
     if selection_name == PDF_ANNOT_CARET[1]:
         insertion_point_x = ann.rect.x0 + ann.rect.width/2

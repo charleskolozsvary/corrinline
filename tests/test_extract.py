@@ -76,10 +76,13 @@ def drawEdits(filename, output_dir, unique_ending = 'edit_selections'):
         for j, bb in enumerate(bbs):
             if bb.width == 0:
                 continue
+            if bb.height == 0:
+                print("bb height was zero that ... shouldn't happen, continuing with modified height")
+                bb.y1 = bb.y0 + 5 ## see endomorphism_ann page 13
             box = page.add_freetext_annot(bb, '', text_color=colors[j])
             box.set_border(width=.75)
             box.update()
-        box = page.add_freetext_annot((5,5,500,350), str(correction), fontsize=10, fontname="Cour", text_color=(.7, .2, .5))
+        box = page.add_freetext_annot((5,5,500,350), str(correction), fontsize=8, fontname="Cour", text_color=(.5, 0, .75))
         box.update()
 
         single_save = f'{single_fname_prefix}_{i}.pdf'
@@ -88,7 +91,7 @@ def drawEdits(filename, output_dir, unique_ending = 'edit_selections'):
         out_str += f'{single_save}\n{i} {correction}\n\n'
         
         singlepage_file_names.append(single_save)
-        print(f'{i:3d}/{len(corrections):3d}')
+        print(f'{i+1:3d}/{len(corrections):3d}')
 
     print(f'done. Files written to {output_dir}')
     combined_doc = pymupdf.open(filename)
@@ -97,10 +100,11 @@ def drawEdits(filename, output_dir, unique_ending = 'edit_selections'):
     for single_page in singlepage_file_names:
         single_pdf = pymupdf.open(single_page)
         combined_doc.insert_pdf(single_pdf, annots=True)
-        
-    combined_doc.save(shipPdfFilename(filename, output_dir, unique_ending))
 
-    print(f"Combined doc saved to {Path(output_dir)}...")
+    combined_doc_filename = shipPdfFilename(filename, output_dir, unique_ending)
+    combined_doc.save(combined_doc_filename)
+
+    print(f"Combined doc saved to {combined_doc_filename}...")
     print("Deleting intermediate PDFs...")
     
     os.system(f"rm {single_fname_prefix}_*.pdf")
