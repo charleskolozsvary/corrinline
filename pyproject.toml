@@ -21,3 +21,4 @@ texpdfedits = { path = ".", editable = true }
 [tool.pixi.dependencies]
 python = "3.12.*"
 opencv = ">=4.12.0,<5"
+ptpython = ">=3.0.32,<4"

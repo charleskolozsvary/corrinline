@@ -1,15 +1,16 @@
+## DISCLAIMER: it's possible that it's much easier to track the box positions of words with lualatex
+## than pdflatex with pylatexenc, but this appears to be working well enough as-is
+
 import argparse
 import logging
 import re
 
-## DISCLAIMER: it's possible that it's much easier to track the box positions of words with lualatex
-## than pdflatex with pylatexenc, but this appears to be working well enough as-is
+## simple TeX parser >>>
+from TexSoup import TexSoup
+## <<<
 
-# simple TeX parser
-from TexSoup import TexSoup 
-# more complex TeX parser and converter
-from pylatexenc.latexwalker import LatexWalker, LatexEnvironmentNode, LatexMacroNode, LatexMathNode, LatexCharsNode, LatexGroupNode 
-from pylatexenc.macrospec import LatexContextDb, MacroSpec, EnvironmentSpec
+from pylatexenc.latexwalker import LatexWalker, LatexNode, LatexMacroNode, LatexEnvironmentNode, LatexGroupNode, LatexMathNode, LatexCharsNode, LatexCommentNode
+from pylatexenc.macrospec import LatexContextDb, std_macro, std_environment
 
 from itertools import count
 from pathlib import Path
@@ -18,67 +19,180 @@ import sys
 import os
 import subprocess
 
-METADATA_FIELDS = ['title', 'author', 'address', 'email', 'thanks', 'subjclass', 'keywords', 'datereceived', 'daterevised', 'abstract']
-UNIQUE_FIELDS = {'title', 'subjclass', 'datereceived', 'keywords', 'abstract'}
+from collections.abc import Callable
+
+RECOGNIZED_CSNAMES = {'emph': '{',
+                      'textit': '{',
+                      'textbf': '{',
+                      'textsc': '{',
+                      'texttt': '{',
+                      'underline': '{',
+                      'part': '*[{',
+                      'chapter' : '*[{',
+                      'section': '*[{',
+                      'subsection': '*[{',
+                      'subsubsection': '*[{',
+                      'thanks': '{',
+                      'subjclass': '[{',
+                      'datereceived': '{',
+                      'daterevised': '{',
+                      'commby': '{',
+                      'title': '[{',
+                      'author': '[{',
+                      'address': '[{',
+                      'email': '[{',
+                      'footnote': '[{', # \footnote[10]{text} sets the footnote to be footnote 10---only a number can be passed
+                      'caption': '[{',
+                      'item': '[',
+                      'renewcommand': '*{[{',
+                      'newcommand': '*{[{',
+                      'theoremstyle' : '{',
+                      'newtheorem': '*{[{['}
+"""greedily read all possible arguments to newtheorem,
+   even if optional is not quite right, but that's okay"""
+
+OPTIONAL_ARG = ('[', ']')
+
+REQUIRED_ARG = ('{', '}')
+
+MARK_CSNAMES = {'emph', 'textit', 'textbf', 'textsc', 'underline', 'texttt'}
+
+MARK_IDENTIFIERS = {'inline math': 'm',
+                    'inside footnote': 'f'} ## may expand upon this >>> yes: match mark key as <letter(s) identifier><digits>
+
+TRACKED_ENVIRONMENTS = {'abstract', 'figure', 'table', 'thebibliography', 'biblist'}
+
+METADATA_CSNAMES = {'title', 'author', 'address', 'email', 'thanks', 'subjclass', 'keywords', 'datereceived', 'daterevised', 'commby'}
+
+UNIQUE_FIELDS = {'title', 'subjclass', 'keywords', 'datereceived', 'commby', 'abstract'}
+
 ALLOWED_MARK_ENVIRONMENTS = {'proof', 'enumerate', 'itemize', 'document', 'thebibliography', 'biblist', 'bibdiv', 'bibsec'}
 
 DIFFPDF_DPI = 175
-## so far it appears for some reason \eqrefs produce very small differences in
-## the PDF output when the \markboxes are inserted
-## (but from what I can tell nothing else causes differences)
+r"""
+so far it appears for some reason \eqrefs produce very small differences in
+the PDF output when the \markboxes are inserted
+(but from what I can tell nothing else causes differences)
 
-## If there are 93 eqrefs on a page less than 50_000 pixels are marxed different
-## (when using DPI = 175; the larger the DPI, the larger the number of pixel differences)
-## And if a page breaks early by just one line the difference on that and subsequent pages is at
-## least 275_000
-## (based on from `diff-pdf teichmuller.pdf breakteich.pdf -v -s -m -g --output-diff=diff_break.pdf --dpi=175`),
-## so I think marking a page as not different if it differs by less than 50_000 pixels at this DPI is quite conservative.
-DIFFPDF_PER_PAGE_PIXEL_TOLERANCE = 50_000
+If there are 93 eqrefs on a page less than 50_000 pixels are marxed different
+(when using DPI = 175; the larger the DPI, the larger the number of pixel differences)
+And if a page breaks early by just one line the difference on that and subsequent pages is at
+least 275_000
+(based on from `diff-pdf teichmuller.pdf breakteich.pdf -v -s -m -g --output-diff=diff_break.pdf --dpi=175`),
+so I think marking a page as not different if it differs by less than 50_000 pixels at this DPI is quite conservative.
+"""
+DIFFPDF_PER_PAGE_PIXEL_TOLERANCE = 100_000
 
 SCALED_POINTS_PER_TEX_POINT = 2 ** 16 # 65536
 
-## there are 72.27 tex pts in an inch, while there are 
-## 72 bp (what tex calls a big point) in an inch, which is what
-## pymupdf and other modern pdf systems use
+"""
+there are 72.27 tex pts in an inch, while there are 
+72 bp (what tex calls a big point) in an inch, which is what
+pymupdf and other modern pdf systems use
+"""
 TEX_POINTS_TO_PDF_POINTS_CONVERSION_RATIO = 72 / 72.27
 
-## allow for half a point discrepancy between x0 + width and x1
-## in boxinfoToPDFRectangle()
-WORD_BOX_WIDTH_TOLERANCE = 1
+"""
+allow for half a point discrepancy between x0 + width and x1
+in boxinfoToPDFRectangle()
+"""
+WORD_BOX_WIDTH_TOLERANCE = 10
 
 def sourceAsString(filename: Path) -> str:
     with open(filename, 'r', encoding = 'utf-8') as f:
         tex_file_str = f.read()
     return tex_file_str
 
-def getMetadata(soup) -> dict[str, list | str]:
-    r"""Extracts metadata, issuing warnings if a unique field appears more than once
-       soup.find_all() fails if multiple comments are used like
-       `\author[J. Malone]%
-       %
-       {John Malone}` which shouldn't really appear anyway. Comments will typically be removed from the souce.
-    """
-    metadata = dict()
-    for field in METADATA_FIELDS:
-        metadata[field] = [str(s) for s in soup.find_all(field)]
-        if field in UNIQUE_FIELDS:
-            num_fields = len(metadata[field])
-            if num_fields != 1:
-                logging.warning(f'Found {num_fields} instances of {field} during getMetadata()')
-            else:
-                metadata[field] = str(metadata[field][0])
-    return metadata
+def writeStringToFile(string: str, filename: Path):
+    with open(filename, 'w', encoding = 'utf-8') as f:
+        f.write(string)
+    return 0
 
-def getEnunciations(soup) -> set[str]:
-    r"""gets the names of enunciations declared with \newtheorem"""
-    newthms = soup.find_all('newtheorem')
+def joinLatexVerbatimNodes(nodelist, start: int, end: int):
+    return ''.join([node.latex_verbatim() for node in nodelist[start:end+1]])
+
+def getEnunciations(preamble_nodes) -> tuple[list[str], str]:
     enunciation_names = set()
-    for thm in newthms:
-        if len(thm.args) < 1:
-            logging.error(fr'Somehow a \newtheorem macro has less than one argument as parsed by TexSoup... exiting.')
-            sys.exit(1)
-        enunciation_names.add(str(thm.args[0].string))
-    return enunciation_names
+    start_idx, end_idx = -1, -1
+    for i, node in enumerate(preamble_nodes):
+        if node.isNodeType(LatexMacroNode) and node.macroname in {'theoremstyle', 'newtheorem'}:
+            if start_idx < 0:
+                start_idx = i
+            end_idx = i
+            if node.macroname == 'theoremstyle':
+                continue
+            ## otherwise try to process \newtheorem
+            node_args = node.nodeargd.argnlist
+            len_arg_spec = len(RECOGNIZED_CSNAMES[node.macroname])
+            if len(node_args) == len_arg_spec and len_arg_spec > 1:
+                arg_one = node_args[1]
+                try:
+                    enunciation_names.add(arg_one.nodelist[0].chars)
+                except Exception as e: ## currently would fail with \\newtheorem{%\nthm}{Theorem}, which I think is fine for now
+                    logging.warning(f"""! Attempting to extract the second argument of
+                    '{node.latex_verbatim()}' raised Exception {e};
+                    it's node.nodeargs[1] was {arg_one}; ignoring""")
+            else:
+                logging.warning(f"""! Malformed {node.macroname},
+                '{node.latex_verbatim()}', did not match it's argument specification:
+                {RECOGNIZED_CSNAMES[node.macroname]}""")
+    if start_idx < 0:
+        logging.warning("! No enunciations (newtheorem commands) found; continuing without them.")
+    enunciation_source = joinLatexVerbatimNodes(preamble_nodes, start_idx, end_idx)
+    return enunciation_names, enunciation_source
+
+def getEnvironmentSources(node, recognized_environments, environments):
+    """recognized environments as a dictionary with keys as the environment names
+    and values as a list of verbatim latex_code of said environment
+    This should preserve order, even though it's recursive since the nesting of nodes
+    is still in document order
+    Modify the passed environments dictionary
+    """
+    if node.isNodeType(LatexEnvironmentNode):
+        if node.envname in recognized_environments:
+            environments[node.envname] += [node.latex_verbatim()]
+        else:
+            for nested_node in node.nodelist:
+                getEnvironmentSources(nested_node, recognized_environments, environments)
+    elif node.isNodeType(LatexGroupNode):
+        for nested_node in node.nodelist:
+            getEnvironmentSources(nested_node, recognized_environments, environments)
+    else:
+        return
+    
+def getMetadataAndSelectEnvironments(preamble_nodes, document_node):
+    r"""we probably also want to track \footnotes and \captions, too, but I'll think about that later..."""
+    metadata = dict()
+    start_idx, end_idx = -1, -1
+    ## this assumes that there isn't weird nesting in the preamble
+    ## we'll probably have to account for that later with a recursive approach, like with markNode
+    ## and in extracting the figures, tables, and abstract
+    for i, node in enumerate(preamble_nodes): 
+        if node.isNodeType(LatexMacroNode) and node.macroname in METADATA_CSNAMES:
+            if start_idx < 0:
+                start_idx = i
+            end_idx = i
+            csname = node.macroname            
+            verbatim_contents = node.latex_verbatim()
+            if csname in metadata and csname in UNIQUE_FIELDS:
+                logging.warning(f"! Found more than one instance of unique field '{csname}', overwriting earlier instance.")
+                metadata[csname] = verbatim_contents
+            elif csname in metadata:
+                metadata[csname] = [metadata[csname], verbatim_contents] if type(metadata[csname]) != list else metadata[csname] + [verbatim_contents]
+            else:
+                metadata[csname] = verbatim_contents
+    metadata_source = joinLatexVerbatimNodes(preamble_nodes, start_idx, end_idx)
+
+    environments = {env_name: [] for env_name in TRACKED_ENVIRONMENTS}
+    getEnvironmentSources(document_node, TRACKED_ENVIRONMENTS, environments)
+    
+    num_abstract = len(environments['abstract'])
+    if num_abstract == 0:
+        logging.warning("No abstract found in getMetadataAndSelectEnvironments()")
+    elif num_abstract > 1:
+        logging.warninig(f"! Found {num_abstract} abstracts; there should only be one")
+
+    return metadata, metadata_source, environments
 
 def runPDFlatex(tex_filename: Path, runs: int = 2) -> subprocess.CompletedProcess:
     """Run pdflatex. Run twice by default to resolve cross-references"""
@@ -95,15 +209,11 @@ def runPDFlatex(tex_filename: Path, runs: int = 2) -> subprocess.CompletedProces
         )
         
         if result.returncode != 0:
-            logging.error(f"pdflatex failed on pass {i+1} of {tex_filename.name}: {result.stderr}.")
+            logging.error(f"""pdflatex failed on pass {i+1} of {tex_filename.name}: {result.stderr}. Output:
+            {result.stdout}""")
             sys.exit(1)
         
     return result
-
-def writeStringToFile(string: str, filename: Path):
-    with open(filename, 'w', encoding = 'utf-8') as f:
-        f.write(string)
-    return 0
 
 def transferTeXFiles(tex_filename: Path, files_to: Path, move_or_copy: str):
     tex_file_dot_star = f"{tex_filename.stem}.*"
@@ -137,20 +247,43 @@ def runDiffpdf(first_fname: str, second_fname: str, output_dir: Path) -> subproc
 
     return result
 
-def markNode(latex_node, allowed_environments: set[str]) -> str:
+def markRequiredArg(node: LatexNode, recMark: Callable[[LatexNode], str]) -> str:
+    node_verbatim = node.latex_verbatim()
+    
+    def joinNodelist(transform: Callable[[LatexNode], str]) -> str:
+        return '{' + ''.join([transform(nested_node) for nested_node in node.nodelist]) + '}'
+
+    def markify(nested_node: LatexNode):
+        return recMark(nested_node)
+    
+    if node.isNodeType(LatexGroupNode) and node.delimiters == REQUIRED_ARG:
+        joined_verbatim_group = joinNodelist(lambda n: n.latex_verbatim())
+        if joined_verbatim_group != node_verbatim:
+            return node_verbatim
+        else:
+            return joinNodelist(markify)
+    else:
+        return node_verbatim
+
+def markArgnlist(argnlist: list[None | LatexNode], recMark) -> str:
+    return ''.join([markRequiredArg(node, recMark) if node != None else '' for node in argnlist])
+
+def markNode(start_node: LatexNode, allowed_environments: set[str], chars_node_match_regex: str) -> str:
+    """Recursively mark the passsed start_node"""
     counter = count(0)
-    def markStr(string, is_inline_math = False):
-        return rf'\markbox{{{"m" if is_inline_math else ""}{next(counter)}}}{{{string}}}'
+    def markStr(string: str, mark_identifier: str) -> str:
+        return rf'\markbox{{{mark_identifier}{next(counter)}}}{{{string}}}'
         
     def recMark(node):
+        node_verbatim = node.latex_verbatim()
         if node.isNodeType(LatexEnvironmentNode):
             verbatim_contents = ''.join([n.latex_verbatim() for n in node.nodelist]) #every LatexEnvironmentNode has a nodelist
-            reconstructed_whole = rf'\begin{{{node.envname}}}{verbatim_contents}\end{{{node.envname}}}'
-            if node.latex_verbatim() != reconstructed_whole:
-                # not sure if I should only check this if the environment is among allowed_environments                
-                # but it's safer to check every environment encountered
-                logging.error(f"pylatexenc environment node {node.latex_verbatim()} in markNode was malformed or parsed incorrectly")
-                logging.debug(f"{verbatim_contents} != {reconstructed_whole}")                
+            joined_whole = rf'\begin{{{node.envname}}}{verbatim_contents}\end{{{node.envname}}}'
+            ## could maybe only do the following check if the environment is among allowed_environments
+            ## but it's safer to check every encountered environment
+            if node_verbatim != joined_whole:
+                logging.error(f"Environment node '{node_verbatim}' in markNode was malformed or parsed incorrectly")
+                logging.debug(f"{verbatim_contents} != {joined_whole}")                
                 sys.exit(1)
             
             if node.envname in allowed_environments:
@@ -159,32 +292,55 @@ def markNode(latex_node, allowed_environments: set[str]) -> str:
                     marked_contents += recMark(nested_node)
                 return rf'\begin{{{node.envname}}}{marked_contents}\end{{{node.envname}}}'
             else:
-                return reconstructed_whole
-            
+                return joined_whole
         elif node.isNodeType(LatexMacroNode):
-            return node.latex_verbatim()
+            if node.macroname in MARK_CSNAMES:
+                return markStr(node_verbatim, '')
+            elif node.macroname == 'item':
+                return f'{node_verbatim}{{}} '
+            elif node.macroname == 'footnote':
+                ## well this is much too messy right now
+                len_arg_spec = len(RECOGNIZED_CSNAMES[node.macroname])
+                argnlist = node.nodeargd.argnlist
+                joined_verbatim_macro = rf"\{node.macroname}" + ''.join([n.latex_verbatim() if n != None else '' for n in argnlist])
+                
+                if node_verbatim != joined_verbatim_macro:
+                    logging.warning(f"""{node.macroname} verbatim, '{node_verbatim}', did not match joined verbatim,
+                    '{joined_verbatim_macro}'; ignoring...""")
+                    return node_verbatim
+                elif len(argnlist) != len_arg_spec:
+                    logging.warning(f"""{node.macroname}, {node_verbatim}, did not match argspec len:
+                    {len(argnlist)} != {len_arg_spec}""")
+                else:
+                    return rf"\{node.macroname}" + markArgnlist(argnlist, recMark)
+            else:
+                return node_verbatim
         elif node.isNodeType(LatexMathNode):
             if node.displaytype == 'inline':
-                return markStr(node.latex_verbatim(), is_inline_math = True)
+                return markStr(node_verbatim, MARK_IDENTIFIERS['inline math'])
             else:
-                return node.latex_verbatim()
+                return node_verbatim
         elif node.isNodeType(LatexCharsNode):
-            verb_str = node.latex_verbatim()
             ## mark every span in safe envs
-            marked_str, num_subs = re.subn(r"(?<=[\t ])[a-zA-Z0-9!?.,;:\-()]+(?=[\t ])", lambda m: markStr(m.group(0)), verb_str)
-            logging.debug(f"marked {num_subs} words in {verb_str}")
+            marked_str, num_subs = re.subn(chars_node_match_regex, lambda m: markStr(m.group(0), ''), node_verbatim)
+            ### >>>
+            ### logging.debug(f"marked {num_subs} words in {node_verbatim}")
+            ### <<<
             return marked_str
         elif node.isNodeType(LatexGroupNode):
-            # for the time being this means that naked group blocks are ignored---will need to revisit.
-            # Ultimately will likely use a different, simpler parser
-            return node.latex_verbatim()
+            ## for the time being this means that naked group blocks are ignored---will need to revisit
+            ## I have to be careful though, because if I encounter an unrecognized macro then one of 
+            ## its arguments could be in a group node.
+            return node_verbatim
+        elif node.isNodeType(LatexCommentNode):
+            return node_verbatim
         else:
-            logging.warning(f"Encountered unrecognized latex node '{node.nodeType()}' during markNode().\n Writing node.latex_verbatim(): '{node.latex_verbatim()}'")
-            return node.latex_verbatim()
+            logging.warning(f"Encountered unrecognized latex node '{node.nodeType()}' during markNode().\n Writing node.latex_verbatim(): '{node_verbatim}'")
+            return node_verbatim
         
-    return recMark(latex_node), next(counter)
+    return recMark(start_node), next(counter)
 
-def get_preamble_and_document(nodelist):
+def getPreambleAndDocument(nodelist):
     """Read in a list of pylatexenc.latexwalker.<Node>s and return the nodes which belong to the
        preamble and document"""
     num_document_envs = len(list(filter(lambda n: n.isNodeType(LatexEnvironmentNode) and n.envname == 'document', nodelist)))
@@ -294,24 +450,23 @@ def segment(tex_filename: str):
     
     tex_str = sourceAsString(tex_filename)
     latex_context = LatexContextDb()
-    # latex_context.add_context_category('macros',macros=[MacroSpec('mark', args_parser='{')])
-    nodelist, _, _ = LatexWalker(tex_str, latex_context=latex_context).get_latex_nodes(pos=0)
+
+    macro_specs = [std_macro(csname, args_format) for csname, args_format in RECOGNIZED_CSNAMES.items()]
+    
+    latex_context.add_context_category('segmentspec', macros=macro_specs)
+    
+    (nodelist, _, _) = LatexWalker(tex_str, latex_context=latex_context).get_latex_nodes(pos=0)
     
     if ''.join([node.latex_verbatim() for node in nodelist]) != tex_str:
         logging.error(f"Verbatim string tex source was not preserved after LatexWalker parsing. The parser has likely failed. Exiting unsuccessfully.")
         sys.exit(1)
+           
+    preamble_nodes, document_node = getPreambleAndDocument(nodelist)
 
-    logging.info("Getting soup...")
-    soup = TexSoup(tex_str)
-    logging.info("Finished getting soup.")
-
-    logging.info("Extracting metadata...")
-    enunciations = getEnunciations(soup)        
-    metadata = getMetadata(soup) # dict[str, list]
-    preambleNodes, documentNode = get_preamble_and_document(nodelist)
-
-    preamble_str = ''.join([node.latex_verbatim() for node in preambleNodes])
-    logging.info("Done.")
+    ## get metadata here >>>
+    enunciation_names, enunciation_source = getEnunciations(preamble_nodes)
+    metadata, metadata_source, environments = getMetadataAndSelectEnvironments(preamble_nodes, document_node)
+    ## <<<
 
     mark_out_filename = f'boxpositions_{tex_filename.stem}.txt'
     tex_write_commands = fr"""
@@ -331,8 +486,23 @@ def segment(tex_filename: str):
 
 """
     logging.info("Inserting marks...")
-    marked_document, num_marks = markNode(documentNode, ALLOWED_MARK_ENVIRONMENTS.union(enunciations))
+    ## form moving foward should be markNode(tex_str) that's it---it will find the enunciations and all
+
+    left = r"[\t $(\[]"
+    inside = r"[a-zA-Z0-9!?.,'`/;:\-()]+"
+    right = r"[\t $)\]]"
+    # chars_node_match_regex = rf"(?:^|(?<={left})){inside}(?:$|(?={right}))"
+    chars_node_match_regex = rf"(?<={left}){inside}(?={right})"    
+
+    ## old >>>
+    # chars_node_match_regex = r"(?<=[\t $])[a-zA-Z0-9!?.,;:\-()]+(?=[\t $])"
+    ## <<<
+    ##
+    
+    marked_document, num_marks = markNode(document_node, ALLOWED_MARK_ENVIRONMENTS.union(enunciation_names), chars_node_match_regex)
     logging.info("Done.")
+
+    preamble_str = ''.join([node.latex_verbatim() for node in preamble_nodes])    
     
     marked_tex = preamble_str + tex_write_commands + markbox_def + marked_document
 
