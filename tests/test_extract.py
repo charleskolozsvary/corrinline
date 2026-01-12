@@ -14,6 +14,8 @@ def shipPdfFilename(filename, output_dir, unique_ending):
 def drawAnnots(filename, output_dir, unique_ending = 'orig_annots'):
     """draw bounding boxes of original annotations in annotated PDF"""
     doc = pymupdf.open(filename)
+    save_filename = shipPdfFilename(filename, output_dir, unique_ending)
+    logging.info(f"Drawing original annotations to {save_filename}...")
     for page in doc:
         for annot in page.annots():
             if annot.type == PDF_ANNOT_TEXT:
@@ -21,7 +23,8 @@ def drawAnnots(filename, output_dir, unique_ending = 'orig_annots'):
             box = page.add_freetext_annot(annot.rect, '', text_color=(1,0,1))
             box.set_border(width=.5)
             box.update()
-    doc.save(shipPdfFilename(filename, output_dir, unique_ending))
+    doc.save(save_filename)
+    logging.info(f"Done.")
     return 0
 
 
@@ -41,7 +44,9 @@ def drawRobustAnnots(filename, robust_annots, output_dir, unique_ending = 'robus
 
 def drawLines(filename, output_dir, unique_ending = 'lines'):
     """draw the bounding boxes of the lines from page.get_text('dict', sort=True)['blocks']"""
+    logging.info(f"Drawing line boxes in {filename}...")
     doc = pymupdf.open(filename)
+    save_filename = shipPdfFilename(filename, output_dir, unique_ending)    
     for page in doc:
         blocks = page.get_text('dict', sort=True)['blocks']
         line_bbs = []
@@ -50,19 +55,18 @@ def drawLines(filename, output_dir, unique_ending = 'lines'):
             box = page.add_freetext_annot(bb, '', text_color=(1,0,0))
             box.set_border(width=.5)
             box.update()
-    doc.save(shipPdfFilename(filename, output_dir, unique_ending))
+    doc.save(save_filename)
+    logging.info(f"Done. Results saved to {save_filename}...")    
     return 0
 
-def drawEdits(filename, output_dir, unique_ending = 'edit_selections'):
+def drawEdits(filename, output_dir, edits, unique_ending = 'edit_selections'):
     """draw the bounding boxes for extracting the selected text and the Edit json for each annotation
        yes this is more messy than it needs to be
     """
-    edits = getEdits(filename)
-    
-    out_str = ''
     single_fname_prefix = Path(output_dir) / f'{Path(filename).stem}_{unique_ending}'
     singlepage_file_names = []
-    print(f'Extracting annotations from {filename}...')
+
+    logging.info("Drawing edit selections on PDF...")
     for i, edit in enumerate(edits):
         doc = pymupdf.open(filename)
         page_count = doc.page_count
@@ -72,13 +76,13 @@ def drawEdits(filename, output_dir, unique_ending = 'edit_selections'):
             doc.delete_pages(from_page=0, to_page=edit.pageno-1)
         assert doc.page_count == 1, "doc.page_count != 1"
         page = doc[0]
-        bbs = edit.debug_bbs
+        bbs = edit.selection_bbs
         colors = [(1,0,0), (0,0,1)] if edit.type == PDF_ANNOT_CARET[1] else [(1,.25,.25), (.25,1,.25), (.25,.25,1)]
         for j, bb in enumerate(bbs):
             if bb.width == 0:
                 continue
             if bb.height == 0:
-                print("bb height was zero that ... shouldn't happen, continuing with modified height")
+                logging.warning("bb height was zero that ... shouldn't happen, continuing with modified height")
                 bb.y1 = bb.y0 + 5 ## see endomorphism_ann page 13
             box = page.add_freetext_annot(bb, '', text_color=colors[j])
             box.set_border(width=.75)
@@ -88,13 +92,12 @@ def drawEdits(filename, output_dir, unique_ending = 'edit_selections'):
 
         single_save = f'{single_fname_prefix}_{i}.pdf'
         doc.save(single_save)
-
-        out_str += f'{single_save}\n{i} {edit}\n\n'
         
         singlepage_file_names.append(single_save)
-        print(f'{i+1:3d}/{len(edits):3d}')
+        logging.info(f'Drew edit selection {i+1:3d}/{len(edits):3d}')
 
-    print(f'done. Files written to {output_dir}')
+    logging.info(f'Done. Intermediate files written to {output_dir}.')
+    logging.info("Combining intermediate files...")
     combined_doc = pymupdf.open(filename)
     ## silly, but I'm not aware of a simpler way
     combined_doc.delete_pages(from_page=0, to_page=combined_doc.page_count-1)
@@ -104,14 +107,11 @@ def drawEdits(filename, output_dir, unique_ending = 'edit_selections'):
 
     combined_doc_filename = shipPdfFilename(filename, output_dir, unique_ending)
     combined_doc.save(combined_doc_filename)
-
-    print(f"Combined doc saved to {combined_doc_filename}...")
-    print("Deleting intermediate PDFs...")
+    logging.info(f"Done. Combined document saved to {combined_doc_filename}.")
     
+    logging.debug("Deleting intermediate PDFs...")
     os.system(f"rm {single_fname_prefix}_*.pdf")
-    
-    with open(f'{Path(output_dir) / Path(filename).stem}_edits_out.txt', 'w') as f:
-        f.write(out_str)
+    logging.debug("Done.")
 
     return 0
     
@@ -119,22 +119,46 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('filename')
     parser.add_argument("-d", "--debug", action="store_true", help='debugging output')
+    parser.add_argument("-l", "--draw-lines", action="store_true", help='draw line boxes')
+    parser.add_argument("-a", "--draw-annots", action="store_true", help='draw original and robust annot boxes')    
+    parser.add_argument("-e", "--draw-edits", action="store_true", help='draw edit selections')    
     
     args = parser.parse_args()
     _level = logging.DEBUG if args.debug else logging.INFO
     logging.basicConfig(level=_level, format='%(asctime)s - %(levelname)s - %(message)s')    
 
     filename = args.filename
-    doc = pymupdf.open(filename)
     
-    annots = getRobustAnnots(doc) # from extract.py
     bb_dir = Path('bbox_drawings')
-    
-    drawAnnots(filename, bb_dir)
-    drawRobustAnnots(filename, annots, bb_dir)
-    drawLines(filename, bb_dir)
 
-    drawEdits(filename, bb_dir)
+    if args.draw_annots:
+        drawAnnots(filename, bb_dir)
+
+        doc = pymupdf.open(filename)    
+        annots = getRobustAnnots(doc) # from extract.py    
+        drawRobustAnnots(filename, annots, bb_dir)
+
+    if args.draw_lines:
+        drawLines(filename, bb_dir)
+
+    logging.info(f'Running getEdits({filename})...')
+    edits = getEdits(filename)
+    logging.info("Done.")
+
+    if args.draw_edits:
+        drawEdits(filename, bb_dir, edits)
+
+    json_edits_dir = Path('extracted_edit_txts')
+    Path.mkdir(json_edits_dir, exist_ok=True)
+
+    json_edits_filename = f'{Path(json_edits_dir) / Path(filename).stem}_edits.txt'
+    logging.info(f"Writing list of json edits to {json_edits_filename}")
+    edits_str = ''
+    for i, edit in enumerate(edits):
+        edits_str += f'{i} {edit}\n\n'
+    with open(json_edits_filename, 'w') as f:
+        f.write(edits_str)
+    logging.info("Done.")
 
     
     

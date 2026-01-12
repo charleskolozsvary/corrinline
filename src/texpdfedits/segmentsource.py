@@ -17,7 +17,8 @@ import subprocess
 
 from collections.abc import Callable
 
-import pymupdf 
+import pymupdf
+import time
 
 RECOGNIZED_CSNAMES = {'emph': '{',
                       'textit': '{',
@@ -87,10 +88,10 @@ If there are 93 eqrefs on a page less than 50_000 pixels are marxed different
 (when using DPI = 175; the larger the DPI, the larger the number of pixel differences)
 And if a page breaks early by just one line the difference on that and subsequent pages is at
 least 275_000
-(based on from `diff-pdf teichmuller.pdf breakteich.pdf -v -s -m -g --output-diff=diff_break.pdf --dpi=175`),
+(based on from `diff-pdf teichmuller.pdf breakteich.pdf -v -s -m -g --output-diff=diff_break.pdf --dpi=175`), # also teichmuller.tex is now arxiv15.tex
 so I think marking a page as not different if it differs by less than 50_000 pixels at this DPI is quite conservative.
 """
-DIFFPDF_PER_PAGE_PIXEL_TOLERANCE = 100_000
+DIFFPDF_PER_PAGE_PIXEL_TOLERANCE = 80_000
 
 SCALED_POINTS_PER_TEX_POINT = 2 ** 16 # 65536
 
@@ -102,10 +103,10 @@ pymupdf and other modern pdf systems use
 TEX_POINTS_TO_PDF_POINTS_CONVERSION_RATIO = 72 / 72.27
 
 """
-allow for half a point discrepancy between x0 + width and x1
+allow a few point discrepancy between x0 + width and x1
 in boxinfoToPDFRectangle()
 """
-WORD_BOX_WIDTH_TOLERANCE = 10
+WORD_BOX_WIDTH_TOLERANCE = 6
 
 def sourceAsString(filename: Path) -> str:
     with open(filename, 'r', encoding = 'utf-8') as f:
@@ -117,8 +118,12 @@ def writeStringToFile(string: str, filename: Path):
         f.write(string)
     return 0
 
-def joinLatexVerbatimNodes(nodelist, start: int, end: int):
-    return ''.join([node.latex_verbatim() for node in nodelist[start:end+1]])
+def joinNodesVerbatim(nodelist, start: int = 0, end: int | None = None) -> str:
+    """return joined verbatim nodes from start to end inclusive"""
+    if end is None:
+        return ''.join([node.latex_verbatim() for node in nodelist[start:]])
+    else:
+        return ''.join([node.latex_verbatim() for node in nodelist[start:end+1]])
 
 def getEnunciations(preamble_nodes) -> tuple[list[str], str]:
     enunciation_names = set()
@@ -151,7 +156,7 @@ def getEnunciations(preamble_nodes) -> tuple[list[str], str]:
                 )
     if start_idx < 0:
         logging.warning("No enunciations (newtheorem commands) found; continuing without them.")
-    enunciation_source = joinLatexVerbatimNodes(preamble_nodes, start_idx, end_idx)
+    enunciation_source = joinNodesVerbatim(preamble_nodes, start_idx, end_idx)
     return enunciation_names, enunciation_source
 
 def getEnvironmentSources(node, recognized_environments, environments):
@@ -194,7 +199,7 @@ def getMetadataAndSelectEnvironments(preamble_nodes, document_node):
                 metadata[csname] = [metadata[csname], verbatim_contents] if type(metadata[csname]) != list else metadata[csname] + [verbatim_contents]
             else:
                 metadata[csname] = verbatim_contents
-    metadata_source = joinLatexVerbatimNodes(preamble_nodes, start_idx, end_idx)
+    metadata_source = joinNodesVerbatim(preamble_nodes, start_idx, end_idx)
 
     environments = {env_name: [] for env_name in TRACKED_ENVIRONMENTS}
     getEnvironmentSources(document_node, TRACKED_ENVIRONMENTS, environments)
@@ -305,7 +310,7 @@ def markMacro(node: LatexNode, recMark):
     else:
         return rf"\{node.macroname}" + markArgnlist(argnlist, recMark)
 
-def markNode(start_node: LatexNode, allowed_environments: set[str], chars_node_match_regex: str) -> str:
+def markNode(start_node: LatexNode, allowed_environments: set[str], chars_node_match_regex: str, job_id: str) -> str:
     """Recursively mark the passsed start_node"""
     counter = count(0)
     def markStr(string: str, mark_identifier: str) -> str:
@@ -314,7 +319,7 @@ def markNode(start_node: LatexNode, allowed_environments: set[str], chars_node_m
     def recMark(node):
         node_verbatim = node.latex_verbatim()
         if node.isNodeType(LatexEnvironmentNode):
-            verbatim_contents = ''.join([n.latex_verbatim() for n in node.nodelist]) #every LatexEnvironmentNode has a nodelist
+            verbatim_contents =  joinNodesVerbatim(node.nodelist) # every LatexEnvironmentNode has a nodelist
             joined_whole = rf'\begin{{{node.envname}}}{verbatim_contents}\end{{{node.envname}}}'
             # could maybe only do the following check if the environment is among allowed_environments
             # but it's safer to check every encountered environment
@@ -334,7 +339,7 @@ def markNode(start_node: LatexNode, allowed_environments: set[str], chars_node_m
             if node.macroname in MARKED_CSNAMES:
                 return markStr(node_verbatim, '')
             elif node.macroname == 'item':
-                return f'{node_verbatim}{{}}\\leavevmode ' # this helps and I think it's benign (from my testing so far)
+                return f'{node_verbatim}{{}}\\segmentgobble{{{job_id}}}\\leavevmode ' # this helps and I think it's benign (from my testing so far)
             # elif node.macroname in MARKED_CONTENTS_MACROS: 
             #     return markMacro(node, recMark)
             else:
@@ -374,11 +379,9 @@ def getPreambleAndDocument(nodelist):
         i += 1
     preamble_nodes = nodelist[:i]
     document_node = nodelist[i]
-    
-    if i+1 < len(nodelist):
-        logging.debug(f"Discarded {len(nodelist)-(i+1)} latex node(s) after `\\end{{document}}` during getPreambleAndDocument")
+    post_document_nodes = nodelist[i+1:]
 
-    return preamble_nodes, document_node
+    return preamble_nodes, document_node, post_document_nodes
 
 def texPointsToPDFpoints(tex_pts: float):
     return tex_pts * TEX_POINTS_TO_PDF_POINTS_CONVERSION_RATIO
@@ -399,13 +402,13 @@ def boxinfoToPDFRectangle(key: str, hbox, start_xy, end_xy):
     pgC, (x1, ey) = unzipPos(end_xy)
 
     if pgB != pgC:
-        logging.debug(f"box '{key}' spanned multiple pages ({pgA} {pgB} {pgC}; ignoring")
+        logging.debug(f"ignoring box '{key}': spanned multiple pages ({pgA} {pgB} {pgC}")
         return None
     if sy != ey:
-        logging.debug(f"box '{key}' start and end y positions were not equal: '{sy} != {ey}'; ignoring")
+        logging.debug(f"ignoring box '{key}': start and end y positions were not equal: '{sy} != {ey}'")
         return None
     if abs(x0 + width - x1) > WORD_BOX_WIDTH_TOLERANCE:
-        logging.debug(f"box '{key}' abs(x0 + width - x1) = abs({x0 + width} - {x1}) = {abs(x0 + width - x1)} > {WORD_BOX_WIDTH_TOLERANCE}; ignoring")
+        logging.debug(f"ignoring box '{key}': abs(x0 + width - x1) = {abs(x0 + width - x1)} > {WORD_BOX_WIDTH_TOLERANCE}")
         return None
 
     # lower y values are closer to the top of the page
@@ -465,141 +468,133 @@ def getWordBoxes(boxpositions_filename: Path, tot_num_boxes):
     logging.info(f"Used {num_used_boxes}/{tot_num_boxes} marked boxes.")
     return document_word_boxes
 
-def unMark(marked_string: str):
-    r"""Remove \markbox commands, keeping only the second argument's contents.
-    Maybe a little silly, but this appears to work and I know exactly how I inserted the markbox csnames, so
-    this should be fine
+
+def readBalancedBraces(idx, string):
+    """Read balanced braces, return (contents without outer braces, chars_read)."""
+    contents = ''
+    depth = 1  # Already past opening brace
+    chars_read = 0
+        
+    while idx < len(string) and depth > 0:
+        char = string[idx]
+        if char == '}':
+            depth -= 1
+        elif char == '{':
+            depth += 1
+            
+        if depth > 0:  # Don't include final closing brace
+            contents += char
+            
+        idx += 1
+        chars_read += 1
+        
+    if depth != 0:
+        logging.error('Unbalanced braces in marked string')
+        sys.exit(1)
+        
+    return contents, chars_read
+
+def unMarkWithPositions(marked_string: str, job_id: str) -> tuple[str, dict[str, tuple[int, int]]]:
+    r"""Remove \markbox commands and track positions of marked content.
+    
+    Returns:
+        (unmarked_string, mark_positions) where mark_positions maps mark_id -> (start, end)
+        Positions are in the unmarked string, with end being exclusive.
     """
-    
-    def readBalancedBraces(idx, string):
-        """Read balanced braces, return (contents without outer braces, chars_read)."""
-        contents = ''
-        depth = 1  # Already past opening brace
-        chars_read = 0
-        
-        while idx < len(string) and depth > 0:
-            char = string[idx]
-            if char == '}':
-                depth -= 1
-            elif char == '{':
-                depth += 1
-            
-            if depth > 0:  # Don't include final closing brace
-                contents += char
-            
-            idx += 1
-            chars_read += 1
-        
-        if depth != 0:
-            logging.error('Unbalanced braces in marked string')
-            sys.exit(1)
-        
-        return contents, chars_read
-    
+    # remove the '{}\segmentgobble{<job_id>}\leavevmode ' from marked_string first
+    marked_string, num_subs = re.subn(rf'\{{\}}\\segmentgobble\{{{job_id}\}}\\leavevmode ', '', marked_string)
+    logging.debug(rf"Removed {num_subs} '{{}}\segmentgobble{{{job_id}}}\leavevmode 's")
+
     unmarked_str = ''
+    mark_positions = {}
+    current_pos = 0  # Position in unmarked string
     idx = 0
     MARKBOX = '\\markbox{'
     
     while idx < len(marked_string):
         if marked_string[idx:].startswith(MARKBOX):
             idx += len(MARKBOX)
-            # Skip first arg
-            _, chars_read = readBalancedBraces(idx, marked_string)
+            # Read first arg (mark_id)
+            mark_id, chars_read = readBalancedBraces(idx, marked_string)
             idx += chars_read + 1  # +1 for opening brace of second arg
-            # Keep second arg
+            # Read second arg (content)
             content, chars_read = readBalancedBraces(idx, marked_string)
+            
+            # Track position in unmarked string
+            start_pos = current_pos
+            end_pos = current_pos + len(content)
+            mark_positions[mark_id] = (start_pos, end_pos)
+            
+            # Add content to unmarked string
             unmarked_str += content
+            current_pos += len(content)
             idx += chars_read
         else:
             unmarked_str += marked_string[idx]
+            current_pos += 1
             idx += 1
     
-    return unmarked_str
+    return unmarked_str, mark_positions
 
-def rectangleToLatex(pageno: int, in_rectangle: pymupdf.Rect, document_word_boxes: dict[int, dict[str, pymupdf.Rect]], marked_document: str) -> str | None:
-    r"""
+def validateMarkPositions(mark_positions: dict[str, tuple[int, int]], document_word_boxes: dict[int, dict[str, pymupdf.Rect]]) -> None:
+    """Verify that no mark positions overlap and that the mark position keys are a superset of the document word box keys. Raises ValueError if they do.
+    Also verify that document_word_boxes.keys() is a subset of in mark_positions.keys()
     Args:
-        pageno: Zero-indexed page number
-        in_rectangle: Rectangle on the page (pymupdf format)
-        document_word_boxes: Dictionary from getWordBoxes()
-        marked_document: Marked source LaTeX as a string
-
-    Returns: The (unmarked) source latex which "contains" the rectangle.
-
-    Given some rectangle, we find the closest word box before and after that rectangle
-    then return all of the LaTeX between (and including) those two word boxes.
-
-    If the inputted rectangle intersects at least one word box, finding the preceding and following word boxes is simple:
-    out of the word boxes that intersect find the one with the smallest id and the one with the largest id, then just use the first
-    existing id
-    
-    (because not all \markbox commands make it to the document_work_boxes dictionary) # actually, I insert all the markboxes regardless, they're in
-    the source; it's just that some of them don't make it to document_word_boxes, but that doesn't matter---I only need the keys, not the boxes to
-    extract the LaTeX.
-    
-    before the smallest and the next existing id
-    after the largest.
-
-    If the inputted rectangle doesn't intersect any document_word_boxes, then the "before" box is the one with the largest id whose baseline (y1) is less than
-    (higher up the page) than the baseline of the inputted box, and the "after" box is the one with the smallest id whose baseline is greater than the inputted box.
+        mark_positions: dict mapping mark_id -> (start, end) positions
+    Raises:
+        ValueError: if any two marks overlap
     """
+    # Sort by start position
+    sorted_marks = sorted(mark_positions.items(), key=lambda x: x[1][0])
 
-    page_word_boxes = document_word_boxes[pageno]
-    intersecting_word_boxes = {k: rect for k, rect in page_word_boxes.items() if in_rectangle.intersects(rect)} 
-
-    def getNumericComponent(k: str) -> int:
+    def numericComponent(k: str) -> int:
         return int(''.join(filter(str.isdigit, k)))
-
-    def getPrevKey(key: str, all_keys: list[str]) -> str | None:
-        target_num = getNumericComponent(key)        
-        prev_keys = [k for k in all_keys if getNumericComponent(k) < target_num]
-        return max(prev_keys, key = getNumericComponent) if prev_keys else None
-
-    def getNextKey(key: str, all_keys: list[str]) -> str | None:
-        target_num = getNumericComponent(key)
-        next_keys = [k for k in all_keys if getNumericComponent(k) > target_num]
-        return min(next_keys, key = getNumericComponent) if next_keys else None        
-
-    all_keys = [k for page_boxes in document_word_boxes.values() for k in page_boxes.keys()]
     
-    if intersecting_word_boxes:
-        logging.debug(f"Rectangle {in_rectangle} on page {pageno} did intersect word boxes")
-        min_key = min(intersecting_word_boxes.keys(), key = getNumericComponent)
-        max_key = max(intersecting_word_boxes.keys(), key = getNumericComponent)
-        before_key = getPrevKey(min_key, all_keys)
-        after_key = getNextKey(max_key, all_keys)
-    else:
-        # the boxes before and after are on the same page
-        logging.debug(f"No word box was intersected by rectangle {in_rectangle} on page {pageno}")
-        boxes_before = {k: rect for k, rect in page_word_boxes.items() if rect.y0 < in_rectangle.y0}
-        boxes_after = {k: rect for k, rect in page_word_boxes.items() if rect.y0 > in_rectangle.y0}
-        before_key = max(boxes_before.keys(), key=getNumericComponent) if boxes_before else None
-        after_key = min(boxes_after.keys(), key=getNumericComponent) if boxes_after else None
+    # Check each adjacent pair
+    for i in range(len(sorted_marks) - 1):
+        id_i, (start_i, end_i) = sorted_marks[i]
+        id_j, (start_j, end_j) = sorted_marks[i + 1]
 
-    if before_key is None:
-        before_key = max(document_word_boxes[pageno-1].keys(), key=getNumericComponent) if pageno-1 in document_word_boxes else None
+        if numericComponent(id_i) >= numericComponent(id_j):
+            raise ValueError(
+                f"mark ids '{id_i}' and '{id_j}' are not in source string position order: "
+                f"mark id '{start_i}' has start pos '{start_i}' and mark id '{id_j}' has start pos '{start_j}'"
+            )
+        
+        # Validity check for current mark
+        if start_i >= end_i:
+            raise ValueError(
+                f"Invalid mark position for '{id_i}': "
+                f"start ({start_i}) >= end ({end_i})"
+            )
+        
+        # Since sorted by start, only need to check if previous end > next start
+        if start_j < end_i:
+            raise ValueError(
+                f"Mark positions overlap: "
+                f"mark '{id_i}' at [{start_i}, {end_i}) overlaps with "
+                f"mark '{id_j}' at [{start_j}, {end_j})"
+            )
+    
+    # Check last mark validity
+    if sorted_marks:
+        id_last, (start_last, end_last) = sorted_marks[-1]
+        if start_last >= end_last:
+            raise ValueError(
+                f"Invalid mark position for '{id_last}': "
+                f"start ({start_last}) >= end ({end_last})"
+            )
 
-    if after_key is None:
-        after_key = min(document_word_boxes[pageno+1].keys(), key=getNumericComponent) if pageno+1 in document_word_boxes else None
+    # check that mark_positions.keys() is a superset of all document_word_boxes mark_ids
+    for page_boxes in document_word_boxes.values():
+        for mark_id in page_boxes.keys():
+            if mark_id not in mark_positions:
+                raise ValueError(
+                    f"mark_id '{mark_id}' not in mark_positions. "
+                    "mark_positions.keys() is not a superset of all mark_ids in document_word_boxes."
+                )
 
-    if before_key is None or after_key is None:
-        # This should only happen if the rectangle is before or after ALL marked boxes in the document.
-        # This is a situation where we should check metadata, but I'll have to think more about that in general
-        logging.warning(f"Cannot extract LaTeX: Rectangle outside marked boxes (before_key={before_key}, after_key={after_key})")
-        return None
-
-    logging.debug(f"Before key is {before_key} and after key is {after_key}")
-
-    pattern = rf'(\\markbox\{{{before_key}\}}.*?\\markbox\{{{after_key}\}}.*?)(?:\\markbox|$)'
-    m = re.search(pattern, marked_document, re.DOTALL)
-
-    if m is None:
-        logging.warning(rf"Cannot extract LaTeX: Regex search for LaTeX between \markbox macros with keys '{before_key}' and '{after_key}' failed")
-        return None
-
-    marked_latex = m.group(1)
-
-    return unMark(marked_latex)
+    logging.info("All mark positions are valid.")
 
 def segment(tex_filename: str):
     tex_filename = Path(tex_filename)
@@ -613,12 +608,12 @@ def segment(tex_filename: str):
     # parse LaTeX file
     logging.info(f"Parsing {tex_filename}...")
     (nodelist, _, _) = LatexWalker(tex_str, latex_context=latex_context).get_latex_nodes(pos=0)
-    
-    if ''.join([node.latex_verbatim() for node in nodelist]) != tex_str:
+
+    if joinNodesVerbatim(nodelist) != tex_str:
         logging.error(f"Verbatim string tex source was not preserved after LatexWalker parsing; the parser has likely failed.")
-        sys.exit(1)
+        sys.exit(1)        
            
-    preamble_nodes, document_node = getPreambleAndDocument(nodelist)
+    preamble_nodes, document_node, post_document_nodes = getPreambleAndDocument(nodelist)
     logging.info("Done.")
 
     # get metadata
@@ -641,7 +636,7 @@ def segment(tex_filename: str):
 \newwrite\markfile
 \immediate\openout\markfile={boxpositions_filename}
 """
-    markbox_def = r"""
+    markbox_defs = r"""
 \newcommand{\markbox}[2]{%
   \setbox0=\hbox{#2}%
   \immediate\write\markfile{#1:pwhd:\the\value{page}:\the\wd0:\the\ht0:\the\dp0}%
@@ -652,24 +647,25 @@ def segment(tex_filename: str):
   \write\markfile{#1:epxy:\the\value{page}:\the\pdflastxpos:\number\dimexpr\pdfpageheight-\pdflastypos sp\relax:}%
 }
 
+\newcommand{\segmentgobble}[1]{}
+
 """
+    job_id = f'segment{int(time.time())}'
+    
     logging.info("Inserting marks...")
 
     left = r"[\t $(]"
     inside = r"[a-zA-Z0-9!?.,'`/;:\-()]+"
     right = r"[\t $)]"
-    chars_node_match_regex = rf"(?<={left}){inside}(?={right})"    
-
-    # old >>>
-    # chars_node_match_regex = r"(?<=[\t $])[a-zA-Z0-9!?.,;:\-()]+(?=[\t $])"
-    # <<<
+    chars_node_match_regex = rf"(?<={left}){inside}(?={right})"
     
-    marked_document, num_marks = markNode(document_node, ALLOWED_MARK_ENVIRONMENTS.union(enunciation_names), chars_node_match_regex)
+    marked_document, num_marks = markNode(document_node, ALLOWED_MARK_ENVIRONMENTS.union(enunciation_names), chars_node_match_regex, job_id)
     logging.info("Done.")
 
-    preamble_str = ''.join([node.latex_verbatim() for node in preamble_nodes])    
+    preamble_str = joinNodesVerbatim(preamble_nodes)
+    post_document_str = joinNodesVerbatim(post_document_nodes)
     
-    marked_tex = preamble_str + tex_write_commands + markbox_def + marked_document
+    marked_tex = preamble_str + tex_write_commands + markbox_defs + marked_document + post_document_str
 
     # save at first the marked file to the same directory as the input tex_filename, then move it after pdflatex
     marked_filename = tex_filename.parent / f"{tex_filename.stem}_marked{tex_filename.suffix}"
@@ -698,9 +694,19 @@ def segment(tex_filename: str):
 
     document_word_boxes = getWordBoxes(tmp_dir / boxpositions_filename, num_marks)
 
-    # I should delete the tmp directory at this point I guess
+    # I should eventually delete the tmp directory at this point
+
+    # do not concatenate the inserted preamble definitions 
+    unmarked_str, mark_positions = unMarkWithPositions(preamble_str + marked_document + post_document_str, job_id)
+
+    if unmarked_str != tex_str:
+        logging.warning("Unmarked LaTeX does NOT match original LaTeX! I need to elevate this to an error later.")
+
+    validateMarkPositions(mark_positions, document_word_boxes)
+
+    # segment should output all the information necessary for rectangleToLatex in prompt.py
     
-    return num_marks, marked_tex, document_word_boxes, all_metadata
+    return num_marks, marked_tex, unmarked_str, mark_positions, document_word_boxes, all_metadata
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog = 'python segmentsource.py',

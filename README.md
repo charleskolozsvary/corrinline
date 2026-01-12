@@ -63,36 +63,42 @@ we have
 
 ```
 
-From my simple testing so far of manually quererying LLMs with prompts like these, the results are fairly promising, especially given how little context I've provided for carrying out the edits. Of course there are many current limitations which make this project very removed from being production-ready, but I think the basic potential is made clear. And I think the limitations can eventually be addressed with more dedicated information retrieval and improved prompting.
+From my simple testing so far of manually quererying LLMs with prompts like these, the results are fairly promising, especially given how little context I've provided for carrying out the edits. Of course there are many current limitations which make this project very removed from being production-ready, but I think the basic potential is made clear. And I think the limitations can eventually be addressed with further dedicated information retrieval and improved prompting.
 
 An overview of what still needs to be implemented is included below in very roughly decreasing importance.
 
-# Future work
+# Next steps
 As mentioned above, the project in it's current state mostly demonstrates the potential of automating corrections, but there are a number of critical
 components which still need to be addressed for the goal to be accomplished robustly.
 
 ## Resolving source update conflicts
-The current plan is to give individual prompts to fix each edits (we can maybe expand the scope and give multiple edits at a time later), and this works well when the edits don't overlap. But if there are two edits on the same line of the PDF, the same underlying source will be changed both times, and naively composing the changes would result in a conflict.
+The current plan is to give individual prompts to fix each correction (we can maybe expand the scope and give multiple corrections at a later time), and this works well when the corrections don't overlap. But if there are two corrections on the same line of the PDF, the same underlying source will be changed both times, and naively composing the changes would result in a conflict.
 
 Off the top of my head, I see two approaches to this:
 (1) cleverly process the conflict resolution
 (2) update the source with each edit
 
-(2) seems like the way to go, though it could have a downside of introducing drift between the PDF selection text and the latex source, but maybe that won't actually be an issue. But I haven't spent a lot of time thinking about this issue in general, so it's not worth speculating further right now. 
+(2) seems like the way to go, though it could have a downside of introducing drift between the PDF selection text and the latex snippet, but maybe that won't actually be an issue.
+
+I think for sure I need to go with (2). I'll first identify which corrections actually have overlapping source. This won't be hard because I already have the
+start and end positions of the source snippets in the original LaTeX file as a string. (Each snippet is just `tex_str[start_snippet:end_snippet]` in python.)
 
 ## Insufficient context
-One major limitation right now is when the local latex source around an edit doesn't actually contain what needs to be changed. Like when an item in an enumerate is highlighted and the local source LaTeX extracted doesn't include the `\begin{enumerate}`.
+One major limitation right now is when the LaTeX snippet doesn't actually contain what needs to be changed. Like when an item in an enumerate is highlighted and
+the snippet doesn't include the `\begin{enumerate}` to modify.
+
+I could specifically identify snippets that have `\item` in them and then extend the snippet to where the enumerate or itemize begins, but that could also make the snippet too large if the list is long.
 
 ## Identifying edits which should be ignored
-Often edits will start with AU: or PE: (for the author or production editor) or will ultimately address someone who is not the current compositor of the corrections. I.e., the edit is not to be acted upon. These should not be hard to identify one way or another, but it still has to be done, so I write it here.
+Often edits will start with AU: or PE: (for the author or production editor) or will ultimately address someone who is not the current compositor of the corrections. I.e., the edit is not to be acted upon. These should not be hard to identify one way or another, but it still has to be done. I've considred trying to do this in the prompt, but I think it is best to leave as little as necessary to the LLM, and not for it to remember which corrections it does or does not need to do.
+
+I could make a simple flag that if AU: or PE: is present in the main comment box, I skip that correction.
 
 ## Dedicated metadata, bibliography, and float processing
-Right now the source extraction excells when the comment is in the normal body of the document. But when an edit asks to change something
-whose source lives in a metadata command like `\author` or is in a float caption, there's no special handling for those cases and rectangleToLatex will likely fail.
+Right now the source extraction excells when the annotation is in the normal body of the document. But when an edit asks to change something
+whose source lives in a metadata command like `\author` or is in a float caption or footnote, there's no special handling for those cases and rectangleToLatex will fail.
 
-It also looks like source in the bibliography is not getting extracted as consistantly as I would hope.
-
-But thankfully these elements are themselves very specific in form and contained, so I think I can do dedicated processing for them which will work well enough.
+But thankfully these elements are themselves very specific in form and are relatively infrequent, so I think I can do dedicated processing for them which will work well enough.
 
 ## Multi-line selections
 When an annotation selects text on more than one line, it's bounding box encompases all lines of selected text, no longer just the marked text (as it would be

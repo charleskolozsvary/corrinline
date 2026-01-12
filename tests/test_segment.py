@@ -1,4 +1,5 @@
-from texpdfedits.segmentsource import segment, getWordBoxes, rectangleToLatex
+from texpdfedits.segmentsource import segment, getWordBoxes
+from texpdfedits.prompt import rectangleToLatex
 import logging
 import argparse
 import pymupdf
@@ -34,7 +35,15 @@ def drawWordBoxes(pdf_filename, document_word_boxes, output_dir):
     logging.info("Done.")
     return 0
 
-def testRectangleToLatex(pageno: int, in_rectangle: pymupdf.Rect, document_word_boxes: dict[int, dict[str, pymupdf.Rect]], marked_document: str, pdf_filename, output_dir):
+def testRectangleToLatex(
+        pageno: int,
+        in_rectangle: pymupdf.Rect,
+        document_word_boxes: dict[int, dict[str, pymupdf.Rect]],
+        mark_positions: dict[str, tuple[int, int]],
+        tex_str: str,
+        pdf_filename: str,
+        output_dir: str
+) -> None:
     word_boxes_file = Path(output_dir) / f'{Path(pdf_filename).stem}_word_boxes.pdf'    
     save_file_name = Path(output_dir) / f'{Path(pdf_filename).stem}_rectangle_test.pdf'
 
@@ -49,16 +58,16 @@ def testRectangleToLatex(pageno: int, in_rectangle: pymupdf.Rect, document_word_
     box.set_border(width=.5)
     box.update()
 
-    latex = rectangleToLatex(pageno, in_rectangle, document_word_boxes, marked_document)
+    latex_snippet, source_positions = rectangleToLatex(pageno, in_rectangle, document_word_boxes, mark_positions, tex_str)
 
     logging.info(
         f"Here's the latex extracted by the rectangle drawn on {save_file_name}\n```latex\n"
-        rf"{latex}"
+        rf"{latex_snippet}"
         "\n```"
     )
 
-    if latex is not None:
-        latex_box = page.add_freetext_annot((5,5,350,350), latex, text_color=(1,.25,.7), fontsize=8, fontname="Cour")
+    if latex_snippet is not None:
+        latex_box = page.add_freetext_annot((5,5,350,350), latex_snippet, text_color=(1,.25,.7), fontsize=8, fontname="Cour")
         latex_box.set_border(width=.5)
         latex_box.update()
 
@@ -98,12 +107,12 @@ if __name__ == '__main__':
     else:
         in_recpage = 0
 
-    num_boxes, marked_tex, document_word_boxes, all_metadata = segment(args.filename)
+    num_marks, marked_tex, unmarked_str, mark_positions, document_word_boxes, all_metadata = segment(args.filename)
     
     output_dir = 'bbox_drawings'
     pdf_filename = Path(args.filename).parent / f'{Path(args.filename).stem}.pdf'
         
-    testRectangleToLatex(in_recpage, in_rectangle, document_word_boxes, marked_tex, pdf_filename, output_dir)
+    testRectangleToLatex(in_recpage, in_rectangle, document_word_boxes, mark_positions, unmarked_str, pdf_filename, output_dir)
 
     if args.drawboxes:
         drawWordBoxes(pdf_filename, document_word_boxes, output_dir)

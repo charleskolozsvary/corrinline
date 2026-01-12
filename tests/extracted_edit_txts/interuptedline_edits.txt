@@ -1,4 +1,3 @@
-bbox_drawings/interuptedline_edit_selections_0.pdf
 0 {
     "pageno": 0,
     "type": "Replace",
@@ -6,10 +5,9 @@ bbox_drawings/interuptedline_edit_selections_0.pdf
         "comment": "\\dots something\\dots{}",
         "responses": []
     },
-    "selection": "Here <Replace>is a line</Replace> which has"
+    "PDF text selection": "Here <Replace>is a line</Replace> which has"
 }
 
-bbox_drawings/interuptedline_edit_selections_1.pdf
 1 {
     "pageno": 0,
     "type": "Replace",
@@ -17,10 +15,9 @@ bbox_drawings/interuptedline_edit_selections_1.pdf
         "comment": "Now normal",
         "responses": []
     },
-    "selection": "middle. What a mess. <Replace>i=0\nAnd some more</Replace> words, too."
+    "PDF text selection": "middle. What a mess. <Replace>And some more</Replace> words, too."
 }
 
-bbox_drawings/interuptedline_edit_selections_2.pdf
 2 {
     "pageno": 0,
     "type": "Caret",
@@ -28,6 +25,6 @@ bbox_drawings/interuptedline_edit_selections_2.pdf
         "comment": ",",
         "responses": []
     },
-    "selection": "b−β\nα<Caret></Caret>"
+    "PDF text selection": "b−β<Caret></Caret>"
 }
 

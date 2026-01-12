@@ -78,18 +78,18 @@ class Edit:
     }
 
     """
-    def __init__ (self, _pageno, _type, _message, _selection, _selection_bbs, _ann_line_rect):
+    def __init__ (self, _pageno, _type, _message, _selection, _selection_bbs, _selection_line_rect):
         self.pageno = _pageno 
         self.type = _type
         self.message = _message
         self.selection = _selection
         self.selection_bbs = _selection_bbs # will not be sent to the model
-        self.ann_line_rect = _ann_line_rect # will also not be sent to the model, but is used in segmentsource routines
+        self.selection_line_rect = _selection_line_rect # will also not be sent to the model, but is used in segmentsource routines
         
-    def __str__ (self):
+    def __str__ (self): # json is getting scrapped for markdown, but this is still fine for debugging
         return json.dumps({
-            "pageno": self.pageno, # will perhaps not ultimately give to the model
-            "type": self.type,
+            "pageno": self.pageno, # will probably not ultimately give to the model
+            "type": self.type, 
             "message": {
                 "comment": self.message['comment'],
                 "responses": self.message['responses']
@@ -143,7 +143,7 @@ def normalizeLineRectYs(line_bb, line_bbs):
     lines_after = list(filter(lambda bb: bb[1] > top_thresh, lines_after))
     # <<<
 
-    # plus or minus half a point to prevent intersection
+    # plus or minus fraction of a point to prevent intersection
     buff = 0.25
     
     # set y0 to below lowest baseline of lines before
@@ -292,7 +292,8 @@ def getResponses(annot, all_responses):
             resps_by_type[resp.type].append(resp)
 
     for ann_type, resps in resps_by_type.items():
-        resps_by_type[ann_type] = sorted(resps, key = lambda r: r.info['creationDate'])
+        # sort responses by creation date
+        resps_by_type[ann_type] = sorted(resps, key = lambda r: r.info['creationDate']) 
     
     return resps_by_type
 
@@ -334,14 +335,18 @@ def getEdits(filename):
     doc = pymupdf.open(filename)
     robust_annots = getRobustAnnots(doc)
     all_responses = getAllResponses(robust_annots)
-    
-    corrections = []
+
+    target_num_edits = 0
+    logging.info("Turning annotations into edits...")
+    edits = []
     for pageno, page in enumerate(doc):
-        for annot in robust_annots[pageno]: 
+        for annot in robust_annots[pageno]:
             if annot.irt_xref != 0:
                 # only true for text responses and annotations which combine
                 # with another to make an annotation of type 'Replace'
                 continue
+            target_num_edits += 1
+            
             responses = getResponses(annot, all_responses)
             text_responses = responses[PDF_ANNOT_TEXT] if PDF_ANNOT_TEXT in responses else []
             text_responses = [resp.info['content'] for resp in text_responses]
@@ -371,12 +376,15 @@ def getEdits(filename):
             res = getSelection(annot, doc)
             if res is None:
                 # I don't think I've seen this happen before in testing, so 
-                logging.warning("getSelection() returned None; skipping")
+                logging.warning("getSelection() returned None; skipping---did not produce an edit for this annotation")
                 continue
-            selection_text, selection_bbs, ann_line_rect = getSelection(annot, doc)
-            corrections.append(Edit(annot.pageno, annot.type[1], message, selection_text, selection_bbs, ann_line_rect))
-                
-    return corrections
+            
+            selection_text, selection_bbs, selection_line_rect = getSelection(annot, doc)
+            edits.append(Edit(annot.pageno, annot.type[1], message, selection_text, selection_bbs, selection_line_rect))
+        logging.info(f"Processed annotations on page {pageno:3d}/{doc.page_count-1:3d}")
+        
+    logging.info(f"Produced {len(edits)} edits from {target_num_edits} PDF annotations")
+    return edits
             
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog = 'python extract.py',
@@ -391,6 +399,6 @@ if __name__ == '__main__':
     
     logging.basicConfig(level=_level, format='%(asctime)s - %(levelname)s - %(message)s')
     
-    corrections = getEdits(filename)
-    for cor in corrections:
-        print(cor)
+    edits = getEdits(filename)
+    for edit in edits:
+        print(edit)

@@ -1,4 +1,6 @@
 
+# 0
+
 ## Type
 StrikeOut
 
@@ -24,7 +26,7 @@ another reply
 stand the failure of the “Flat Orbit Conjecture” in higher curvature regimes1<StrikeOut>.</StrikeOut>
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 to understand the failure of the ``Flat Orbit Conjecture'' in higher curvature regimes\footnote{
 Originally conjectured by P.\ Alexandrov, the Flat Orbit Conjecture proposed that all $\lambda$-periodic orbits of a $\mathrm{CAT}(0)$ space are isometric to Euclidean circles. 
@@ -37,8 +39,10 @@ This is now known to be false in dimensions $\geq 3$ due to \cite{hubard23}.}.
 Let $(X,d)$ 
 ```
 
---------------
+---
 
+
+# 1
 
 ## Type
 Caret
@@ -53,7 +57,7 @@ Caret
 stand the failure of the “Flat Orbit Conjecture” in higher curvature regimes<Caret></Caret>1.
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 to understand the failure of the ``Flat Orbit Conjecture'' in higher curvature regimes\footnote{
 Originally conjectured by P.\ Alexandrov, the Flat Orbit Conjecture proposed that all $\lambda$-periodic orbits of a $\mathrm{CAT}(0)$ space are isometric to Euclidean circles. 
@@ -66,8 +70,10 @@ This is now known to be false in dimensions $\geq 3$ due to \cite{hubard23}.}.
 Let $(X,d)$ 
 ```
 
---------------
+---
 
+
+# 2
 
 ## Type
 Replace
@@ -82,7 +88,7 @@ Flat orbit conjecture
 stand the failure of the <Replace>“Flat Orbit Conjecture”</Replace> in higher curvature regimes1.
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 to understand the failure of the ``Flat Orbit Conjecture'' in higher curvature regimes\footnote{
 Originally conjectured by P.\ Alexandrov, the Flat Orbit Conjecture proposed that all $\lambda$-periodic orbits of a $\mathrm{CAT}(0)$ space are isometric to Euclidean circles. 
@@ -95,8 +101,10 @@ This is now known to be false in dimensions $\geq 3$ due to \cite{hubard23}.}.
 Let $(X,d)$ 
 ```
 
---------------
+---
 
+
+# 3
 
 ## Type
 StrikeOut
@@ -111,7 +119,7 @@ StrikeOut
 function is trivially constant when X is Euclidean, but varies dramatically in non<StrikeOut>-</StrikeOut>
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 $\lambda$-scaling.  
 This function is trivially constant when $X$ is Euclidean, but varies dramatically in non-flat $\mathrm{CAT}(0)$ manifolds.
@@ -120,8 +128,10 @@ This function is trivially constant when $X$ is Euclidean, but varies dramatical
 We 
 ```
 
---------------
+---
 
+
+# 4
 
 ## Type
 StrikeOut
@@ -136,7 +146,7 @@ StrikeOut
 StabG(x) = {g ∈G | g · x = x}<StrikeOut>,</StrikeOut>
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 stabilizer group
 \[
@@ -145,8 +155,10 @@ stabilizer group
 whose index 
 ```
 
---------------
+---
 
+
+# 5
 
 ## Type
 Replace
@@ -161,7 +173,7 @@ Replace
 L. H. was supported by NSF grant No. <Replace>314159357</Replace>. F. E. thanks the Department of Linguistics
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 in Figure~\ref{fig:curvature}. 
 
@@ -170,8 +182,10 @@ in Figure~\ref{fig:curvature}.
 Our principal 
 ```
 
---------------
+---
 
+
+# 6
 
 ## Type
 Replace
@@ -186,7 +200,7 @@ The first author
 <Replace>L. H.</Replace> was supported by NSF grant No. 314159357. F. E. thanks the Department of Linguistics
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 in Figure~\ref{fig:curvature}. 
 
@@ -195,8 +209,10 @@ in Figure~\ref{fig:curvature}.
 Our principal 
 ```
 
---------------
+---
 
+
+# 7
 
 ## Type
 Highlight
@@ -211,7 +227,7 @@ please move to Acknowledgments section.
 <Highlight>L. H. was supported by NSF grant No. 314159357. F. E. thanks the Department of Linguistics</Highlight>
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 in Figure~\ref{fig:curvature}. 
 
@@ -220,8 +236,10 @@ in Figure~\ref{fig:curvature}.
 Our principal 
 ```
 
---------------
+---
 
+
+# 8
 
 ## Type
 Replace
@@ -236,7 +254,7 @@ p <small cap>
 2. Background and <Replace>P</Replace>reliminaries
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 curvature regimes\footnote{
 Originally conjectured by P.\ Alexandrov, the Flat Orbit Conjecture proposed that all $\lambda$-periodic orbits of a $\mathrm{CAT}(0)$ space are isometric to Euclidean circles. 
@@ -249,8 +267,10 @@ This is now known to be false in dimensions $\geq 3$ due to \cite{hubard23}.}.
 Let $(X,d)$ 
 ```
 
---------------
+---
 
+
+# 9
 
 ## Type
 Replace
@@ -272,7 +292,7 @@ a reply to a replace annotation
 Figure 2. Low orbit foliations centered at x0<Replace>. E</Replace>ach ellipse repre-
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 $X$.
 \end{corollary}
@@ -294,8 +314,10 @@ $X$.
 Consider $X = \mathbb{H}^2$, 
 ```
 
---------------
+---
 
+
+# 10
 
 ## Type
 StrikeOut
@@ -310,7 +332,7 @@ StrikeOut
 sents an orbit of constant ∆(x, λ)<StrikeOut>.</StrikeOut>
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 $X$.
 \end{corollary}
@@ -332,8 +354,10 @@ $X$.
 Consider $X = \mathbb{H}^2$, 
 ```
 
---------------
+---
 
+
+# 11
 
 ## Type
 StrikeOut
@@ -348,7 +372,7 @@ StrikeOut
 Figure 1. A schematic of local orbit curvature under λ-perturbation<StrikeOut>.</StrikeOut>
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 in Figure~\ref{fig:curvature}. 
 
@@ -357,8 +381,10 @@ in Figure~\ref{fig:curvature}.
 Our principal 
 ```
 
---------------
+---
 
+
+# 12
 
 ## Type
 Replace
@@ -373,7 +399,7 @@ if and only if
 Then the orbit foliation Fλ(X) is quasi-uniform <Replace>if</Replace>f
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 $\lambda \in [1-\varphi,1+\varphi]$.  
 Then the orbit foliation $\mathcal{F}_\lambda(X)$ is quasi-uniform iff
@@ -383,8 +409,10 @@ Then the orbit foliation $\mathcal{F}_\lambda(X)$ is quasi-uniform iff
 (The 
 ```
 
---------------
+---
 
+
+# 13
 
 ## Type
 StrikeOut
@@ -399,7 +427,7 @@ StrikeOut
 <StrikeOut>(</StrikeOut>The proof is omitted for space reasons; see Appendix B.)
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 quasi-uniform iff
 \begin{equation}
@@ -411,8 +439,10 @@ quasi-uniform iff
 A quick 
 ```
 
---------------
+---
 
+
+# 14
 
 ## Type
 StrikeOut
@@ -427,7 +457,7 @@ StrikeOut
 (The proof is omitted for space reasons; see Appendix B.<StrikeOut>)</StrikeOut>
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 quasi-uniform iff
 \begin{equation}
@@ -439,8 +469,10 @@ quasi-uniform iff
 A quick 
 ```
 
---------------
+---
 
+
+# 15
 
 ## Type
 Highlight
@@ -455,7 +487,7 @@ COMP: set typewriter font <\texttt{}>
 We implemented a simple prototype in <Highlight>Julia 1.10</Highlight> to visualize Fλ(X) for synthetic
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 orbit divergence.
 
@@ -477,8 +509,10 @@ orbit divergence.
 We implemented a simple prototype in \textsf{Julia 1.10} to visualize $\mathcal{F}_\lambda(X)$ for synthetic $\mathrm{CAT}(0)$ 
 ```
 
---------------
+---
 
+
+# 16
 
 ## Type
 Highlight
@@ -493,7 +527,7 @@ small cap
 5. Numerical <Highlight>E</Highlight>xperiments
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 orbit divergence.
 
@@ -515,8 +549,10 @@ orbit divergence.
 We implemented 
 ```
 
---------------
+---
 
+
+# 17
 
 ## Type
 Highlight
@@ -531,7 +567,7 @@ lowercase
 4.1. Numerical <Highlight>S</Highlight>imulation. Following [3], we can simulate the orbit structure
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 geodesic boundaries.
 
@@ -540,8 +576,10 @@ Following \cite{euler24}, we can simulate the orbit structure numerically.
 Let 
 ```
 
---------------
+---
 
+
+# 18
 
 ## Type
 Highlight
@@ -556,7 +594,7 @@ lowercase
 4. Applications and <Highlight>E</Highlight>xamples
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 $X$.
 \end{corollary}
@@ -578,8 +616,10 @@ $X$.
 Consider $X = \mathbb{H}^2$, 
 ```
 
---------------
+---
 
+
+# 19
 
 ## Type
 Highlight
@@ -594,7 +634,7 @@ Move caption to top of table
 <Highlight>Table 1. Empirical orbit metrics under λ-iteration.</Highlight>
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 in Table~\ref{tab:data}.
 
@@ -617,8 +657,10 @@ $\lambda$ & $\overline{\Delta}$ & $\kappa$ \\
 A peculiar 
 ```
 
---------------
+---
 
+
+# 20
 
 ## Type
 Replace
@@ -633,7 +675,7 @@ Figure
 A peculiar observation (<Replace>Fig.</Replace> 5) was that for large λ, the orbit clusters exhibited a
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 in Table~\ref{tab:data}.
 
@@ -656,8 +698,10 @@ $\lambda$ & $\overline{\Delta}$ & $\kappa$ \\
 A peculiar observation (Fig.~\ref{fig:scatter}) was that for large $\lambda$, the orbit clusters exhibited a double-lobed 
 ```
 
---------------
+---
 
+
+# 21
 
 ## Type
 Highlight
@@ -672,7 +716,7 @@ put footnote after period
 double-lobed structure reminiscent of quasi-periodic tori in Hamiltonian systems<Highlight>2.</Highlight>
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 a double-lobed structure reminiscent of quasi-periodic tori in Hamiltonian systems\footnote{A referee pointed out that this might be a discretization artifact, but we were unable to reproduce it analytically.}. 
 
@@ -695,8 +739,10 @@ a double-lobed structure reminiscent of quasi-periodic tori in Hamiltonian syste
 Our experiments 
 ```
 
---------------
+---
 
+
+# 22
 
 ## Type
 Replace
@@ -711,14 +757,16 @@ Equation
 geometric invariant for the foliation type. However, <Replace>Eq.</Replace> (7) reveals an unexpected
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 a geometric invariant for the foliation type.  
 However, Eq.~(7) reveals an unexpected resonance 
 ```
 
---------------
+---
 
+
+# 23
 
 ## Type
 Replace
@@ -733,14 +781,16 @@ Replace
 geometric invariant for the foliation type. However, Eq. <Replace>(7)</Replace> reveals an unexpected
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 a geometric invariant for the foliation type.  
 However, Eq.~(7) reveals an unexpected resonance 
 ```
 
---------------
+---
 
+
+# 24
 
 ## Type
 Highlight
@@ -755,15 +805,17 @@ Highlight
 We hypothesize (Hypothesis <Highlight>5.1</Highlight>) that this anomaly corresponds to a hidden
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 discrete setting.
 
 We hypothesize (Hypothesis 5.1) that this anomaly corresponds to a hidden symmetry 
 ```
 
---------------
+---
 
+
+# 25
 
 ## Type
 Highlight
@@ -778,15 +830,17 @@ remove new paragraph: continue the last paragraph with this sentence.
 <Highlight>We hypothesize</Highlight> (Hypothesis 5.1) that this anomaly corresponds to a hidden
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 discrete setting.
 
 We hypothesize (Hypothesis 5.1) that this anomaly corresponds to a hidden symmetry 
 ```
 
---------------
+---
 
+
+# 26
 
 ## Type
 Replace
@@ -801,15 +855,17 @@ Replace
 resonance near λ = φ2 ≈2.618<Replace>. At</Replace> that point, the curvature-weighted orbit integral
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 type.  
 However, Eq.~(7) reveals an unexpected resonance near $\lambda = \varphi^2 \approx 2.618$.  
 At that point, the curvature-weighted orbit integral appears 
 ```
 
---------------
+---
 
+
+# 27
 
 ## Type
 Highlight
@@ -824,15 +880,17 @@ does this look right?
 resonance <Highlight>near λ = φ2 ≈</Highlight>2.618. At that point, the curvature-weighted orbit integral
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 type.  
 However, Eq.~(7) reveals an unexpected resonance near $\lambda = \varphi^2 \approx 2.618$.  
 At that point, the curvature-weighted orbit integral appears 
 ```
 
---------------
+---
 
+
+# 28
 
 ## Type
 Highlight
@@ -847,7 +905,7 @@ AU: is this necessary?
 <Highlight>2A referee pointed out that this might be a discretization artifact, but we were unable to</Highlight>
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 $\mathcal{G}$-action:
 \[
@@ -856,8 +914,10 @@ $\mathcal{G}$-action:
 which has 
 ```
 
---------------
+---
 
+
+# 29
 
 ## Type
 Highlight
@@ -872,7 +932,7 @@ place footnote after period
 will be discussed in a forthcoming note by the first author<Highlight>3.</Highlight>
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 phenomenon will be discussed in a forthcoming note by the first author\footnote{Submitted to the \emph{Journal of Approximate Topologies}, 2025.}.  
 
@@ -881,8 +941,10 @@ phenomenon will be discussed in a forthcoming note by the first author\footnote{
 While most 
 ```
 
---------------
+---
 
+
+# 30
 
 ## Type
 Highlight
@@ -897,7 +959,7 @@ place footnote after comma
 Although the convergence of this expansion is questionable<Highlight>4,</Highlight> the leading term suf-
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 $\mathfrak{I}$ operator:
 \[
@@ -906,8 +968,10 @@ $\mathfrak{I}$ operator:
 Although the convergence of this expansion is questionable\footnote{We observed divergence for $|\lambda| > 2.1$, which we did not persue.}, the leading term suffices to 
 ```
 
---------------
+---
 
+
+# 31
 
 ## Type
 StrikeOut
@@ -922,7 +986,7 @@ StrikeOut
 ⟨fi, fj⟩φ = δij(1 + λφ)<StrikeOut>,</StrikeOut>
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 $\varphi$-orthogonality condition,
 \[
@@ -931,8 +995,10 @@ $\varphi$-orthogonality condition,
 we recover Eq.~(
 ```
 
---------------
+---
 
+
+# 32
 
 ## Type
 Highlight
@@ -947,7 +1013,7 @@ Highlight
 fices to justify Theorem <Highlight>4.3.</Highlight>
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 term suffices to justify Theorem~4.3.
 
@@ -958,8 +1024,10 @@ term suffices to justify Theorem~4.3.
 The 
 ```
 
---------------
+---
 
+
+# 33
 
 ## Type
 StrikeOut
@@ -974,7 +1042,7 @@ StrikeOut
 Laplace–Beltrami operator and applying the φ-orthogonality condition<StrikeOut>,</StrikeOut>
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 the Laplace–Beltrami operator and applying the $\varphi$-orthogonality condition,
 \[
@@ -983,8 +1051,10 @@ the Laplace–Beltrami operator and applying the $\varphi$-orthogonality conditi
 we recover Eq.~(
 ```
 
---------------
+---
 
+
+# 34
 
 ## Type
 StrikeOut
@@ -999,7 +1069,7 @@ StrikeOut
 Figure 6. Convergence of displacement difference ∥∆n −∆n−1∥<StrikeOut>.</StrikeOut>
 ```
   
-## LaTeX source
+## LaTeX snippet
 ```latex
 it entirely.
 
@@ -1020,5 +1090,5 @@ it entirely.
 The argument 
 ```
 
---------------
+---
 
