@@ -5,6 +5,8 @@ import logging
 import sys
 from copy import deepcopy
 
+import re
+
 PDF_ANNOT_TEXT = (0, 'Text')
 PDF_ANNOT_STRIKE_OUT = (11, 'StrikeOut')
 PDF_ANNOT_CARET = (14, 'Caret')
@@ -37,17 +39,21 @@ class Annot:
         self.surr_lines = _surr_lines
         
     def __str__ (self):
-        return str({'pageno':self.pageno,
-                    'type':self.type,
-                    'info':self.info,
-                    'xref':self.xref,
-                    'irt_xref':self.irt_xref,
-                    'rect':self.rect,
-                    'intersecting line bb':self.intersecting_line_bb})
+        return str({'pageno':self.pageno, 'type':self.type, 'info':self.info})
     
     def __repr__ (self):
-        return str(self)
-
+        return str(
+            {'pageno':self.pageno,
+             'type':self.type,
+             'info':self.info,
+             'xref':self.xref,
+             'irt_xref':self.irt_xref,
+             'rect':self.rect,
+             'line_bb':self.line_bb,
+             'surr_lines':self.surr_lines
+             }
+        )
+    
 class Edit:
     """
     Represents the information necessary to carry out an edit. An edit has the following attributes:
@@ -253,14 +259,16 @@ def getRobustAnnots(doc):
                 robust_annots[pageno].append(Annot(pageno, annot.type, annot.info, annot.xref, annot.irt_xref, annot_rect, None, None))
                 continue
             annot_rect, line_bb, surrounding_lines = getAnnotAndSurrLineRects(annot.type, annot.info, annot.rect, page_lines)
-            robust_annots[pageno].append(Annot(pageno,
-                                               annot.type,
-                                               annot.info,
-                                               annot.xref,
-                                               annot.irt_xref,
-                                               annot_rect,
-                                               line_bb,
-                                               surrounding_lines))
+            robust_annots[pageno].append(
+                Annot(pageno,
+                      annot.type,
+                      annot.info,
+                      annot.xref,
+                      annot.irt_xref,
+                      annot_rect,
+                      line_bb,
+                      surrounding_lines)
+            )
     return robust_annots
 
 def getAllResponses(robust_annots):
@@ -329,7 +337,23 @@ def getSelection(ann, doc):
                                                                name = selection_name), (left_rect, middle_rect, right_rect), ann_rect
     else:
         return None
-    
+
+def isNotForCOMP(message: dict[str, str | list[str]]) -> bool:
+    head_comment = message['comment']
+    responses = message['responses']
+    first_response = responses[0] if responses else ''
+
+    not_for_comp = r"\b(?:AU|PE|PTG|GA)\b:?"
+    for_comp = r"\b(?:COMP|TEG)\b:?"
+
+    if re.search(not_for_comp, head_comment, re.IGNORECASE) is not None:
+        if re.search(for_comp, first_response, re.IGNORECASE) is not None:
+            return False
+        else:
+            return True
+    else:
+        return False
+
 def getEdits(filename):
     """return a list of Edits. See class Edit."""
     doc = pymupdf.open(filename)
@@ -338,6 +362,7 @@ def getEdits(filename):
 
     target_num_edits = 0
     logging.info("Turning annotations into edits...")
+    num_not_for_comp = 0
     edits = []
     for pageno, page in enumerate(doc):
         for annot in robust_annots[pageno]:
@@ -350,7 +375,13 @@ def getEdits(filename):
             responses = getResponses(annot, all_responses)
             text_responses = responses[PDF_ANNOT_TEXT] if PDF_ANNOT_TEXT in responses else []
             text_responses = [resp.info['content'] for resp in text_responses]
-            message = {'comment': annot.info['content'], 'responses': text_responses}            
+            message = {'comment': annot.info['content'], 'responses': text_responses}
+
+            # skip annots whose comment text starts with AU: or PE: or PTG: among other things, unless the first response has COMP: or TEG:
+            if isNotForCOMP(message):
+                logging.debug(f"Skipping annot {annot}; deemed not for COMP")
+                num_not_for_comp += 1
+                continue
 
             def isReplaceAnnot(ann, ann_resps):
                 if not (ann.type == PDF_ANNOT_STRIKE_OUT or ann.type == PDF_ANNOT_CARET) or ann_resps == []:
@@ -375,7 +406,7 @@ def getEdits(filename):
 
             res = getSelection(annot, doc)
             if res is None:
-                # I don't think I've seen this happen before in testing, so 
+                # I don't think I've seen this happen before in testing
                 logging.warning("getSelection() returned None; skipping---did not produce an edit for this annotation")
                 continue
             
@@ -383,7 +414,8 @@ def getEdits(filename):
             edits.append(Edit(annot.pageno, annot.type[1], message, selection_text, selection_bbs, selection_line_rect))
         logging.info(f"Extracted annotations on page {pageno:3d}/{doc.page_count-1:3d}")
         
-    logging.info(f"Produced {len(edits)} edits from {target_num_edits} PDF annotations")
+    logging.info(f"Created {len(edits)} edits from {target_num_edits} PDF annotations")
+    logging.info(f"Ignored {num_not_for_comp} annotations deemed not for COMP")
     return edits
             
 if __name__ == '__main__':
@@ -391,6 +423,7 @@ if __name__ == '__main__':
                                      description = 'Return edits from annotated pdf as json')
     parser.add_argument('filename')
     parser.add_argument("-d", "--debug", action="store_true", help='debugging output')
+    parser.add_argument("-pe", "--print-edits", action="store_true", help='print edits at the end')
     
     args = parser.parse_args()
     
@@ -398,7 +431,9 @@ if __name__ == '__main__':
     _level = logging.DEBUG if args.debug else logging.INFO
     
     logging.basicConfig(level=_level, format='%(asctime)s - %(levelname)s - %(message)s')
-    
-    edits = getEdits(filename)
-    for edit in edits:
-        print(edit)
+
+    edits = getEdits(filename)    
+
+    if args.print_edits:
+        for edit in edits:
+            print(edit)
