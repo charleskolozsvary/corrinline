@@ -1,9 +1,9 @@
 # texpdfedits
-This python project modifies LaTeX source files to aid and automate any correction workflow where the copyedits are provided by an annotated PDF.
+This python project modifies LaTeX source files to aid and automate any correction workflow where copyedits are provided by an annotated PDF.
 
 Normal processing of the changes involves reviewing the PDF and finding and fixing the corresponding LaTeX one annotation at a time. There are tools like SyncTeX to speed up the navigation between output and source, but even then the process is time-consuming and tedious.
 
-The script this project provides places the corrections directly into the source LaTeX as comments and carries out whatever corrections it can automatically. The short of it is that simple dedicated annotations like 'Strikeout', 'Replace', and 'Caret' can often be done automatically, while general annotations like 'Highlight' cannot. You can find more about what correction annotations are done automatically in [annotation_guidelines.md](notes/annotation_guidelines.md).
+The script this project provides places the corrections directly into the source LaTeX as comments and carries out whatever corrections it can automatically. See [annotation_guidelines.md](notes/annotation_guidelines.md) for more on the autocorrections.
 
 ## Tools/Tech
 The major dependencies of this project are 
