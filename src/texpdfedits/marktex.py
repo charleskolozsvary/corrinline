@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 import re
 
 from pylatexenc.latexwalker import LatexWalker, LatexNode, LatexMacroNode, LatexEnvironmentNode, LatexGroupNode, LatexMathNode, LatexCharsNode, LatexCommentNode
-from pylatexenc.macrospec import LatexContextDb, std_macro, std_environment, MacroSpec, ParsedMacroArgs
+from pylatexenc.macrospec import LatexContextDb, std_macro, std_environment, MacroSpec, ParsedMacroArgs, EnvironmentSpec
 
 from itertools import count
 from pathlib import Path
@@ -107,9 +107,8 @@ CSNAMES_ARGSPEC = {'emph': '{',
                    'copyrightinfo': '{{',
                    'translator': '{',}
 
-OPTIONAL_ARG = ('[', ']')
-
-REQUIRED_ARG = ('{', '}')
+ENVNAMES_ARGSPEC = {'enumerate': '[',
+                    'itemize': '[',}
 
 # macros which themselves get marked like \markbox{<key>}{\macro{...}}, like in-line math
 MARKED_ENTIRE_CSNAMES = {'emph', 'textit', 'textbf', 'textsc', 'underline', 'texttt', 'textup', 'url',}
@@ -422,12 +421,17 @@ def markNodes(
         in_bib = parent_counter_keys and 'bib' in parent_counter_keys
         
         if isinstance(node, LatexEnvironmentNode):
-            verbatim_contents =  joinNodesVerbatim(node.nodelist) # every LatexEnvironmentNode has a nodelist
-            joined_whole = rf'\begin{{{node.envname}}}{verbatim_contents}\end{{{node.envname}}}'
+            env_args = node.nodeargd.argnlist
+            logger.debug(f"env_arg = {env_args}")
+            verbatim_args = joinNodesVerbatim(env_args) if env_args != [None] else ''
+
+            # every LatexEnvironmentNode has a nodelist            
+            verbatim_contents =  joinNodesVerbatim(node.nodelist) 
+            joined_whole = rf'\begin{{{node.envname}}}{verbatim_args}{verbatim_contents}\end{{{node.envname}}}'
             
             if node_verbatim != joined_whole:
                 logger.error(f"Environment node '{node_verbatim}' in markNode was malformed or parsed incorrectly")
-                logger.debug(f"{verbatim_contents} != {joined_whole}")                
+                logger.debug(f"{node_verbatim} != {joined_whole}")
                 sys.exit(1)
                 
             if node.envname in allowed_environments or node.envname in ONLY_MARK_CAPTION_ENVS:
@@ -447,7 +451,7 @@ def markNodes(
                 if is_distinct_mark_env:
                     parent_counter_keys.pop()
                     
-                return rf"\begin{{{node.envname}}}{''.join(marked_contents)}\end{{{node.envname}}}"
+                return rf"\begin{{{node.envname}}}{verbatim_args}{''.join(marked_contents)}\end{{{node.envname}}}"
             else:
                 return joined_whole
             
@@ -883,14 +887,18 @@ def segment(tex_filename: str, **kwargs):
     extra_marked_environment_names = kwargs.get('emen', set()) # set[str]
     clean                          = kwargs.get('clean', True) # delete temporary directory
     compiler                       = kwargs.get('compiler', 'pdflatex')
+    if compiler is None:
+        compiler = 'pdflatex'
     
     tex_filename = Path(tex_filename)
     tex_str = sourceAsString(tex_filename)
 
     # Setup parser context with recognized commands and environments
     latex_context = LatexContextDb()
-    _macro_specs = [std_macro(csname, args_format) for csname, args_format in CSNAMES_ARGSPEC.items()]
-    latex_context.add_context_category('segmentspec', macros=_macro_specs)
+    macro_specs = [std_macro(csname, args_format) for csname, args_format in CSNAMES_ARGSPEC.items()]
+    environment_specs = [std_environment(envname, args_format) for envname, args_format in ENVNAMES_ARGSPEC.items()]
+    
+    latex_context.add_context_category('segmentspec', macros=macro_specs, environments=environment_specs)
 
     # Add Ignore Parsing
     custom_macros = [MacroSpec('startignorepylatexenc', args_parser=IgnoreRegionArgsParser())]
