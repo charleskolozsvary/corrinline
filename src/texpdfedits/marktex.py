@@ -155,16 +155,6 @@ DISTINCTLY_MARKED_MACROS = {
 # environments which get their own nested numbering
 DISTINCTLY_MARKED_ENVIRONMENTS = {'document', 'abstract'}
 
-# Following are only used in getMetadataAndSelectEnvironments(), which is currently unused >>>
-TRACKED_ENVIRONMENTS = {'abstract', 'figure', 'table', 'thebibliography', 'biblist', 'bibsection'}
-
-METADATA_CSNAMES = {'title', 'author', 'address', 'curraddr', 'urladdr', 'email', 'thanks',
-                    'subjclass', 'keywords', 'datereceived', 'daterevised', 'commby',
-                    'translator', 'dedicatory', 'copyrightinfo'}
-
-UNIQUE_FIELDS = {'title', 'subjclass', 'keywords', 'datereceived', 'commby', 'abstract', 'translator', 'dedicatory', 'copyrightinfo'}
-# <<<
-
 # the environments whose latex character nodes can be marked
 ALLOWED_MARK_ENVIRONMENTS = {
     'document',
@@ -279,62 +269,6 @@ def getEnunciations(preamble_nodes) -> tuple[list[str], str]:
         
     return enunciations
 
-def getEnvironmentSources(node, recognized_environments, environments):
-    """
-    Only used by getMetadataAndSelectEnvironments, which is currently unused
-    
-    recognized environments as a dictionary with keys as the environment names
-    and values as a list of verbatim latex_code of said environment
-    This should preserve order, even though it's recursive since the nesting of nodes
-    is still in document order
-    Modify the passed environments dictionary
-    """
-    if node.isNodeType(LatexEnvironmentNode):
-        if node.envname in recognized_environments:
-            environments[node.envname] += [node.latex_verbatim()]
-        else:
-            for nested_node in node.nodelist:
-                getEnvironmentSources(nested_node, recognized_environments, environments)
-    elif node.isNodeType(LatexGroupNode):
-        for nested_node in node.nodelist:
-            getEnvironmentSources(nested_node, recognized_environments, environments)
-    else:
-        return
-    
-def getMetadataAndSelectEnvironments(preamble_nodes, document_node):
-    """Currently unused"""
-    metadata = dict()
-    start_idx, end_idx = -1, -1
-    # this assumes that there isn't weird nesting in the preamble
-    # we'll probably have to account for that later with a recursive approach, like with markNode
-    # and in extracting the figures, tables, and abstract
-    for i, node in enumerate(preamble_nodes): 
-        if node.isNodeType(LatexMacroNode) and node.macroname in METADATA_CSNAMES:
-            if start_idx < 0:
-                start_idx = i
-            end_idx = i
-            csname = node.macroname            
-            verbatim_contents = node.latex_verbatim()
-            if csname in metadata and csname in UNIQUE_FIELDS:
-                logger.warning(f"Found more than one instance of unique field '{csname}', overwriting earlier instance.")
-                metadata[csname] = verbatim_contents
-            elif csname in metadata:
-                metadata[csname] = [metadata[csname], verbatim_contents] if type(metadata[csname]) != list else metadata[csname] + [verbatim_contents]
-            else:
-                metadata[csname] = verbatim_contents
-    metadata_source = joinNodesVerbatim(preamble_nodes, start_idx, end_idx)
-
-    environments = {env_name: [] for env_name in TRACKED_ENVIRONMENTS}
-    getEnvironmentSources(document_node, TRACKED_ENVIRONMENTS, environments)
-    
-    num_abstract = len(environments['abstract'])
-    if num_abstract == 0:
-        logger.warning("No abstract found in getMetadataAndSelectEnvironments()")
-    elif num_abstract > 1:
-        logger.warninig(f"! Found {num_abstract} abstracts; there should only be one")
-
-    return metadata, metadata_source, environments
-
 def compileLatex(tex_filename: Path, compiler: str = 'pdflatex') -> subprocess.CompletedProcess:
     """Compile .tex file with provided compiler"""
     result = None
@@ -367,10 +301,9 @@ def transferTeXFiles(tex_filename: Path, files_to: Path, move_or_copy: str):
     if tex_filename.parent == files_to:
         logger.debug("No need to transfer files; they are already in the cwd")
         return
-    # glob used to be f'**/{tex_filename.stem}.*', but I actually only want the top-level files in the parent dir        
+    
     tex_dot_star_files = [x for x in tex_filename.parent.glob(f'{tex_filename.stem}.*')]
     for x in tex_dot_star_files:
-        logger.debug(f"x is {x}")
         match move_or_copy:
             case 'mv':
                 x.move_into(files_to)
@@ -428,7 +361,7 @@ def markNodes(
     """Recursively mark the passsed node list. Return the marked string and the mark counters"""
     counters = {}
 
-    # macro names where are acceptable to match the beggining of the string when marking a chars node after it
+    # macro names where it is acceptable to match the beggining of the string when marking a chars node after it
     OTHER_PREV_MACRO_NODE_EXCEPTIONS = {' ', 'item'} # control space or item
     
     def markStr(string: str, parent_counter_keys: list[str]) -> str:
@@ -467,9 +400,6 @@ def markNodes(
         
         node_verbatim = node.latex_verbatim()
         
-        # before the subsequent if ... elif block was inside "if parent_counter_keys:"
-        # not sure why.... Tentatively removing that check---as it was,
-        # the numbering for boxes inside dedicated macros in the preamble were incorrect
         if node.isNodeType(LatexEnvironmentNode):
             node_name = node.envname
             if node_name in DISTINCTLY_MARKED_ENVIRONMENTS and node_name in counters:
@@ -488,7 +418,6 @@ def markNodes(
         
         if isinstance(node, LatexEnvironmentNode):
             env_args = node.nodeargd.argnlist
-            logger.debug(f"env_arg = {env_args}")
             verbatim_args = joinNodesVerbatim(env_args) if env_args != [None] else ''
 
             # every LatexEnvironmentNode has a nodelist            
@@ -504,7 +433,6 @@ def markNodes(
                 marked_contents = []
                 is_distinct_mark_env = node.envname in DISTINCTLY_MARKED_ENVIRONMENTS
                 
-                # add parent counter key
                 if is_distinct_mark_env:
                     parent_counter_keys.append(node.envname)
 
@@ -513,7 +441,6 @@ def markNodes(
                     marked_contents.append(recMark(nested_node, node, this_prev_node, parent_counter_keys))
                     this_prev_node = nested_node
                     
-                # remove parent counter key
                 if is_distinct_mark_env:
                     parent_counter_keys.pop()
                     
@@ -531,8 +458,7 @@ def markNodes(
             elif node.macroname in DISTINCTLY_MARKED_MACROS:
                 if is_in_only_mark_caption_env and node.macroname != 'caption':
                     return node_verbatim
-
-                # do arg processing >>>
+                # process args >>>
                 len_arg_spec = len(CSNAMES_ARGSPEC[node.macroname])
                 argnlist = node.nodeargd.argnlist
                 joined_verbatim_macro = rf"\{node.macroname}" + ''.join([n.latex_verbatim() if n is not None else '' for n in argnlist])
@@ -565,15 +491,11 @@ def markNodes(
                     
                 parent_counter_keys.pop()
                 
-                # logger.debug(''.join(marked_macro))
-                # logger.debug("END\n\n")
-                
                 return ''.join(marked_macro)
                 # <<<
             else:
                 return node_verbatim
 
-        # this recMark implementation is getting unweildy....
         elif in_preamble and not parent_counter_keys:
             return node_verbatim
         
@@ -612,16 +534,14 @@ def markNodes(
             
             if prev_node is not None:
                 prev_ends_square = re.search(r'[\]\}]\s*$', prev_node.latex_verbatim())
-                
                 prev_includes_forbidden_mark_bib_keys = re.search('|'.join(FORBIDDEN_BIB_KEYS), prev_node.latex_verbatim(), re.IGNORECASE)
                 
                 if in_bib and prev_includes_forbidden_mark_bib_keys is not None:
                     return node_verbatim
             
             if (prev_node is not None and prev_node.isNodeType(LatexCharsNode) and prev_ends_square is None) or parent_is_distinctly_marked_macro:
-                # logger.debug(f"Prev node in marked group node: {prev_node.latex_verbatim()}")
-                verbatim_contents = joinNodesVerbatim(node.nodelist) # every LatexGroupNode has a nodelist
-                # logger.debug(f"contents of marked group node: {verbatim_contents}\n")
+                # every LatexGroupNode has a nodelist                
+                verbatim_contents = joinNodesVerbatim(node.nodelist) 
                 
                 joined_whole = rf'{{{verbatim_contents}}}'
                 if node_verbatim != joined_whole:
@@ -656,9 +576,6 @@ def markNodes(
     return ''.join(manuscript_marked_contents), counters
 
 def getPreambleAndDocument(nodelist):
-    """ Needs review """
-    """Read in a list of pylatexenc.latexwalker.<Node>s and return the nodes which belong to the
-       preamble and document"""        
     num_document_envs = len(list(filter(lambda n: n.isNodeType(LatexEnvironmentNode) and n.envname == 'document', nodelist)))
     if num_document_envs != 1:
         logger.critical(r"Found more (or less) than one `\begin{document}`s during getPreambleAndDocument().")
@@ -687,10 +604,6 @@ def unzipPos(stend_xy):
     return stend_xy[0], tuple(map(lambda spts: scaledPointsToPDFpoints(int(spts)), stend_xy[1:-1]))
 
 def boxinfoToPDFRectangle(key: str, hbox, start_xy):
-    """No longer using the end position to avoid minor issues with italic correction.
-    However, this means that boxes which break across a line just extend into the margin, which is only 
-    a relatively minor inconvenience if the layout is not two-column.
-    """
     pgA, (width, height, depth) = unzipHbox(hbox)
     pgB, (x0, sy) = unzipPos(start_xy)
     
@@ -720,23 +633,22 @@ def getWordBoxes(boxpositions_filename: Path):
                         line_no += 1
                         continue
                     # for some reason, when using the prdlatex format (even with texlive2024), caption boxes will appear twice (or perhaps more times)
-                    # with different box information, but it looks like the second appearance is correct. This is probably fragile.
+                    # with different box information, but it looks like the second (or last) appearance is correct. This is probably fragile.
                     if 'CAPTION' in key:
                         word_boxes[key][label] = values
                         line = f.readline().strip()
                         line_no += 1
                         continue                    
-                    
                     # There should be only two labels (and they should each appear at most once):
-                    # it looks like captions are read in twice, so it's okay if a label for a key appears more than once if the values are the same
+                    # Captions are read in twice, so it's okay if a label for a key appears more than once if the values are the same
                     # 'pwhd' for page, width, height, depth; and 'spxy' for start, page, x pos, y pos
+                    # see above comment for when they aren't the same
                     logger.critical(
                         f"Key '{key}' with label '{label}' was already in '{word_boxes[key]}' and values differed\n"
                         f"current value:\n```python\n{word_boxes[key][label]}\n```\n"
                         f"new value:\n```python\n{values}\n```"
                     )
                     sys.exit(1)
-                            
                 word_boxes[key][label] = values
             else:
                 word_boxes[key] = {label:values}
@@ -757,7 +669,7 @@ def getWordBoxes(boxpositions_filename: Path):
         if len(info) != 2:
             # all marks should have exactly two fields (except for the ones which don't make it to the page)
             # the hbox dimensions and the start page and xy positions
-            logger.error(f"mark id '{key}' in '{boxpositions_filename}' differed from specification")
+            logger.critical(f"mark id '{key}' in '{boxpositions_filename}' differed from specification")
             sys.exit(1)
 
     for mark_id in markids_to_delete:
@@ -795,10 +707,9 @@ def readBalancedBraces(idx: int, s: str) -> tuple[str, int]:
             idx += 1
             
     if depth != 0:
-        logger.error('Unbalanced braces in marked string')
+        logger.critical('Unbalanced curly braces in marked string')
         sys.exit(1)
     
-    # Extract contents between start and the closing brace
     contents = s[start_idx:idx-1]
     return contents, idx - start_idx
 
@@ -844,7 +755,6 @@ def unMarkWithPositions(marked_string: str, job_id: str, markids_to_delete: set[
     
     return ''.join(unmarked_parts), mark_positions
 
-# >>>
 def numericComponent(s: str) -> int:
     return int(''.join(filter(str.isnumeric, s)))
 
@@ -899,7 +809,6 @@ def compareNestedMarkIDs(count_info_1: list[dict[str, int]], count_info_2: list[
         return 1
     else:
         return 0
-# <<<
 
 def validateMarkPositions(mark_positions: dict[str, tuple[int, int]], document_word_boxes: dict[int, dict[str, pymupdf.Rect]]) -> None:
     """Verify that no mark positions overlap and that the mark position keys are a superset of the document word box keys. Raises ValueError if they do.
@@ -953,7 +862,7 @@ def validateMarkPositions(mark_positions: dict[str, tuple[int, int]], document_w
                     "mark_positions.keys() is not a superset of all mark_ids in document_word_boxes."
                 )
 
-    logger.info("All mark positions are valid.")
+    logger.info("Mark positions are valid.")
     
 def pdfFname(tex_fname: Path):
     return f"{tex_fname.stem}.pdf"
@@ -1042,8 +951,6 @@ def segment(tex_filename: str, **kwargs):
         chars_node_match_regex,
         job_id
     )
-
-    # logger.debug(f"marked preamble:\n{marked_preamble}\n\nEND\n")
         
     marked_document, counters = markNodes(
         [document_node],
