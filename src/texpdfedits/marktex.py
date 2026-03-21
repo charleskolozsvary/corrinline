@@ -10,20 +10,18 @@ import argparse
 import logging
 logger = logging.getLogger(__name__)
 
-import re
-
 from pylatexenc.latexwalker import LatexWalker, LatexNode, LatexMacroNode, LatexEnvironmentNode, LatexGroupNode, LatexMathNode, LatexCharsNode, LatexCommentNode
 from pylatexenc.macrospec import LatexContextDb, std_macro, std_environment, MacroSpec, ParsedMacroArgs, EnvironmentSpec
 
-from itertools import count
 from pathlib import Path
-
+import re
 import sys
-import os
-import subprocess
-
 import pymupdf
 import time
+
+import texpdfedits.utils as utils
+
+MODULE_NAME = __spec__.name.split('.')[-1]
 
 class IgnoreRegionArgsParser:
     def parse_args(self, w, pos, parsing_state, **kwargs):
@@ -39,7 +37,7 @@ class IgnoreRegionArgsParser:
         ...
         \endignorepylatexenc
 
-        around any problematic code before running segmentsource
+        around any problematic code before running corrinline
         """
         current_pos = pos
         while True:
@@ -57,11 +55,8 @@ class IgnoreRegionArgsParser:
         
         return (ParsedMacroArgs(argnlist=[]), end_pos, 0)
 
-COMPILER_INFO = {
-    'pdflatex': (2, 'latin-1', ['--interaction=nonstopmode']),
-    'prdlatex': (1, 'latin-1', ['-pdf', '-nonstopmode']),
-    'xelatex': (2, 'utf-8', ['--interaction=nonstopmode'])
-}
+# chosen csname for marking command
+MARK_CSNAME = r'\markbox'
 
 CSNAMES_ARGSPEC = {
     'emph': '{',
@@ -72,7 +67,6 @@ CSNAMES_ARGSPEC = {
     'texttt': '{',
     'url': '{',
     'underline': '{',
-    'markbox': '{{',
     'part': '*[{',
     'chapter' : '*[{',
     'section': '*[{',
@@ -110,6 +104,7 @@ CSNAMES_ARGSPEC = {
     'vspace': '*{',
     'hspace': '*{',
     'documentclass': '[{',
+    MARK_CSNAME: '{{',  # although I don't ever parse the marked latex
 }
 
 ENVNAMES_ARGSPEC = {
@@ -195,17 +190,6 @@ ONLY_MARK_CAPTION_ENVS = {
     'subfigure*'
 }
 
-DIFF_PDF_DPI = 175
-
-r"""
-The tolerance of 50_000 pixels is a heuristic picked by trial and error.
-Unfortunately, italic correction can still be inserted *before* a markbox, too, which will introduce some pixel differences.
-Example: '(\emph{Boundary depletion})' (\markbox{}{\emph{Boundary depletion}}) will prevent space from being inserted after the
-first open parenthesis if the entire string is in italic font.
-"""
-DIFFPDF_PER_PAGE_PIXEL_TOLERANCE = 50_000
-
-
 """
 There are 72.27 TeX points in an inch, while there are 
 72 PDF points (what TeX calls a big point or "bp") in an inch, which is what
@@ -215,16 +199,6 @@ TEX_POINTS_TO_PDF_POINTS_CONVERSION_RATIO = 72 / 72.27
 
 # PdfTeX outputs the PDF positions in scaled points, so this constant is useful
 SCALED_POINTS_PER_TEX_POINT = 2 ** 16 # 65536
-
-def sourceAsString(filename: Path) -> str:
-    with open(filename, 'r', encoding = 'utf-8') as f:
-        tex_file_str = f.read()
-    return tex_file_str
-
-def writeStringToFile(string: str, filename: Path) -> int:
-    with open(filename, 'w', encoding = 'utf-8') as f:
-        f.write(string)
-    return 0
 
 def joinNodesVerbatim(nodelist: list[LatexNode], start: int = 0, end: int | None = None) -> str:
     """return joined verbatim nodes from start to end inclusive"""
@@ -269,94 +243,10 @@ def getEnunciations(preamble_nodes) -> tuple[list[str], str]:
         
     return enunciations
 
-def compileLatex(tex_filename: Path, compiler: str = 'pdflatex') -> subprocess.CompletedProcess:
-    """Compile .tex file with provided compiler"""
-    result = None
-    tex_filename_dir = tex_filename.parent
-    
-    (num_runs, encoding, compile_options) = COMPILER_INFO.get(compiler, (2, 'latin-1', ['--interaction=nonstopmode']))
-    command = [compiler, *compile_options, tex_filename.name]    
-    for i in range(num_runs):
-        logger.info(f"Running {compiler} on {tex_filename} (pass {i+1}/{num_runs})...")
-        logger.debug(f"I.e., {' '.join(command)}")        
-        result = subprocess.run(
-            command,
-            cwd=tex_filename_dir,
-            capture_output=True, # see result.stdout, result.stderr
-            text=True,
-            encoding=encoding
-        )
-        
-        if result.returncode != 0:
-            logger.error(
-                f"{compiler} failed on pass {i+1} of {tex_filename.name}: {result.stderr}."
-                f"Output: {result.stdout}"
-            )
-            sys.exit(1)
-        
-    return result
-
-def transferTeXFiles(tex_filename: Path, files_to: Path, move_or_copy: str):
-    logger.debug(f"the tex_filename is {tex_filename}\nfiles_to is {files_to}")    
-    if tex_filename.parent == files_to:
-        logger.debug("No need to transfer files; they are already in the cwd")
-        return
-    
-    tex_dot_star_files = [x for x in tex_filename.parent.glob(f'{tex_filename.stem}.*')]
-    for x in tex_dot_star_files:
-        match move_or_copy:
-            case 'mv':
-                x.move_into(files_to)
-            case 'cp':
-                x.copy_into(files_to)
-            case _:
-                logger.critical(f"Could not transfer TeX files: unrecognized action '{move_or_copy}'; exiting")
-                sys.exit(1)
-
-def removeDir(directory: Path):
-    if not directory.exists():
-        return
-    files_in_dir = [f for f in directory.glob('**/*') if f.is_file()]
-    if not files_in_dir:
-        directory.rmdir()
-        return
-    for f in files_in_dir:
-        f.unlink()
-    directory.rmdir()
-
-def runDiffpdf(first_fname: str, second_fname: str, output_dir: Path, per_page_tol: int = DIFFPDF_PER_PAGE_PIXEL_TOLERANCE) -> subprocess.CompletedProcess:
-    first_stem = Path(first_fname).stem
-    second_stem = Path(second_fname).stem
-    diff_fname = f'diff_{first_stem}_{second_stem}.pdf'
-
-    subprocess_command = ['diff-pdf',
-                          f'--per-page-pixel-tolerance={per_page_tol}',
-                          f'--dpi={DIFF_PDF_DPI}',
-                          '--skip-identical',
-                          '--grayscale',
-                          '--mark-differences',
-                          '--verbose',
-                          f'--output-diff={diff_fname}',
-                          first_fname,
-                          second_fname]
-    
-    logger.info(f"Running `{' '.join(subprocess_command)}`...")
-    result = subprocess.run(
-        subprocess_command,
-        cwd=output_dir
-    )
-    
-    if result.returncode != 0:
-        logger.error(f"{first_fname} and {second_fname} are not identical. See {Path(output_dir) / diff_fname}")        
-        sys.exit(1)
-        
-    return result, Path(diff_fname)
-
 def markNodes(
         to_mark_nodelist: list[LatexNode],
         allowed_environments: set[str],
         chars_node_match_regex: str,
-        job_id: str
 ) -> tuple[str, dict[str, dict[str, int]]]:
     """Recursively mark the passsed node list. Return the marked string and the mark counters"""
     counters = {}
@@ -394,7 +284,7 @@ def markNodes(
             f"{key.upper()}{counters[key]['head']};{counters[key]['value']}" for key in parent_counter_keys
         ])
         
-        return rf'\markbox{{{mark_id}}}{{{string}}}'
+        return rf'{MARK_CSNAME}{{{mark_id}}}{{{string}}}'
         
     def recMark(node, parent_node, prev_node, parent_counter_keys):
         
@@ -573,7 +463,7 @@ def markNodes(
     for start_node in to_mark_nodelist:
         manuscript_marked_contents.append(recMark(start_node, None, outer_prev_node, []))
         outer_prev_node = start_node
-    return ''.join(manuscript_marked_contents), counters
+    return ''.join(manuscript_marked_contents)
 
 def getPreambleAndDocument(nodelist):
     num_document_envs = len(list(filter(lambda n: n.isNodeType(LatexEnvironmentNode) and n.envname == 'document', nodelist)))
@@ -588,7 +478,14 @@ def getPreambleAndDocument(nodelist):
     document_node = nodelist[i]
     post_document_nodes = nodelist[i+1:]
 
-    return preamble_nodes, document_node, post_document_nodes
+    return (preamble_nodes, document_node, post_document_nodes)
+
+def splitPreambleNodes(preamble_nodes: list[LatexNode]):
+    for i, node in enumerate(preamble_nodes):
+        if isinstance(node, LatexMacroNode) and node.macroname == 'documentclass':
+            return (preamble_nodes[:i+1], preamble_nodes[i+1:])
+    logger.critical("\\documentclass command not found")
+    sys.exit(1)
 
 def texPointsToPDFpoints(tex_pts: float):
     return tex_pts * TEX_POINTS_TO_PDF_POINTS_CONVERSION_RATIO
@@ -607,7 +504,7 @@ def boxinfoToPDFRectangle(key: str, hbox, start_xy):
     pgA, (width, height, depth) = unzipHbox(hbox)
     pgB, (x0, sy) = unzipPos(start_xy)
     
-    return pgB, pymupdf.Rect(x0, sy - height, x0 + width, sy + depth)
+    return (pgB, pymupdf.Rect(x0, sy - height, x0 + width, sy + depth))
         
 def getWordBoxes(boxpositions_filename: Path):
     word_boxes = dict()
@@ -677,10 +574,7 @@ def getWordBoxes(boxpositions_filename: Path):
 
     document_word_boxes = dict()
     for key, info in word_boxes.items():
-        res = boxinfoToPDFRectangle(key, info['pwhd'], info['spxy'])
-        if res is None:
-            continue
-        one_indexed_pageno, rectangle = res
+        (one_indexed_pageno, rectangle) = boxinfoToPDFRectangle(key, info['pwhd'], info['spxy'])
         pageno = int(one_indexed_pageno) - 1
         if pageno in document_word_boxes:
             document_word_boxes[pageno][key] = rectangle
@@ -689,7 +583,7 @@ def getWordBoxes(boxpositions_filename: Path):
 
     logger.info(f"Created {len(word_boxes)} marked boxes.")
     
-    return document_word_boxes, markids_to_delete
+    return (document_word_boxes, markids_to_delete)
 
 def readBalancedBraces(idx: int, s: str) -> tuple[str, int]:
     """Read unescaped balanced braces, return (contents without outer braces, chars_read)."""
@@ -713,7 +607,7 @@ def readBalancedBraces(idx: int, s: str) -> tuple[str, int]:
     contents = s[start_idx:idx-1]
     return contents, idx - start_idx
 
-def unMarkWithPositions(marked_string: str, job_id: str, markids_to_delete: set[str]) -> tuple[str, dict[str, tuple[int, int]]]:
+def unMarkWithPositions(marked_string: str, deleted_mark_IDs: set[str]) -> tuple[str, dict[str, tuple[int, int]]]:
     r"""Remove \markbox commands and track positions of marked content.
     
     Returns:
@@ -724,10 +618,10 @@ def unMarkWithPositions(marked_string: str, job_id: str, markids_to_delete: set[
     mark_positions = {}
     current_pos = 0  # Position in unmarked string
     idx = 0
-    MARKBOX = '\\markbox{'
+    MARKBOX = MARK_CSNAME + '{'
     MARKBOX_LEN = len(MARKBOX)
 
-    unmarked_parts = []
+    unmarked_strs = []
     
     while idx < len(marked_string):
         if marked_string[idx:idx+MARKBOX_LEN] == MARKBOX:
@@ -741,19 +635,20 @@ def unMarkWithPositions(marked_string: str, job_id: str, markids_to_delete: set[
             # Track position in unmarked string
             start_pos = current_pos
             end_pos = current_pos + len(content)
-            
-            if mark_id not in markids_to_delete:
+
+            # don't bother tracking deleted mark IDs
+            if mark_id not in deleted_mark_IDs:
                 mark_positions[mark_id] = (start_pos, end_pos)
             
-            unmarked_parts.append(content)
+            unmarked_strs.append(content)
             current_pos += len(content)
             idx += chars_read
         else:
-            unmarked_parts.append(marked_string[idx])
+            unmarked_strs.append(marked_string[idx])
             current_pos += 1
             idx += 1
     
-    return ''.join(unmarked_parts), mark_positions
+    return ''.join(unmarked_strs), mark_positions
 
 def numericComponent(s: str) -> int:
     return int(''.join(filter(str.isnumeric, s)))
@@ -767,48 +662,12 @@ def markIdToCountInfo(mark_id: str) -> list[dict[str, int]]:
     for count in counts:
         head_and_stem = count.split(';')
         if len(head_and_stem) != 2:
-            raise ValueError(f"A segment of a nested mark, {piece}, was not delimited into two by a semicolon")
+            raise ValueError(f"A segment of a nested mark, {head_and_stem}, was not delimited into two by a semicolon")
         count_name = alphaComponent(head_and_stem[0])
         head_count = numericComponent(head_and_stem[0])
         stem_count = int(head_and_stem[1])
         count_info.append({'name': count_name, 'head': head_count, 'stem': stem_count})
     return count_info
-
-def compareNestedMarkIDs(count_info_1: list[dict[str, int]], count_info_2: list[dict[str, int]]):
-    """ Needs review """
-    """ return -1 if id_1 < id_2, 0 if they are equal, 1 if id_1 > id_2
-        only compares marks that are both within document
-    Not sure what the real point of writing this is... This effectively just recovers the
-    order the marks are inserted (but more weakly), which is what I already get from mark_positions
-    """
-    if not (count_info_1[0]['name'] == 'document' and count_info_2[0]['name'] == 'document'):
-        raise ValueError(f"Given IDs '{id_1}' and '{id_2}' are not nested within the document")
-    
-    for idx in range(min(len(count_info_1), len(count_info_2))):
-        counter_1 = count_info_1[idx]
-        counter_2 = count_info_2[idx]
-        if counter_1['name'] != counter_2['name']:
-            raise ValueError(
-                f"Cannot compare counters '{count_info_1}' and '{count_info_2}': "
-                "counter names don't match up"
-            )
-        
-        if counter_1['head'] < counter_2['head']:
-            return -1
-        elif counter_1['head'] > counter_2['head']:
-            return 1
-
-        if counter_1['stem'] < counter_2['stem']:
-            return -1
-        elif counter_1['stem'] > counter_2['stem']:
-            return 1
-
-    if len(count_info_1) < len(count_info_2):
-        return -1
-    elif len(count_info_1) > len(count_info_2):
-        return 1
-    else:
-        return 0
 
 def validateMarkPositions(mark_positions: dict[str, tuple[int, int]], document_word_boxes: dict[int, dict[str, pymupdf.Rect]]) -> None:
     """Verify that no mark positions overlap and that the mark position keys are a superset of the document word box keys. Raises ValueError if they do.
@@ -863,27 +722,8 @@ def validateMarkPositions(mark_positions: dict[str, tuple[int, int]], document_w
                 )
 
     logger.info("Mark positions are valid.")
-    
-def pdfFname(tex_fname: Path):
-    return f"{tex_fname.stem}.pdf"
 
-def splitPreambleNodes(preamble_nodes: list[LatexNode]):
-    for i, node in enumerate(preamble_nodes):
-        if isinstance(node, LatexMacroNode) and node.macroname == 'documentclass':
-            return preamble_nodes[:i+1], preamble_nodes[i+1:]
-    logger.critical("\\documentclass command not found")
-    sys.exit(1)
-    
-def segment(tex_filename: str, **kwargs):
-    extra_marked_environment_names = kwargs.get('emen', set()) # set[str]
-    clean                          = kwargs.get('clean', True) # delete temporary directory
-    compiler                       = kwargs.get('compiler', 'pdflatex')
-    if compiler is None:
-        compiler = 'pdflatex'
-    
-    tex_filename = Path(tex_filename)
-    tex_str = sourceAsString(tex_filename)
-
+def parseLatex(tex_str: str) -> tuple[list[LatexNode]]:
     # Set up parser context with recognized commands and environments
     latex_context = LatexContextDb()
     macro_specs = [std_macro(csname, args_format) for csname, args_format in CSNAMES_ARGSPEC.items()]
@@ -896,7 +736,6 @@ def segment(tex_filename: str, **kwargs):
     latex_context.add_context_category('ignore-regions', macros=custom_macros, prepend=True)
     
     # Parse LaTeX --> get LaTeX node list 
-    logger.info(f"Parsing {tex_filename}...")
     (nodelist, _, _) = LatexWalker(tex_str, latex_context=latex_context).get_latex_nodes(pos=0)
 
     if joinNodesVerbatim(nodelist) != tex_str:
@@ -904,14 +743,13 @@ def segment(tex_filename: str, **kwargs):
         sys.exit(1)
            
     preamble_nodes, document_node, post_document_nodes = getPreambleAndDocument(nodelist)
-    logger.info("Done.")
 
-    # Track \newtheorems
-    enunciations = getEnunciations(preamble_nodes)
-    enunciation_names = set([enun['name'] for enun in enunciations])
+    # update preamble_nodes, exlude docclass
+    docclass_nodes, preamble_nodes = splitPreambleNodes(preamble_nodes)    
 
-    # Mark file
-    boxpositions_filename = f'boxpositions_{tex_filename.stem}.txt'
+    return (docclass_nodes, preamble_nodes, document_node, post_document_nodes)
+
+def getInsertedCodeForMarking(boxpositions_filename: str):
     tex_write_commands = fr"""
 \makeatletter      %% for some reason \leavevmode's expansion of \unhbox\voidb@x is sometimes not read with @ as a letter, resulting in the error
 \let\voidb\voidb@x %% `undefined control sequence \voidb<linebreak>@x`. Should probably be looked into.
@@ -919,9 +757,9 @@ def segment(tex_filename: str, **kwargs):
 
 \newwrite\markfile
 \immediate\openout\markfile={boxpositions_filename}
+
 """
-    markbox_def = r"""
-\newcommand{\markbox}[2]{%
+    markcs_def = rf'\newcommand{{{MARK_CSNAME}}}' + r"""[2]{%
   \ifvmode\leavevmode\fi%% to get the correct pdfposition, I must leave vmode when marking. Otherwise the position recorded is before the new paragraph
   \setbox0=\hbox{#2}%
   \immediate\write\markfile{#1:pwhd:\the\value{page}:\the\wd0:\the\ht0:\the\dp0}%
@@ -931,75 +769,98 @@ def segment(tex_filename: str, **kwargs):
 }
 
 """
-    job_id = f'segment{int(time.time())}'
-    
-    logger.info("Inserting marks...")
+    return (tex_write_commands, markcs_def)
 
+def markLatex(tex_filename: Path, *parse_out, **kwargs):
+    extra_marked_environment_names = kwargs.get('emen', set()) # set[str]
+    (docclass_nodes, preamble_nodes, document_node, post_document_nodes) = parse_out
+
+    # Track \newtheorems
+    enunciations = getEnunciations(preamble_nodes)
+    enunciation_names = set(enun['name'] for enun in enunciations)
+    all_allowed_mark_environments = ALLOWED_MARK_ENVIRONMENTS.union(enunciation_names).union(extra_marked_environment_names)    
+
+    # build LatexCharsNode node marking regexes
     left = r"[\n\t $(~]"
     inside = r"[a-zA-Z0-9!?.,'`/;:\-()@]+"
     right = r"[\n\t $)~]"
     chars_node_match_regex = rf"(?:(?<={left})|^){inside}(?:(?={right})|$)"
 
-    all_allowed_mark_environments = ALLOWED_MARK_ENVIRONMENTS.union(enunciation_names).union(extra_marked_environment_names)
-
-    docclass_nodes, preamble_nodes = splitPreambleNodes(preamble_nodes)    
-
-    # job_id may be eventually removed; currently unused    
-    marked_preamble, counters = markNodes(
+    marked_preamble = markNodes(
         preamble_nodes,
         all_allowed_mark_environments,
-        chars_node_match_regex,
-        job_id
+        chars_node_match_regex
     )
         
-    marked_document, counters = markNodes(
+    marked_document = markNodes(
         [document_node],
         all_allowed_mark_environments,
-        chars_node_match_regex,
-        job_id
+        chars_node_match_regex
     )
-    
-    logger.info("Done.")
 
-    post_document_str = joinNodesVerbatim(post_document_nodes)
+    boxpositions_filename = f'boxpositions_{tex_filename.stem}.txt'
+    (tex_write_commands, markcs_def) = getInsertedCodeForMarking(boxpositions_filename)
 
+    # build marked file out of components    
     docclass_str = joinNodesVerbatim(docclass_nodes)
+    post_document_str = joinNodesVerbatim(post_document_nodes)
+    marked_tex = docclass_str + tex_write_commands + markcs_def + marked_preamble + marked_document + post_document_str
 
-    # Concatenate marked file out of components
-    marked_tex = docclass_str + tex_write_commands + markbox_def + marked_preamble + marked_document + post_document_str
+    # Save the marked file to the same directory as the input tex_filename, compile it, then move it
+    marked_filename = tex_filename.parent / f"{tex_filename.stem}_marked{tex_filename.suffix}" # automatically Path object from / 
+    utils.writeStringToFile(marked_tex, marked_filename)
 
-    # Save at first the marked file to the same directory as the input tex_filename, then move it after pdflatex
-    marked_filename = tex_filename.parent / f"{tex_filename.stem}_marked{tex_filename.suffix}"
-
-    # Write marked file 
-    writeStringToFile(marked_tex, marked_filename)
-
-    # Compile original and marked LaTeX
-    process1 = compileLatex(tex_filename, compiler = compiler)
-    process2 = compileLatex(marked_filename, compiler = compiler)
-
-    # Set up tmp directory and transfer files
-    tmp_dir = Path('tmp_marktex')
-    Path.mkdir(tmp_dir, exist_ok = True)
-
-    transferTeXFiles(tex_filename, tmp_dir, 'cp')
-    transferTeXFiles(marked_filename, tmp_dir, 'mv')
+    return (marked_preamble, marked_document, marked_filename, boxpositions_filename)
     
-    # Move boxpositions file
-    new_boxpositions_fname = (tex_filename.parent/boxpositions_filename).move_into(tmp_dir)
+    
+def getSyncInfo(tex_filename: str, **kwargs):
+    clean    = kwargs.get('clean', True) 
+    compiler = kwargs.get('compiler', utils.DEFAULT_LATEX_COMPILER)
 
-    # Compare original and marked PDFs
-    process3, _ = runDiffpdf(pdfFname(tex_filename), pdfFname(marked_filename), tmp_dir)
+    tex_filename = Path(tex_filename)
+    tex_str = utils.sourceAsString(tex_filename)        
 
-    logger.info(f"Original and marked sources produce identical PDFs.")
-
-    logger.info("Getting word boxes...")
-    document_word_boxes, markids_to_delete = getWordBoxes(tmp_dir / boxpositions_filename)
+    # Parse
+    logger.info(f"Parsing {tex_filename}...")    
+    parse_out = parseLatex(tex_str)
     logger.info("Done.")    
 
-    # Do not concatenate the inserted preamble definitions
+    # Mark
+    logger.info("Inserting marks...")
+    (marked_preamble, marked_document, marked_filename, boxpositions_filename) = markLatex(tex_filename, *parse_out, **kwargs)
+    logger.info("Done.")
+
+    # Compile and diff-pdf
+    process1 = utils.compileLatex(tex_filename, compiler = compiler)
+    process2 = utils.compileLatex(marked_filename, compiler = compiler)
+
+    tmp_dir = Path('tmp_marktex')
+    Path.mkdir(tmp_dir, exist_ok = True)
+    utils.transferTeXFiles(tex_filename, tmp_dir, 'cp')
+    utils.transferTeXFiles(marked_filename, tmp_dir, 'mv')    
+    moved_boxpositions_filename = (tex_filename.parent/boxpositions_filename).move_into(tmp_dir)
+    
+    (process3, _) = utils.runDiffpdf(
+        utils.pdfFname(tex_filename),
+        utils.pdfFname(marked_filename),
+        tmp_dir
+    )
+    logger.info(f"Original and marked sources produce identical PDFs.")    
+
+    # Retrieve box info
+    logger.info("Getting word boxes...")
+    (document_word_boxes, deleted_mark_IDs) = getWordBoxes(tmp_dir / boxpositions_filename)
+    logger.info("Done.")    
+
     logger.info("Unmarking LaTeX...")
-    unmarked_str, mark_positions = unMarkWithPositions(docclass_str + marked_preamble + marked_document + post_document_str, job_id, markids_to_delete)
+    # Do not concatenate the inserted code for marking
+    docclass_nodes, post_document_nodes = parse_out[0], parse_out[-1]
+    docclass_str = joinNodesVerbatim(docclass_nodes)
+    post_document_str = joinNodesVerbatim(post_document_nodes)    
+    
+    (unmarked_str, mark_positions) = unMarkWithPositions(
+        docclass_str + marked_preamble + marked_document + post_document_str, deleted_mark_IDs
+    )
     logger.info("Done.")
 
     if unmarked_str != tex_str:
@@ -1009,15 +870,14 @@ def segment(tex_filename: str, **kwargs):
     validateMarkPositions(mark_positions, document_word_boxes)
 
     if clean:
-        removeDir(tmp_dir)
+        utils.removeDir(tmp_dir)
 
-    # Segment should output all the information necessary for rectangleToLatex in makeCorrections.py
-    return mark_positions, document_word_boxes
+    return (mark_positions, document_word_boxes)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        prog = 'python segmentsource.py',
-        description = r'Marks small units in source LaTeX to extract source with positional information (i.e., rectangles)'
+        prog = f'python {MODULE_NAME}.py',
+        description = r'Marks small units in source LaTeX to extract source using positional information (i.e., rectangles)'
     )
     
     parser.add_argument('filename')
@@ -1029,7 +889,12 @@ if __name__ == '__main__':
         help='Delete intermediate files (and temporary directories); default=True',
         default=True
     )
-    parser.add_argument("--compiler", type=str, help='Specify LaTeX compiler; default=pdflatex', default='pdflatex')
+    parser.add_argument(
+        "--compiler",
+        type=str,
+        help=f'Specify LaTeX compiler; default={utils.DEFAULT_LATEX_COMPILER}',
+        default=utils.DEFAULT_LATEX_COMPILER
+    )
     
     args = parser.parse_args()
     
@@ -1038,4 +903,4 @@ if __name__ == '__main__':
     
     logging.basicConfig(level=_level, format='%(asctime)s - %(levelname)s - %(message)s')
 
-    mark_positions, document_word_boxes = segment(filename, clean=args.clean, compiler=args.compiler)
+    (mark_positions, document_word_boxes) = getSyncInfo(filename, clean=args.clean, compiler=args.compiler)

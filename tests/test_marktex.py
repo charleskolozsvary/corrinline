@@ -1,5 +1,6 @@
-from texpdfedits.marktex import getSyncInfo, getWordBoxes, unMarkWithPositions, sourceAsString
+from texpdfedits.marktex import getSyncInfo, getWordBoxes, unMarkWithPositions
 from texpdfedits.corr import rectangleToLatex
+from texpdfedits.utils import sourceAsString, DEFAULT_LATEX_COMPILER
 
 import logging
 logger = logging.getLogger(__name__)
@@ -97,7 +98,7 @@ if __name__ == '__main__':
     )
 
     parser.add_argument("-emen", "--extra-marked-environment-names", type=str, help='Comma-separated extra environment names to mark in---last resort')
-    parser.add_argument("--compiler", type=str, help='LaTeX compiler')
+    parser.add_argument("--compiler", type=str, help='LaTeX compiler', default=DEFAULT_LATEX_COMPILER)
     parser.add_argument("--clean", action=argparse.BooleanOptionalAction, help='Delete intermediate LaTeX files and tmp dirs; default=True', default=True)        
     
     args = parser.parse_args()

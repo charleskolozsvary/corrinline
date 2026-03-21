@@ -9,9 +9,9 @@ import pickle
 import re
 import sys
 
-
 import texpdfedits.extractanns as extractanns
 import texpdfedits.marktex as marktex
+import texpdfedits.utils as utils
 
 from pathlib import Path      
 
@@ -89,7 +89,7 @@ def rectangleToLatex(
     Args:
         pageno: Zero-indexed page number
         in_rectangle: Rectangle on the page (pymupdf format)
-        document_word_boxes: Dictionary from getWordBoxes() in segmentsource.py
+        document_word_boxes: Dictionary from getWordBoxes() in marktex.py
         mark_positions: dictionary mapping mark_id -> (start, end) positions in tex_str 
         tex_str: original unmarked LaTeX source
 
@@ -180,7 +180,7 @@ def rectangleToLatex(
     intersecting_word_boxes = {k: rect for k, rect in page_word_boxes.items() if in_rectangle.intersects(rect)}
 
     if intersecting_word_boxes:
-        logger.debug(f"Rectangle {in_rectangle} on page {pageno} intersected {len(intersecting_word_boxes)} word boxes")
+        # logger.debug(f"Rectangle {in_rectangle} on page {pageno} intersected {len(intersecting_word_boxes)} word boxes")
         mark_ids = list(intersecting_word_boxes.keys())
         category = categorizeMarkIDs(mark_ids)
         if category == 'compatible':
@@ -198,7 +198,7 @@ def rectangleToLatex(
             logger.debug(f"Incompatible mark IDs were\n{mark_ids}")
             return None, None
     else:
-        logger.debug(f"Rectangle {in_rectangle} did not intersect any word box on page {pageno}")
+        logger.debug(f"Rectangle {in_rectangle} did NOT intersect any word box on page {pageno}")
         boxes_before = {k: rect for k, rect in page_word_boxes.items() if rect.y0 < in_rectangle.y0 - BOXES_ORDER_THRESHOLD_BUFF and isSimpleID(k)}
         boxes_after = {k: rect for k, rect in page_word_boxes.items() if rect.y0 > in_rectangle.y0 + BOXES_ORDER_THRESHOLD_BUFF and isSimpleID(k)}
 
@@ -224,7 +224,7 @@ def rectangleToLatex(
         logger.warning(f"Cannot extract LaTeX: Rectangle outside marked boxes (start_key={start_key}, end_key={end_key})")
         return None, None
 
-    logger.debug(f"Before key is {start_key} and after key is {end_key}")
+    # logger.debug(f"Before key is {start_key} and after key is {end_key}")
 
     start_pos = mark_positions[start_key][0]
     end_pos = mark_positions[end_key][1]
@@ -284,7 +284,7 @@ class Correction:
             focus tags. See getSelection in extract.py for more on this
     
     latex_snippet: the latex source which corresponds to the pdf_selected_text.
-            See segmentsource.py for more on how this was retrieved
+            See marktex.py for more on how this was retrieved
     
     snippet_source_positions: the start and end positions of the latex_snippet
             in the original latex_string. That is, the latex_snippet is
@@ -446,9 +446,11 @@ def getCorrections(annot_filename: str, latex_filename: str, **kwargs) -> list[C
     clean               = kwargs.get('clean', True)
 
     edits = extractanns.getEdits(annot_filename, **kwargs)
-    mark_positions, document_word_boxes = marktex.segment(latex_filename, compiler=compiler, clean=clean)
+    (mark_positions, document_word_boxes) = marktex.getSyncInfo(latex_filename, compiler=compiler, clean=clean)
     
-    tex_str = marktex.sourceAsString(Path(latex_filename))
+    tex_str = utils.sourceAsString(Path(latex_filename))
+
+    logger.info("Making correction objects...")
 
     corrections = []
     for i, edit in enumerate(edits):
@@ -459,7 +461,7 @@ def getCorrections(annot_filename: str, latex_filename: str, **kwargs) -> list[C
             continue
         
         pdf_annot_rect = edit.annot_rect
-        logger.debug(f"Getting latex snippet for correction {i}...")
+        logger.debug(f"Getting latex snippet for edit {edit}...")
         latex_snippet, snippet_source_positions = rectangleToLatex(
             pageno,
             pdf_annot_rect,
@@ -467,6 +469,7 @@ def getCorrections(annot_filename: str, latex_filename: str, **kwargs) -> list[C
             mark_positions,
             tex_str
         )
+        logger.debug(f"Done.")
         
         if latex_snippet is None:
             logger.warning(f"Could not create correction {progress}: no LaTeX snippet for edit {progress}: {edit}")
@@ -479,7 +482,7 @@ def getCorrections(annot_filename: str, latex_filename: str, **kwargs) -> list[C
                 snippet_source_positions
             )
         )
-        logger.info(f"Created correction {progress}")
+    logger.info("Done.")
 
     logger.info(f"Produced {len(corrections)} corrections from {len(edits)} edit annotations.")
 

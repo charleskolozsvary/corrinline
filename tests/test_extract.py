@@ -3,6 +3,9 @@ import argparse
 import logging
 
 from texpdfedits.extractanns import getRobustAnnots, getEdits, PDF_ANNOT_TEXT, PDF_ANNOT_CARET, PDF_ANNOT_STRIKE_OUT
+
+import texpdfedits.utils as utils
+
 from pathlib import Path
 
 pymupdf.TOOLS.set_small_glyph_heights(True)
@@ -45,16 +48,23 @@ def drawRobustAnnots(filename, robust_annots, output_dir, unique_ending = 'robus
     doc.save(save_filename)
     logging.info(f"Done. Results saved to {save_filename}")
 
-def drawCharacters(filename, output_dir, unique_ending = 'pymupdf_characters'):
+def drawCharacters(filename, output_dir, unique_ending = 'pymupdf_characters', **kwargs):
     logging.info(f"Drawing character boxes in {filename}...")
     pymupdf.TOOLS.set_small_glyph_heights(True)
     doc = pymupdf.open(filename)
     save_filename = shipPdfFilename(filename, output_dir, unique_ending)
+
+    draw_page = kwargs.get('chars_draw_page', 1)
+    
     for i, page in enumerate(doc):
-        if i != 1:
+        if i != draw_page:
             continue
         raw_dict = page.get_text('rawdict', sort=True)
-        for block in raw_dict.get('blocks'):
+
+        blocks = raw_dict.get('blocks')
+        bar = utils.TextProgressBar(len([0 for block in blocks for line in block.get('lines')]))
+        bar.showSize()           
+        for block in blocks:
             for line in block.get('lines'):
                 for span in line.get('spans'):
                     for char in span.get('chars'):
@@ -64,11 +74,9 @@ def drawCharacters(filename, output_dir, unique_ending = 'pymupdf_characters'):
                         box = page.add_freetext_annot(char['bbox'], '', text_color=(1,0,1))
                         box.set_border(width=0.1)
                         box.update()
-                        
-                        # dot = page.add_ink_annot([[char_center, char_off]])
-                        # dot.update()
-
-        logging.info(f"Finished page {i:3d}/{doc.page_count:3d}")
+                bar.addProgress()
+        bar.end()
+        logging.info(f"Drew character rectangles on page {i:3d} of {filename}")
         break
     doc.save(save_filename)
     logging.info(f"Done. Results saved to {save_filename}.")
@@ -176,25 +184,30 @@ def drawEdits(filename, output_dir, edits, unique_ending = 'edit_selections'):
     
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('filename')
+    parser.add_argument('pdf_filename')
     parser.add_argument("-d", "--debug", action="store_true", help='debugging output')
     parser.add_argument("-c", "--draw-chars", action="store_true", help='draw character boxes')            
     parser.add_argument("-w", "--draw-words", action="store_true", help='draw word boxes')        
     parser.add_argument("-l", "--draw-lines", action="store_true", help='draw line boxes')
     parser.add_argument("-a", "--draw-annots", action="store_true", help='draw original and robust annot boxes')    
     parser.add_argument("-e", "--draw-edits", action="store_true", help='draw edit selections')
-    parser.add_argument("--tryhack", action="store_true", help='Try adjusting the widths of the noncaret Annots; default=False')    
+    parser.add_argument("--adjust-annots", action="store_true", help='Try adjusting the widths of the noncaret Annots; default=False')
+    parser.add_argument("--chars-draw-page", type=int, help='page (zero indexed) to draw individual char rectangles if specified; default=1', default=1)
     
     args = parser.parse_args()
     _level = logging.DEBUG if args.debug else logging.INFO
     logging.basicConfig(level=_level, format='%(asctime)s - %(levelname)s - %(message)s')    
 
-    filename = args.filename
+    filename = args.pdf_filename
     
     bb_dir = Path('bbox_drawings')
 
+    kwargs = dict()
+    if args.chars_draw_page:
+        kwargs['chars_draw_page'] = args.chars_draw_page
+
     if args.draw_chars:
-        drawCharacters(filename, bb_dir)
+        drawCharacters(filename, bb_dir, **kwargs)
 
     if args.draw_words:
         drawWords(filename, bb_dir)
@@ -206,12 +219,12 @@ if __name__ == '__main__':
         drawAnnots(filename, bb_dir)
 
         doc = pymupdf.open(filename)
-        annots = getRobustAnnots(doc, remove_extra_horizontal=args.tryhack) # from extract.py    
+        annots = getRobustAnnots(doc, adjust_annots=args.adjust_annots) # from extract.py    
         drawRobustAnnots(filename, annots, bb_dir)
 
 
     logging.info(f'Running getEdits({filename})...')
-    edits = getEdits(filename, remove_extra_horizontal=args.tryhack)
+    edits = getEdits(filename, adjust_annots=args.adjust_annots)
     logging.info("Done.")
         
     if args.draw_edits:    

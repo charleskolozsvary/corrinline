@@ -89,15 +89,15 @@ Finally, here are two pages side by side, one from `arxiv5_ann.pdf`, the other f
 
 You might notice that one of the automatic corrections resulted in "satisfyit." That happened because the contents of the comment for that correction was just "it" (no space before).
 
-## Assumptions/Limitations
+## Assumptions and limitations
 ### Unchanged LaTeX
 This script assumes that the LaTeX source is unchanged since the original PDF was generated and annotated. If there is any difference (even of a few words) between the current source and what generated the PDF which was annotated, the script will not work.
 
-### Incomplete character mapping
-Since text is extracted directly from the PDF for producing the "annotated text" rendered math and other special glyphs will not be translated correctly to the
-Unicode text in the PDF. For example, even something relatively simple like `''` in the latex source will produce the unicode character `”`.
-
-A straitforward enhancement would be to specify some of these Unicde to TeX character mappings, but this is not implemented yet.
-
 ### Annotations are precise
 As shown in the above screenshots, the contents of insertion and replacement text are interpreted literally. Additionally, since 'highlight' is too general an annotation, said annotations will never be done automatically, even if they are used in place of a replacement or strikeout annotation. So dedicated annotations must be used for best results.
+
+### Incomplete character mapping to the PDF
+Since text is extracted directly from the PDF for producing the "annotated text," rendered math and other special glyphs will not be translated correctly to
+Unicode (which is what the PDF text is encoded as). For example, even something relatively simple like `''` in the LaTeX source will produce the unicode character `”`. Such a mismatch would prevent a correction like `''.` to `.''` from happening automatically.
+
+A straitforward enhancement would be to specify some of these Unicde to TeX character mappings, but this is not implemented yet.

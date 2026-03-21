@@ -1,6 +1,6 @@
 #!/bin/bash
 
-script_name="corrinline"
+script_name=$(grep -m 1 '^\[project.scripts\]' -A 1 pyproject.toml | grep '=' | sed 's/=.*//' | tr -d '[:space:]')
 
 if [ -z "$1" ]; then
     echo "Error: no destination directory provided"
@@ -29,7 +29,7 @@ pixi install
 
 cat <<EOF > "$script_name"
 #!/bin/bash
-pixi run --manifest-path "$PWD" python -m texpdfedits.inlinecorr "\$@"
+pixi run --manifest-path "$PWD" $script_name "\$@"
 EOF
 
 chmod +x "$script_name"

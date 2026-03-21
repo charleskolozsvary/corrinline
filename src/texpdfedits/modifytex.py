@@ -2,26 +2,13 @@ import logging
 logger = logging.getLogger(__name__)
 import argparse
 import pymupdf
-import json
-import time
-import pickle
 import re
 import sys
-
-from texpdfedits.extractanns import Edit, getEdits
-from texpdfedits.marktex import segment, sourceAsString, runDiffpdf, pdfFname, compileLatex, transferTeXFiles, removeDir
-from texpdfedits.corr import Correction, getCorrections, toCodeblock
-
 from pathlib import Path
 
-from importlib.metadata import version
-__version__ = version("texpdfedits")
-
-PROGRAM_NAME = __spec__.name.split('.')[-1]
-
-EDITED_SUFFIX = 'inlined'
-
-INTERMEDIATE_EXTENSIONS_TO_DELETE = set(".aux .out .log .toc .bbl .blg .thm .synctex.gz .synctex .brf .pdf".split(' '))
+import texpdfedits.extractanns as extractanns
+import texpdfedits.marktex as marktex
+from texpdfedits.corr import Correction, getCorrections, toCodeblock
 
 def getBetweenLatex(prev_pos: int, char_pos: int, prev_rest_of_line: str, *args):
     (tex_str, charpos_to_kinds_and_corrections, corrected_snippets) = args
@@ -159,7 +146,6 @@ def commentSource(tex_str: str, char_positions: list[int], charpos_to_kinds_and_
     commented_source = []
     prev_pos, prev_rest_of_line = 0, ''
     for (char_pos, inserted_comment) in inserted_comments:
-        ## >>>
         between_latex = tex_str[prev_pos:char_pos]
         if corrected_snippets is not None:
             between_latex = getBetweenLatex(
@@ -170,7 +156,6 @@ def commentSource(tex_str: str, char_positions: list[int], charpos_to_kinds_and_
                 charpos_to_kinds_and_corrections,
                 corrected_snippets
             )
-        ## <<<
         
         commented_source.append(between_latex)
 
@@ -206,14 +191,6 @@ def commentSource(tex_str: str, char_positions: list[int], charpos_to_kinds_and_
     commented_source.append(tex_str[prev_pos:])
     return ''.join(commented_source)
 
-def deleteIntermediateLaTeX(tex_filename: Path):
-    body = tex_filename.stem
-    for extension in INTERMEDIATE_EXTENSIONS_TO_DELETE:
-        to_delete = Path(body + extension)
-        if to_delete.exists():
-            logger.debug(f"Deleted {to_delete}")
-            to_delete.unlink()
-
 def tagsAreValid(tagged_text: str) -> bool:
     tag_regex = r'(</?)([a-zA-Z]+)>'
     all_tags = list(re.finditer(tag_regex, tagged_text))
@@ -224,7 +201,7 @@ def tagsAreValid(tagged_text: str) -> bool:
     tag_info = [(tag.group(1), tag.group(2)) for tag in all_tags]
     tag_starts, tag_names = zip(*tag_info)
 
-    if tag_names.count(Edit.CARET_NAME) > 1:
+    if tag_names.count(extractanns.Edit.CARET_NAME) > 1:
         return False
 
     if len(set(tag_names)) != 1:
@@ -261,13 +238,19 @@ def correctSnippet(corr: Correction, **kwargs):
     if re.search(r'pls\s*link|<\s*link\s*>|comp', comment_text, re.IGNORECASE):
         return None
 
-    tag_name = corr.type if corr.type != 'Caret' else Edit.CARET_NAME
+    tag_name = corr.type if corr.type != 'Caret' else extractanns.Edit.CARET_NAME
 
     # TODO: other enhancements/character substitutions like getting a correction
     # Annotated text: "stands for “closed<Replace>”,</Replace> as opposed" to work
     # Check (home)/notes/enhancements.md for more examples
+    
+    # I don't think I like how I do this. It should be simpler.
+    # I should to the autocorrect if the caret matches just once in the snippet the character
+    # to the left of the caret followed by the character to the right of the caret
+    # though maybe that would create too many more-than-one-matches
 
-    # TODO: improve this surrounding character check: try to get 0 or more words (up to some maximum).
+    # for the other two selected text autocorrections, though, I should just do it if the selected text matches
+    # once in the snippet. None of this surrounding space and nonspace...
 
     nonwhite_left = r'(\S+)?(\s*)'
     nonwhite_right = r'(\s*)(\S+)?'
@@ -279,6 +262,7 @@ def correctSnippet(corr: Correction, **kwargs):
     tagged_and_surr_text = list(re.finditer(regex, pdf_selection_text, re.DOTALL))
     
     if len(tagged_and_surr_text) != 1:
+        logger.debug("Did not match tagged + surr text")
         return None
 
     match = tagged_and_surr_text[0]
@@ -291,7 +275,8 @@ def correctSnippet(corr: Correction, **kwargs):
     
     m_left, m_right = rf'({left}{l_sp})({tagged})', rf'({tagged})({r_sp}{right})'
 
-    existing_snippet = kwargs.get('snippet', None)
+    # if the snippet has already been updated    
+    existing_snippet = kwargs.get('snippet', None) 
     latex_snippet = corr.latex_snippet if existing_snippet is None else existing_snippet
 
     def doSubstitution(sub_left, sub_right):
@@ -304,7 +289,37 @@ def correctSnippet(corr: Correction, **kwargs):
         )
         
         if ns_left == 1 and ns_right == 1:
-            return cs_left if cs_left == cs_right else None # could return either; arbitrarily return left sub
+            # <<<
+            # return cs_left if cs_left == cs_right else None
+            # ========================
+            if cs_left == cs_right:
+                return cs_left
+            # if one of the matches inserts something inside $$ (to the right of it is `$` or `\)`) and the other doesn't
+            # (to the right of it is not `$` or `\)`), go with the one that doesn't
+            # This is not robust. We would still have issues if something was inserted
+            # on either side of a start math shift.
+            # Would need to properly check if inserted content is inside inline math, ideally
+            # with a TeX parser on the snippet
+            elif ns_left == 1 and ns_left == ns_right and corr.type == 'Caret':
+                l_rstart = list(re.finditer(m_left, latex_snippet))[0].start()+1
+                r_rstart = list(re.finditer(m_right, latex_snippet))[0].start()+1
+
+                l_right_of = latex_snippet[l_rstart:l_rstart+2]
+                r_right_of = latex_snippet[r_rstart:r_rstart+2]
+
+                def hasEndMathShift(chars: str) -> bool:
+                    return chars[0] == '$' or chars[0:2] == r'\)'
+                
+                l_inline_math = hasEndMathShift(l_right_of)
+                r_inline_math = hasEndMathShift(r_right_of)
+                
+                if l_inline_math ^ r_inline_math: # xor
+                    return cs_left if r_inline_math else cs_right
+                else:
+                    return None
+            else:
+                return None
+            # >>> 
         elif ns_left == 1:
             return cs_left
         elif ns_right == 1:
@@ -359,37 +374,7 @@ def getCorrectedSnippets(corrections: list[Correction], overlapping_keys: list[l
     
     return corrected_snippets
 
-def addCorrectionComments(*args, **kwargs) -> int:
-    """
-    *args are the annotated pdf file name followed by the LaTeX file name
-    **kwargs are key word arguments (currently just corrections and group_overlapping)
-    """
-    annot_filename, tex_filename = args
-    
-    corrections         = kwargs.get('corrections', None)
-    overlapping_keys    = kwargs.get('overlapping_keys', None)
-    
-    group_overlapping   = kwargs.get('group_overlapping', True)
-    compiler            = kwargs.get('compiler', 'pdflatex')
-    
-    clean               = kwargs.get('clean', True)    
-    validate            = kwargs.get('validate', True)
-    do_autocorrections  = kwargs.get('autocorrect', False)
-
-    remove_extra_horizontal = kwargs.get('remove_extra_horizontal', False)
-
-    if corrections is None and overlapping_keys is None:
-        corrections, overlapping_keys = getCorrections(
-            *args,
-            group_overlapping = group_overlapping,
-            compiler          = compiler,            
-            clean             = clean,
-            remove_extra_horizontal = remove_extra_horizontal
-        )
-
-    tex_filename = Path(tex_filename)
-    commented_tex_filename = Path(f"{tex_filename.parent / tex_filename.stem}_{EDITED_SUFFIX}.tex")
-
+def getSourcePosToCorrections(corrections: list[Correction]):
     char_positions = []
     charpos_to_kinds_and_corrections = dict()
     for corr in corrections:
@@ -405,123 +390,4 @@ def addCorrectionComments(*args, **kwargs) -> int:
         char_positions.extend([start_pos, end_pos])
 
     char_positions = sorted(set(char_positions))
-    tex_str = sourceAsString(tex_filename)
-    
-    # comment the source -- no autocorrections    
-    commented_source = commentSource(
-        tex_str,
-        char_positions,
-        charpos_to_kinds_and_corrections
-    )
-
-    with open(commented_tex_filename, 'w') as f:
-        f.write(commented_source)
-
-    cwd = Path('./')
-
-    # Verify that inserting the comments does not change the PDF
-    process1 = compileLatex(tex_filename, compiler=compiler)
-    process2 = compileLatex(commented_tex_filename, compiler=compiler)
-
-    transferTeXFiles(tex_filename, cwd, 'cp')
-    transferTeXFiles(commented_tex_filename, cwd, 'mv')
-    
-    if validate:
-        process3, diff_fname = runDiffpdf(pdfFname(tex_filename), pdfFname(commented_tex_filename), cwd, per_page_tol=0)
-
-    if clean:
-        logger.info("Deleting intermediate files.")
-        diff_fname.unlink()
-        deleteIntermediateLaTeX(tex_filename)
-        deleteIntermediateLaTeX(commented_tex_filename)
-
-    logger.info(f"Original and commented source produce identical PDFs.")
-    logger.info(f"Correction comments successfully written to {commented_tex_filename.name}.")
-
-    if not do_autocorrections:
-        return 0
-
-    # comment the source again---now with autocorrections if specified    
-    logger.info(f"Doing autocorrections.")
-    corrected_snippets = getCorrectedSnippets(corrections, overlapping_keys)
-
-    commented_source = commentSource(
-        tex_str,
-        char_positions,
-        charpos_to_kinds_and_corrections,
-        corrected_snippets = corrected_snippets
-    )
-    
-    # no validation because we expect pdf differences after autocorrections
-    autocorrected_tex_filename = Path(f"{tex_filename.stem}_autocorrected.tex")    
-    with open(autocorrected_tex_filename, 'w') as f:
-        f.write(commented_source)
-
-    n_corrected = sum(1 for corr in corrections if corr.is_autocorrected)
-
-    logger.info(f"Autocorrected {n_corrected:3d}/{len(corrections):3d} corrections")
-    logger.info(f"Autocorrected source successfully written to {autocorrected_tex_filename}.")
-
-    return 0
-
-def ProgramBanner():
-    return f"This is {PROGRAM_NAME} version {__version__}\n"
-
-if __name__ == '__main__':
-    clparser = argparse.ArgumentParser()
-    clparser.add_argument('annotated_PDF_filename')
-    clparser.add_argument('latex_filename')
-    
-    clparser.add_argument("-d", "--debug", action="store_true", help='debugging output')
-    clparser.add_argument("-p", "--load-pickle", action="store_true", help='Load (or create) pickle file of corrections (for debugging)')
-    
-    clparser.add_argument("--grp-overlap", action=argparse.BooleanOptionalAction, help='Extend overlapping correction source positions; default=True', default=True)
-    clparser.add_argument("--compiler", type=str, help='Specify TeX compiler; default=pdflatex', default='pdflatex')
-    clparser.add_argument("--clean", action=argparse.BooleanOptionalAction, help='Delete intermediate LaTeX files and tmp dirs; default=True', default=True)    
-    clparser.add_argument("--autocorrect", action="store_true", help='Automatically carry out simple corrections; default=False')
-    clparser.add_argument("--tryhack", action="store_true", help='Try adjusting the widths of the noncaret Annots; default=False')
-    
-    args = clparser.parse_args()
-    _level = logging.DEBUG if args.debug else logging.INFO
-    logging.basicConfig(encoding='utf-8', level=_level) # format='%(asctime)s - %(levelname)s - %(message)s'
-
-    print(ProgramBanner())
-
-    if not args.grp_overlap and args.autocorrect:
-        logger.critical("Overlapping snippets must be extended to do autocorrections. Please either allow overlap grouping or do not request autocorrections.")
-        sys.exit(1)
-
-    if args.load_pickle:
-        pickle_dir = Path("pickle")
-        Path.mkdir(pickle_dir, exist_ok = True)
-        pcorr_file = pickle_dir / Path(f"{Path(args.latex_filename).stem}_corrections.pkl")
-    
-        if pcorr_file.exists():
-            with open(pcorr_file, 'rb') as f:
-                (corrections, overlapping_keys) = pickle.load(f)
-        else:
-            corrections, overlapping_keys = getCorrections(
-                args.annotated_PDF_filename,
-                args.latex_filename,
-                group_overlapping = args.grp_overlap,
-                compiler          = args.compiler,
-                clean             = args.clean
-            )
-            with open(pcorr_file, 'wb') as f:
-                pickle.dump((corrections, overlapping_keys), f)
-    else:
-        corrections, overlapping_keys = None, None
-
-    addCorrectionComments(
-        args.annotated_PDF_filename,
-        args.latex_filename,
-        group_overlapping = args.grp_overlap,
-        compiler          = args.compiler,        
-        clean             = args.clean,
-        corrections       = corrections,
-        overlapping_keys  = overlapping_keys,        
-        autocorrect       = args.autocorrect,
-        remove_extra_horizontal = args.tryhack
-    )
-
-    
+    return (char_positions, charpos_to_kinds_and_corrections)
