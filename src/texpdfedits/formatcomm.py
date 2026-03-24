@@ -57,7 +57,7 @@ def startComment(corr: Correction, format: str, replies: str):
     c_id = FORMAT_TO_IDENTIFIER[format][0] # [0] since start
 
     if replies:
-        replies = f'\n%{c_id} Replies: "{replies}"'
+        replies = f'\n%% Replies: "{replies}"'
 
     status_message = '(auto) [✓]' if corr.is_autocorrected else '[ ]'
 
@@ -83,7 +83,7 @@ def endComment(corr: Correction, format: str, replies: str):
     c_id = FORMAT_TO_IDENTIFIER[format][1]
 
     if replies:
-        replies = f'\n%{c_id} Replies: "{replies}"'    
+        replies = f'\n%% Replies: "{replies}"'    
         
     if format == FORMAT_FRONT:
         return ''

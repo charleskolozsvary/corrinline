@@ -175,6 +175,7 @@ FORBIDDEN_BIB_KEYS = [
     'url',
     'arXiv',
     'eprint',
+    'edition',
 ]
 
 # environments which are not marked in full like allowed_mark_environments---here
