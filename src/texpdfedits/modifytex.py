@@ -14,6 +14,8 @@ import texpdfedits.utils as utils
 from texpdfedits.corr import Correction, toCodeblock
 from texpdfedits.extractanns import Annot
 
+from icecream import ic
+
 MAX_PROGRESSIVE_AUTO_ATTEMPTS = 10
 
 def getBetweenLatex(
@@ -283,15 +285,20 @@ def tagsAreValid(tagged_text: str) -> bool:
         
     return True
 
-def literalSearchRegex(s: str):
+def pdf2texSearchRegex(s: str):
     """
     return a regex of the string which we can use to search for it literally up to whitespace,
     where all individual white space characters are treated the same
     """
     return ''.join(
-        r'\s+?' if re.match(r'^\s$', c) is not None else re.escape(c)
+        r'(?:\s+?|\s*~+\s*)' if re.match(r'^\s$', c) is not None else re.escape(c)
         for c in s
     )
+
+
+def matchingText(regex, string):
+    m = re.search(regex, string)
+    return string[m.start():m.end()]
 
 def progressiveAutocorrectAttempt(corr: Correction, **kwargs):
     tag_name = corr.type[1]
@@ -314,8 +321,9 @@ def progressiveAutocorrectAttempt(corr: Correction, **kwargs):
         return None
 
     m = match[0]
-    
-    tagged_text = literalSearchRegex(m.group(1))
+
+    # l for literal
+    between_tags_lregex = pdf2texSearchRegex(m.group(1))
     
     comment_text = utils.backslashEscape(
         utils.UnicodeToTeX(corr.messages['comment'])
@@ -323,16 +331,31 @@ def progressiveAutocorrectAttempt(corr: Correction, **kwargs):
 
     # simple attempt first
     simple_auto, num_subs = re.subn(
-        tagged_text,
+        between_tags_lregex,
         comment_text,
         latex_snippet,
-        flags=re.IGNORECASE
-    )    
+        # flags=re.IGNORECASE
+    )
+
+    # keep track of
+    # (new text,
+    #  length of regex used to make the sub) 
+    # tuples
+    # We only care about autocorrects which have just one substitution,
+    # and if there are more than one of those, we take the one
+    # which matched the longest length string in the latex
+
+    # This is done to reduce false positives
+    # much better idea than the greedy approach before
+    # and these checks are essentially free. No need
+    # to be greedy.
     
     if num_subs == 0:
         return None
     if num_subs == 1:
         return simple_auto
+
+    contending_autocorrects = []
 
     left_context  = annotated_pdf_text[:m.start()]
     right_context = annotated_pdf_text[m.end():]
@@ -347,100 +370,71 @@ def progressiveAutocorrectAttempt(corr: Correction, **kwargs):
         right_chars = right_context[:k] if k <= max_right else None
 
         if left_chars is not None:
-            l_regex = literalSearchRegex(left_chars)
-            m_left = rf'({l_regex})({tagged_text})'
+            l_regex = pdf2texSearchRegex(left_chars)
+            m_left = rf'({l_regex})({between_tags_lregex})'
             auto_left, ns_left = re.subn(
                 m_left,
                 rf'\1{comment_text}',
                 latex_snippet,
-                flags=re.IGNORECASE | re.DOTALL
+#                flags=re.IGNORECASE # | re.DOTALL
             )
             if ns_left == 1:
-                return auto_left
+                contending_autocorrects.append(
+                    (auto_left, len(matchingText(m_left, latex_snippet)))
+                )
 
         if right_chars is not None:
-            r_regex = literalSearchRegex(right_chars)
-            m_right = rf'({tagged_text})({r_regex})'
+            r_regex = pdf2texSearchRegex(right_chars)
+            m_right = rf'({between_tags_lregex})({r_regex})'
             auto_right, ns_right = re.subn(
                 m_right,
                 rf'{comment_text}\2',
                 latex_snippet,
-                flags=re.IGNORECASE | re.DOTALL
+#                flags=re.IGNORECASE # | re.DOTALL
             )
             if ns_right == 1:
-                return auto_right
+                contending_autocorrects.append(
+                    (auto_right, len(matchingText(m_right, latex_snippet)))
+                )
+                # return auto_right
 
         if left_chars is not None and right_chars is not None:
-            l_regex = literalSearchRegex(left_chars)
-            r_regex = literalSearchRegex(right_chars)
-            m_ambi = rf'({l_regex})({tagged_text})({r_regex})'
+            l_regex = pdf2texSearchRegex(left_chars)
+            r_regex = pdf2texSearchRegex(right_chars)
+            m_ambi = rf'({l_regex})({between_tags_lregex})({r_regex})'
             auto_ambi, ns_ambi = re.subn(
                 m_ambi,
                 rf'\1{comment_text}\3',
                 latex_snippet,
-                flags=re.IGNORECASE | re.DOTALL
+#                flags=re.IGNORECASE # | re.DOTALL
             )
             if ns_ambi == 1:
-                return auto_ambi
-
-    logger.debug("Progressive attempts exhausted")
-    return None
-
-def correctSnippet(corr: Correction, **kwargs):
-    if corr.type[0] not in {
-            Annot.CARET,
-            Annot.REPLACE,
-            Annot.REMOVE
-    }:
+                contending_autocorrects.append(
+                    (auto_ambi, len(matchingText(m_ambi, latex_snippet)))
+                )
+                # return auto_ambi
+    if not contending_autocorrects:
         return None
+
+    if corr.index == 119:
+        ic(contending_autocorrects)
+
+    (best_auto, _) = max(
+        contending_autocorrects,
+        key=lambda cauto: cauto[1]
+    )
     
-    pdf_selection_text = corr.pdf_selected_text
-    if not tagsAreValid(pdf_selection_text):
-        logger.warning(
-            f"Invalid tags: {pdf_selection_text} "
-            f"for corr on page {corr.pageno} with comment"
-            f" {corr.messages['comment']}"
-        )
-        return None
-    else:
-        logger.debug(f"`{pdf_selection_text}` is valid!")
+    return best_auto
 
-    comment_text = corr.messages['comment']
-
-    # expect empty comment with remove annotation
-    if corr.type[0] == Annot.REMOVE and comment_text != '':
-        return None
-
-    # insertion or replacement text that is very likely
-    # not exact/literal
-    if re.search(
-            r'pls\s*link|<\s*link\s*>|comp:',
-            comment_text,
-            flags=re.IGNORECASE
-    ):
-        return None
-
-    # ⭣⭣⭣
-    if corr.type[0] in {Annot.REPLACE, Annot.REMOVE}:
-        return progressiveAutocorrectAttempt(corr, **kwargs)
-    # ⭡⭡⭡ 0.12.0
-        
+def autocorrectCaret(corr: Correction, **kwargs):
     tag_name = corr.type[1]
-
-    # TODO: other enhancements/character substitutions like getting a correction
-    # Annotated text: "stands for “closed<Replace>”,</Replace> as opposed" to work
-    # Check (home)/notes/enhancements.md for more examples
+    pdf_selection_text = corr.pdf_selected_text
+    comment_text = corr.messages['comment']    
 
     nonspace_left = r'(\S+)?(\s*)'
     nonspace_right = r'(\s*)(\S+)?'
-    if corr.type[0] == Annot.CARET:
-        regex = rf'{nonspace_left}<{tag_name}>(){nonspace_right}'
-    else:
-        regex = (
-            rf'{nonspace_left}'
-            rf'<{tag_name}>(.*?)</{tag_name}>'
-            rf'{nonspace_right}'
-        )
+
+    regex = rf'{nonspace_left}<{tag_name}>(){nonspace_right}'
 
     tagged_and_surr_text = list(re.finditer(
         regex,
@@ -547,6 +541,150 @@ def correctSnippet(corr: Correction, **kwargs):
             return None
 
     return doSubstitution(sub_left, sub_right)
+
+def newCaretAutocorrect(corr: Correction, **kwargs):
+    tag_name = Annot.CARET_NAME
+    annotated_pdf_text = corr.pdf_selected_text
+
+    existing_snippet = kwargs.get('snippet', None)
+    latex_snippet = corr.latex_snippet if existing_snippet is None else existing_snippet
+
+    regex = rf"<{tag_name}>"
+    match = list(re.finditer(
+            regex,
+            annotated_pdf_text,
+    ))
+
+    if len(match) == 0:
+        logger.error(
+            "No match despite valid tags from "
+            f"`{regex}` on `{annotated_pdf_text}`"
+        )
+        return None
+    
+    if len(match) > 1:
+        logger.error(
+            f"More than one caret in PDF selection text `{annotated_pdf_text}`"
+            f"for annot on page {annot.pageno} despite passing tag"
+            "validation"
+        )
+        return None
+        
+    m = match[0]
+    left_text = annotated_pdf_text[:m.start()]
+    right_text = annotated_pdf_text[m.end():]
+
+    max_left = len(left_text)
+    max_right = len(right_text)
+    max_k = max(max_left, max_right)
+
+    insert_text = utils.backslashEscape(
+        utils.UnicodeToTeX(corr.messages['comment'])
+    )
+
+    contending_autocorrects = []
+
+    for k in range(1, min(max_k, MAX_PROGRESSIVE_AUTO_ATTEMPTS) + 1):
+        left_chars = left_text[-k:] if k <= max_left else None
+        right_chars = right_text[:k] if k <= max_right else None
+
+        if left_chars is not None:
+            l_regex = pdf2texSearchRegex(left_chars)
+            m_left = rf'({l_regex})'
+            auto_left, ns_left = re.subn(
+                m_left,
+                rf'\1{insert_text}',
+                latex_snippet,
+                # flags = re.IGNORECASE | re.DOTALL
+            )
+            if ns_left == 1:
+                contending_autocorrects.append(
+                    (auto_left, len(matchingText(m_left, latex_snippet)))
+                )
+                # return auto_left
+        if right_chars is not None:
+            r_regex = pdf2texSearchRegex(right_chars)
+            m_right = rf'({r_regex})'
+            auto_right, ns_right = re.subn(
+                m_right,
+                rf'{insert_text}\1',
+                latex_snippet,
+                # flags = re.IGNORECASE | re.DOTALL
+            )
+            if ns_right == 1:
+                contending_autocorrects.append(
+                    (auto_right, len(matchingText(m_right, latex_snippet)))
+                )
+                # return auto_right
+        if left_chars is not None and right_chars is not None:
+            l_regex = pdf2texSearchRegex(left_chars)
+            r_regex = pdf2texSearchRegex(right_chars)
+            m_ambi = rf'({l_regex})({r_regex})'
+            auto_ambi, ns_ambi = re.subn(
+                m_ambi,
+                rf'\1{insert_text}\2',
+                latex_snippet,
+                # flags = re.IGNORECASE | re.DOTALL
+            )
+            if ns_ambi == 1:
+                contending_autocorrects.append(
+                    (auto_ambi, len(matchingText(m_ambi, latex_snippet)))
+                )
+                # return auto_ambi
+    if not contending_autocorrects:
+        return None
+        
+    (best_auto, _) = max(
+        contending_autocorrects,
+        key=lambda cauto: cauto[1]
+    )
+    
+    return best_auto
+
+def correctSnippet(corr: Correction, **kwargs):
+    if corr.type[0] not in {
+            Annot.CARET,
+            Annot.REPLACE,
+            Annot.REMOVE
+    }:
+        return None
+    
+    pdf_selection_text = corr.pdf_selected_text
+    if not tagsAreValid(pdf_selection_text):
+        logger.warning(
+            f"Invalid tags: {pdf_selection_text} "
+            f"for corr on page {corr.pageno} with comment"
+            f" {corr.messages['comment']}"
+        )
+        return None
+    else:
+        logger.debug(f"`{pdf_selection_text}` is valid!")
+
+    comment_text = corr.messages['comment']
+
+    # expect empty comment with remove annotation
+    if corr.type[0] == Annot.REMOVE and comment_text != '':
+        logger.debug(
+            f"Remove annotation on page {corr.pageno} "
+            "did not have empty comment text"
+        )
+        return None
+
+    # insertion or replacement text that is 
+    # very likely not exact/literal
+    if re.search(
+            r'pls\s*link|<\s*link\s*>|comp:',
+            comment_text,
+            flags=re.IGNORECASE
+    ):
+        return None
+
+    if corr.type[0] in {Annot.REPLACE, Annot.REMOVE}:
+        return progressiveAutocorrectAttempt(corr, **kwargs)
+    # else:
+    #     return autocorrectCaret(corr, **kwargs)
+    else: # 0.13.2
+        return newCaretAutocorrect(corr, **kwargs)
 
 def getCorrectedSnippets(
         corrections: list[Correction],

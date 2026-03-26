@@ -1,14 +1,10 @@
-However, there is still maybe one last step in connecting the complete metadata commands and float environments to the associated markboxes and marked captions
-That would be an enhancement if solely markboxes works well enough. As of right now, I'm not doing anything with the dedicated metadata and environment extraction (which is different from the newly added marking of footnotes, captions, and metadata commands).
+1. Checking footnotes and captions if PDF annot rectangle does not intersect any tex_word_boxes.
+1.1 Improve before and after sorting of tex_word_boxes when the PDF annotation rectangle doesn't intersect any of them. Sort their centers (including the annotation rect's center) by x then y and then use those before the annotation as the before pool and those after as the after pool.
+2. Limit character checks for selection text to generous region around annotation rectangle, not full page (speed up)
+3. Standardize labels
+4. Do autocorrections for "In the following theorem" -> "In Theorem~\ref{thmlabel}"
 
-# main next enhancements
-- label standardization
-- determining if no rectangle intersects/specified whether to give snippet of preamble to insert a missing metadata like `\datereceived`, `\subjclass`, etc.
 
-## low priority
-- screening multi-line annotations (maybe can be done without opencv)
-- correctly extracting multi-line annotations with opencv
-- extracting line and polygon annotations (may or may not require opencv)
 
 
 
