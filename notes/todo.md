@@ -1,6 +1,6 @@
-1. Limit character checks for selection text to generous region around annotation rectangle, not full page (speed up)
-2. Standardize labels
-3. Do autocorrections for "In the following theorem" -> "In Theorem~\ref{thmlabel}"
+1. Standardize labels
+1.1 add labels to chapters, sections, subsection, subsubsections, and enunciations. Don't worry about equations for now.
+2. Do autocorrections for "In the following theorem" -> "In Theorem~\ref{thmlabel}"
 
 
 

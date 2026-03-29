@@ -31,6 +31,7 @@ INTERMEDIATE_EXTENSIONS_TO_DELETE = set(
 )
 
 UNICODE2TEX = {
+    # COMMON PUNCTUATION
     '\u201c': r"``",      # “ 
     '\u201d': r"''",      # ” 
     '\u2018': r"`",       # ‘ 
@@ -38,12 +39,19 @@ UNICODE2TEX = {
     '\u00a7': r'\S ',    # § 
     '\u2013': r'--',      # – (EN-DASH)
     '\u2014': r'---',     # — (EM-DASH)
+    # LIGATURES
     '\ufb00': r'ff',      # ﬀ 
     '\ufb01': r'fi',      # ﬁ 
     '\ufb02': r'fl',      # ﬂ 
     '\ufb03': r'ffi',     # ﬃ
     '\ufb04': r'ffl',     # ﬄ
-    '\u0133': r'ij',      # ĳ
+    '\u0132': r'{\IJ }',  # Ĳ
+    '\u0133': r'{\ij }',  # ĳ    
+    # MATH 
+    '\u2206': r'\Delta',  # ∆
+    '\u03a9': r'\Omega',  # Ω
+    '\u03c9': r'\omega',  # ω
+    # ACCENTED/SPECIAL LETTERS
     '\u00e0': r'{\` a}',  # à
     '\u00e1': r"{\' a}",  # á
     '\u00e2': r'{\^ a}',  # â
@@ -123,8 +131,6 @@ UNICODE2TEX = {
     '\u012f': r'{\k i}',  # į
     '\u0130': r'{\. I}',  # İ
     '\u0131': r'{\i  }',  # ı
-    '\u0132': r'{\IJ }',  # Ĳ
-    '\u0133': r'{\ij }',  # ĳ
     '\u0134': r'{\^J }',  # Ĵ
     '\u0135': r'{\^\j}',  # ĵ
     '\u0136': r'{\c K}',  # Ķ

@@ -14,12 +14,11 @@ import texpdfedits.marktex as marktex
 import texpdfedits.utils as utils
 
 import functools
+from icecream import ic
 
 from pathlib import Path
 
 BOXES_Y_EQUIV_RANGE = 6
-
-MAYBE_COMPATIBLE_POSITION_DIFFERENCE_THRESH = 100 # 100 characters
 
 """
 When a rectangle doesn't intersect any word boxes, we look for
@@ -78,7 +77,7 @@ def categorizeMarkIDs(mark_ids: list[str]) -> int:
             if index < max_counter_idx:
                 return 'incompatible'
             else:
-                return 'maybe same'
+                return 'maybe compatible'
         if len(set_of_c_info['stems']) != 1 and index < max_counter_idx:
             return 'incompatible'
         
@@ -163,35 +162,35 @@ def checkMaybeCompatible(
         # count information is the same            
         head_count = c_info[-1]['head']
         if head_count in head_partitions:
-            head_partitions[head_count].append(c_info[-1])
+            head_partitions[head_count].append(c_info)
         else:
-            head_partitions[head_count] = [c_info[-1]]
+            head_partitions[head_count] = [c_info]
     sorted_head_counts = list(sorted(head_partitions.keys()))
 
-    def returnCinfoStem(single_c_info: dict[str, str | int]):
-        return single_c_info['stem']
-        
+    def returnCinfoStem(c_info: list[dict[str, str | int]]):
+        return c_info[-1]['stem']
+
     for i in range(len(sorted_head_counts)-1):
         curr_hcount = sorted_head_counts[i]
         next_hcount = sorted_head_counts[i+1]
-        last_curr = infoToMarkID(
-            max(head_partitions[curr_hcount], key=returnCinfoStem)
-        )
-        first_next = infoToMarkID(
-            min(head_partitions[next_hcount], key=returnCinfoStem)
-        )
+
+        last_curr_hpartitions = max(head_partitions[curr_hcount], key=returnCinfoStem)
+        # ic(last_curr_hpartitions)
+        
+        last_curr = infoToMarkID(last_curr_hpartitions)
+
+        first_next_hpartitions = min(head_partitions[next_hcount], key=returnCinfoStem)
+        # ic(first_next_hpartitions)
+        
+        first_next = infoToMarkID(first_next_hpartitions)
 
         start_pos = mark_positions[last_curr][1]
         end_pos = mark_positions[first_next][0]
-        if not (
-            start_pos < end_pos
-            and end_pos - start_pos < MAYBE_COMPATIBLE_POSITION_DIFFERENCE_THRESH
-        ):
+        if not start_pos < end_pos:
             logger.debug(
-                f"Mark IDs are not compatible for source extraction:\n"
-                f"markId {last_curr} had end {start_pos} and id {first_next} had start {end_pos}"
+                f"Intermediate start_ends '{start_pos}' '{end_pos}' were out of order"
             )
-            return None, None
+            return (None, None)    
 
     start_key = infoToMarkID(
         min(head_partitions[sorted_head_counts[0]], key=returnCinfoStem)
@@ -414,11 +413,12 @@ def rectangleToLatex(
             start_key = before_min if before_min is not None else min_key
             end_key = after_max if after_max is not None else max_key
         elif category == 'maybe compatible':
-            start_key, end_key = checkMaybeCompatible(mark_ids, mark_positions)
+            (start_key, end_key) = checkMaybeCompatible(mark_ids, mark_positions)
         else:
             logger.warning(
                 f"Cannot extract LaTeX: "
-                f"intersected mark IDs were not compatible."
+                f"intersected mark IDs {mark_ids} "
+                "were not compatible."
             )
             logger.debug(f"Incompatible mark IDs were\n{mark_ids}")
             return (None, None)

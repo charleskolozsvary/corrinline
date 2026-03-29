@@ -15,11 +15,14 @@ pymupdf.TOOLS.set_small_glyph_heights(True)
 # how many characters to include on either side of what was selected by an annotation
 NUM_SELECTION_CONTEXT_CHARS = 12
 
-NUM_CONTEXT_WORDS = 2 # words to add before and after which are not selected    
+# words to add before and after which are not selected    
+NUM_CONTEXT_WORDS = 2 
 
-# heuristic adjustment of annot rectangle heights (in points) to reduce overlapps
-REDUCE_AMMOUNT_ABOVE = 2.5
-REDUCE_AMMOUNT_BELOW = 1.5
+# instead of iterating through every character on the page
+# to get the selection text of a single annotation, limit
+# the chars to those within 12 points above and below the
+# annotation
+PAGE_GET_TEXT_VERT_BEFORE_AFTER = 15
 
 class Annot:
     """
@@ -179,6 +182,14 @@ class Edit:
     def __repr__ (self):
         return str(self)
 
+def pageGetTextClipRect(annot_rect: pymupdf.Rect, page_rect: pymupdf.Rect):
+    return pymupdf.Rect(
+        page_rect.x0,
+        annot_rect.y0 - PAGE_GET_TEXT_VERT_BEFORE_AFTER,
+        page_rect.x1,
+        annot_rect.y1 + PAGE_GET_TEXT_VERT_BEFORE_AFTER
+    )
+
 def adjustCaretRect(caret_rect: pymupdf.Rect, page):
     """
     The bounding boxes of the original caret annotations often extend below the line they
@@ -195,7 +206,8 @@ def adjustCaretRect(caret_rect: pymupdf.Rect, page):
     caret_rect.y0 = y0 - 0.75 * extension
     
     # check intersecting spans
-    raw_dict = page.get_text('rawdict')
+    raw_dict_rect = pageGetTextClipRect(caret_rect, page.rect)
+    raw_dict = page.get_text('rawdict', sort=True, clip=raw_dict_rect)
     intersecting_spans = []
     for block in raw_dict.get('blocks'):
         if block.get('lines') is None:
@@ -274,10 +286,6 @@ def getRobustAnnots(doc, **kwargs):
             if annot.type[0] == Annot.CARET:
                 new_ann_rect = adjustCaretRect(new_ann_rect, page)
             else:
-                # can remove this once the character level getSelectionText is complete for all annots
-                # new_ann_rect.y0 = y0 + REDUCE_AMMOUNT_ABOVE
-                # new_ann_rect.y1 = y1 - REDUCE_AMMOUNT_BELOW
-
                 # logging.debug(f"before horizontal hack: {new_ann_rect}")
                 if adjust_annots:
                     new_ann_rect.x0 = x0 + HORIZONTAL_REMOVE
@@ -713,6 +721,9 @@ def getSelection(
     page = doc[annot.pageno]
     intersecting_words = []
 
+    raw_dict_rect = pageGetTextClipRect(annot.rect, page.rect)
+    page_rawdict = page.get_text('rawdict', sort=True, clip=raw_dict_rect)
+
     # <<< 0.10.1
     # ===============================
     if annot.type[0] == Annot.CARET:
@@ -728,7 +739,7 @@ def getSelection(
         return (
             newGetSelectionText(
                 annot,
-                page.get_text('rawdict',sort=True),
+                page_rawdict,
                 page_words
             ),
             sel_bbs,
@@ -738,7 +749,7 @@ def getSelection(
     else:
         selection, annot_rects = newGetSelectionText(
             annot,
-            page.get_text('rawdict',sort=True),
+            page_rawdict,
             page_words
         )
         return selection, annot_rects, annot.rect
@@ -834,7 +845,8 @@ def getEdits(filename, **kwargs):
             if annot.type[0] == Annot.STRIKE_OUT:
                 annot.type = (Annot.REMOVE, Annot.REMOVE_NAME)
 
-            page_words = page.get_text('words', sort=True)    
+            page_words_rect = pageGetTextClipRect(annot.rect, page.rect)
+            page_words = page.get_text('words', sort=True, clip=page_words_rect)
             # the sort option doesn't actually sort in lexicographic order... maybe it does it by rectangle positions.
             page_words = list(sorted(page_words, key = lambda w: (w[5], w[6], w[7])))
             
