@@ -1,23 +1,44 @@
 r"""
 This module marks the source with
-\markbox commands which record box and pdf positioning information which is used to take any (it is hoped) rectangle
-produce corresponding source which rendered the text which intersects said rectangle.
+\markbox commands which record box and pdf
+positioning information which is used to take any
+(it is hoped) rectangle produce corresponding
+source which rendered the text
+which intersects said rectangle.
 
-The function rectangleToLatex is implemented in corr.py where the correction objects are created
+The function rectangleToLatex is implemented
+in corr.py where the correction objects are created
 """
 
 import argparse
 import logging
 logger = logging.getLogger(__name__)
 
-from pylatexenc.latexwalker import LatexWalker, LatexNode, LatexMacroNode, LatexEnvironmentNode, LatexGroupNode, LatexMathNode, LatexCharsNode, LatexCommentNode
-from pylatexenc.macrospec import LatexContextDb, std_macro, std_environment, MacroSpec, ParsedMacroArgs, EnvironmentSpec
+from pylatexenc.latexwalker import (
+    LatexWalker,
+    LatexNode,
+    LatexMacroNode,
+    LatexEnvironmentNode,
+    LatexGroupNode,
+    LatexMathNode,
+    LatexCharsNode,
+    LatexCommentNode
+)
+from pylatexenc.macrospec import (
+    LatexContextDb,
+    std_macro,
+    std_environment,
+    MacroSpec,
+    ParsedMacroArgs,
+    EnvironmentSpec
+)
 
 from pathlib import Path
 import re
 import sys
 import pymupdf
 import time
+import textwrap
 
 import texpdfedits.utils as utils
 
@@ -27,7 +48,8 @@ class IgnoreRegionArgsParser:
     def parse_args(self, w, pos, parsing_state, **kwargs):
         r"""
         Skip until \endignorepylatexenc using get_token
-        use in rare circumstances where the pylatexenc parser fails on something (typically in the preamble)
+        use in rare circumstances where the pylatexenc
+        parser fails on something (typically in the preamble)
         just add
         \def\startignorepylatexenc{}
         \def\endignorepylatexenc{}
@@ -43,11 +65,17 @@ class IgnoreRegionArgsParser:
         while True:
             try:
                 # get_token returns (token_object, new_pos)
-                tok = w.get_token(current_pos, parsing_state=parsing_state)
+                tok = w.get_token(
+                    current_pos,
+                    parsing_state=parsing_state
+                )
             except:
-                raise ValueError("No matching \\endignorepylatexenc found")
+                raise ValueError(
+                    "No matching \\endignorepylatexenc found"
+                )
             
-            if tok.tok == 'macro' and tok.arg == 'endignorepylatexenc':
+            if (tok.tok == 'macro'
+                and tok.arg == 'endignorepylatexenc'):
                 end_pos = tok.pos + tok.len
                 break
             
@@ -85,7 +113,9 @@ CSNAMES_ARGSPEC = {
     'urladdr' : '[{',
     'email': '[{',
     'keywords': '{',
-    'footnote': '[{', # \footnote[10]{text} sets the footnote to be footnote 10---only a number can be passed
+    'footnote': '[{',
+    # \footnote[10]{text} sets the footnote to be footnote 10
+    # only a number can be passed, nothing else
     'footnotemark': '[',
     'footnotetext': '[{',
     'caption': '[{',
@@ -113,8 +143,9 @@ ENVNAMES_ARGSPEC = {
     'description': '[',
 }
 
-# macros which get marked as \markbox{<key>}{\macro{...}}, like in-line math
-# TODO: can I mark the words in these macros? 
+# macros which get marked as
+# \markbox{<key>}{\macro{...}}, like in-line math
+# LOW PRIORITY: can I mark the words in these macros? 
 MARKED_ENTIRE_CSNAMES = {
     'emph',
     'textit',
@@ -124,9 +155,11 @@ MARKED_ENTIRE_CSNAMES = {
     'textup',
     'url',
 }
-# any of the above fail if their arguments are abnormal, like a \[...\] in a \textit
+# any of the above fail if their arguments
+# are abnormal, like a \[...\] in a \textit
 
-# Below are macros whose contents ARE marked, not just the entire macro like the ones above
+# Below are macros whose contents ARE marked,
+# not just the entire macro like the ones above
 DISTINCTLY_MARKED_MACROS = {
     'caption': 1,
     'footnote': 1,
@@ -149,7 +182,8 @@ DISTINCTLY_MARKED_MACROS = {
 # environments which get their own nested numbering
 DISTINCTLY_MARKED_ENVIRONMENTS = {'document', 'abstract'}
 
-# the environments whose latex character nodes can be marked
+# the environments whose latex
+# character nodes can be marked
 ALLOWED_MARK_ENVIRONMENTS = {
     'document',
     'abstract',
@@ -177,8 +211,9 @@ FORBIDDEN_BIB_KEYS = [
     'edition',
 ]
 
-# environments which are not marked in full like allowed_mark_environments---here
-# only the contents of the \caption macros in said environments can be marked
+# environments which are not marked in full like
+# allowed_mark_environments---here only the contents
+# of the \caption macros in said environments can be marked
 ONLY_MARK_CAPTION_ENVS = {
     'table',
     'table*',
@@ -200,46 +235,65 @@ TEX_POINTS_TO_PDF_POINTS_CONVERSION_RATIO = 72 / 72.27
 # PdfTeX outputs the PDF positions in scaled points, so this constant is useful
 SCALED_POINTS_PER_TEX_POINT = 2 ** 16 # 65536
 
-def joinNodesVerbatim(nodelist: list[LatexNode], start: int = 0, end: int | None = None) -> str:
-    """return joined verbatim nodes from start to end inclusive"""
+def joinNodesVerbatim(
+        nodelist: list[LatexNode],
+        start: int = 0,
+        end: int | None = None
+) -> str:
+    """
+    return joined verbatim nodes from
+    start to end inclusive
+    """
     if end is None:
-        return ''.join([node.latex_verbatim() for node in nodelist[start:]])
+        return ''.join(
+            node.latex_verbatim()
+            for node in nodelist[start:]
+        )
     else:
-        return ''.join([node.latex_verbatim() for node in nodelist[start:end+1]])
+        return ''.join(
+            node.latex_verbatim()
+            for node in nodelist[start:end+1]
+        )
 
 def getEnunciations(preamble_nodes) -> tuple[list[str], str]:
     r"""
-    Retrieve \newtheorem declarations so we can expand ALLOWED_MARK_ENVIRONMENTS to include
+    Retrieve \newtheorem declarations so we can
+    expand ALLOWED_MARK_ENVIRONMENTS to include
     those enunciations, too.
     """
     enunciations = []
     for i, node in enumerate(preamble_nodes):
-        if node.isNodeType(LatexMacroNode) and node.macroname == 'newtheorem':
+        if (node.isNodeType(LatexMacroNode)
+            and node.macroname == 'newtheorem'):
             node_args = node.nodeargd.argnlist
             len_arg_spec = len(CSNAMES_ARGSPEC[node.macroname])
             if len(node_args) == len_arg_spec and len_arg_spec > 1:
                 arg_one = node_args[1]
                 try:
-                    # this fails with \\newtheorem{%\nthm}{Theorem}, but that's okay
+                    # this fails with \\newtheorem{%\nthm}{Theorem},
+                    # but that's okay
                     enun_name = arg_one.nodelist[0].chars
                 except Exception as e: 
                     logger.warning(
-                        f"Attempting to extract second argument of '{node.latex_verbatim()}' "
+                        f"Attempting to extract second argument of "
+                        f"'{node.latex_verbatim()}' "
                         f"raised {type(e).__name__}: {e}; "
                         f"node.nodeargs[1] was {arg_one}; ignoring"
                     )
-                enunciations.append(
-                    {'name': enun_name,
-                     'start end': (node.pos, node.pos+node.len),
-                     'verbatim': node.latex_verbatim()}
-                )
+                enunciations.append({
+                    'name': enun_name,
+                    'start end': (node.pos, node.pos+node.len),
+                    'verbatim': node.latex_verbatim()
+                })
             else:
                 logger.warning(
-                    f"Malformed {node.macroname}, '{node.latex_verbatim()}', "
-                    f"did not match it's argument specification: {CSNAMES_ARGSPEC[node.macroname]}"
+                    f"Malformed {node.macroname}, "
+                    f"'{node.latex_verbatim()}', "
+                    f"did not match it's argument specification: "
+                    f"{CSNAMES_ARGSPEC[node.macroname]}"
                 )
     if not enunciations:
-        logger.warning("No enunciations (newtheorem commands) found; continuing without them.")
+        logger.warning("No newtheorem commands found")
         
     return enunciations
 
@@ -248,30 +302,48 @@ def markNodes(
         allowed_environments: set[str],
         chars_node_match_regex: str,
 ) -> tuple[str, dict[str, dict[str, int]]]:
-    """Recursively mark the passsed node list. Return the marked string and the mark counters"""
+    """
+    Recursively mark the passsed node list.
+    Return the marked string and the mark counters
+    """
     counters = {}
 
-    # macro names where it is acceptable to match the beggining of the string when marking a chars node after it
-    OTHER_PREV_MACRO_NODE_EXCEPTIONS = {' ', 'item'} # control space or item
+    # macro names where it is acceptable to match the
+    # beggining of the string when marking a chars
+    # node after it
+    OTHER_PREV_MACRO_NODE_EXCEPTIONS = {' ', 'item'}
+    # control space or item        
     
     def markStr(string: str, parent_counter_keys: list[str]) -> str:
         """
-        A mark like document0:15;footnote0:3 corresponds to the fourth markbox in the first footnote which appears after
-        the 16th markbox in the first (and only) document environment. So all numbers are zero indexed. The number after the colon
-        corresponds to some box counter, and the number before the colon corresponds to the environment/macro counter
+        A mark like document0:15;footnote0:3 corresponds to the fourth
+        markbox in the first footnote which appears after
+        the 16th markbox in the first (and only) document environment.
+        So all numbers are zero indexed. The number after the colon
+        corresponds to some box counter, and the number before the colon
+        corresponds to the environment/macro counter
 
-        So the general structure is <environment/macro><num>:<num>;<nested enuncation/macro>:<num>;<and so on>
+        So the general structure is
+        <environment/macro><num>:<num>;<nested enuncation/macro>:<num>;<and so on>
 
-        More than two levels of nesting should be very rare, but I use this format to handle arbitrary nesting
+        More than two levels of nesting should be very rare,
+        but I use this format to handle arbitrary nesting
 
-        parent_counter_keys are the names of environments/macros the current mark is to be written in.
-        increment_head tells me whether I need to increment the head counter to the currently deepest nested object
+        parent_counter_keys are the names of environments/macros
+        the current mark is to be written in.
+        increment_head tells me whether I need to increment the
+        head counter to the currently deepest nested object
         
-        The very first time a particular dedicated macro/env is encountered (to mark in), increment_head should not be True, 
-        the counter key is automatically initialized (and so there's no head value to reset)
+        The very first time a particular dedicated macro/env is
+        encountered (to mark in), increment_head should not be True, 
+        the counter key is automatically initialized
+        (and so there's no head value to reset)
         """
         if not parent_counter_keys:
-            logger.critical(f"Could not mark {string}: it is not within any recognized macro/environment; exiting")
+            logger.critical(
+                f"Could not mark {string}: it is not "
+                "within any recognized macro/environment"
+            )
             sys.exit(1)
             
         for parent in parent_counter_keys:
@@ -280,9 +352,13 @@ def markNodes(
 
         count_key = parent_counter_keys[-1]
         counters[count_key]['value'] += 1
-        mark_id = ','.join([
-            f"{key.upper()}{counters[key]['head']};{counters[key]['value']}" for key in parent_counter_keys
-        ])
+        
+        mark_id = ','.join(
+            f"{key.upper()}"
+            f"{counters[key]['head']};"
+            f"{counters[key]['value']}"
+            for key in parent_counter_keys
+        )
         
         return rf'{MARK_CSNAME}{{{mark_id}}}{{{string}}}'
         
@@ -292,17 +368,28 @@ def markNodes(
         
         if node.isNodeType(LatexEnvironmentNode):
             node_name = node.envname
-            if node_name in DISTINCTLY_MARKED_ENVIRONMENTS and node_name in counters:
+            if (node_name in DISTINCTLY_MARKED_ENVIRONMENTS
+                and node_name in counters):
                 counters[node_name]['head'] += 1
                 counters[node_name]['value'] = -1                    
         elif node.isNodeType(LatexMacroNode):
             node_name = node.macroname
-            if node_name in DISTINCTLY_MARKED_MACROS and node_name in counters:
+            if (node_name in DISTINCTLY_MARKED_MACROS
+                and node_name in counters):
                 counters[node_name]['head'] += 1
                 counters[node_name]['value'] = -1
 
-        parent_is_distinctly_marked_macro = parent_node is not None and parent_node.isNodeType(LatexMacroNode) and parent_node.macroname in DISTINCTLY_MARKED_MACROS
-        is_in_only_mark_caption_env = parent_node is not None and parent_node.isNodeType(LatexEnvironmentNode) and parent_node.envname in ONLY_MARK_CAPTION_ENVS
+        parent_is_distinctly_marked_macro = (
+            parent_node is not None
+            and parent_node.isNodeType(LatexMacroNode)
+            and parent_node.macroname in DISTINCTLY_MARKED_MACROS
+        )
+        is_in_only_mark_caption_env = (
+            parent_node is not None
+            and parent_node.isNodeType(LatexEnvironmentNode)
+            and parent_node.envname in ONLY_MARK_CAPTION_ENVS
+        )
+        
         in_preamble = 'document' not in parent_counter_keys
         in_bib = parent_counter_keys and 'bib' in parent_counter_keys
         
@@ -312,10 +399,18 @@ def markNodes(
 
             # every LatexEnvironmentNode has a nodelist            
             verbatim_contents =  joinNodesVerbatim(node.nodelist) 
-            joined_whole = rf'\begin{{{node.envname}}}{verbatim_args}{verbatim_contents}\end{{{node.envname}}}'
+            joined_whole = (
+                rf'\begin{{{node.envname}}}'
+                rf'{verbatim_args}'
+                rf'{verbatim_contents}'
+                rf'\end{{{node.envname}}}'
+            )
             
             if node_verbatim != joined_whole:
-                logger.error(f"Environment node '{node_verbatim}' in markNode was malformed or parsed incorrectly")
+                logger.error(
+                    f"Environment node '{node_verbatim}' in "
+                    f"markNode was malformed or parsed incorrectly"
+                )
                 logger.debug(f"{node_verbatim} != {joined_whole}")
                 sys.exit(1)
                 
@@ -328,19 +423,37 @@ def markNodes(
 
                 this_prev_node = None
                 for nested_node in node.nodelist:
-                    marked_contents.append(recMark(nested_node, node, this_prev_node, parent_counter_keys))
+                    marked_contents.append(
+                        recMark(
+                            nested_node,
+                            node,
+                            this_prev_node,
+                            parent_counter_keys
+                        )
+                    )
                     this_prev_node = nested_node
                     
                 if is_distinct_mark_env:
                     parent_counter_keys.pop()
                     
-                return rf"\begin{{{node.envname}}}{verbatim_args}{''.join(marked_contents)}\end{{{node.envname}}}"
+                return (
+                    rf"\begin{{{node.envname}}}"
+                    rf"{verbatim_args}"
+                    rf"{''.join(marked_contents)}"
+                    rf"\end{{{node.envname}}}"
+                )
             else:
                 return joined_whole
             
         elif isinstance(node, LatexMacroNode):
-            if node.macroname in MARKED_ENTIRE_CSNAMES and (prev_node is not None) and (not is_in_only_mark_caption_env) and not in_preamble:
-                prev_ends_italcorr = re.search(r'[(\[]\s*$', prev_node.latex_verbatim())
+            if (node.macroname in MARKED_ENTIRE_CSNAMES
+                and (prev_node is not None)
+                and (not is_in_only_mark_caption_env)
+                and not in_preamble):
+                prev_ends_italcorr = re.search(
+                    r'[(\[]\s*$',
+                    prev_node.latex_verbatim()
+                )
                 if prev_ends_italcorr is None:
                     return markStr(node_verbatim, parent_counter_keys)
                 else:
@@ -351,17 +464,25 @@ def markNodes(
                 # process args vvv
                 len_arg_spec = len(CSNAMES_ARGSPEC[node.macroname])
                 argnlist = node.nodeargd.argnlist
-                joined_verbatim_macro = rf"\{node.macroname}" + ''.join([n.latex_verbatim() if n is not None else '' for n in argnlist])
+                
+                joined_verbatim_macro = rf"\{node.macroname}"
+                joined_verbatim_macro += ''.join([
+                    n.latex_verbatim() if n is not None else ''
+                    for n in argnlist
+                ])
                 
                 if node_verbatim != joined_verbatim_macro:
                     logger.warning(
-                        f"{node.macroname} verbatim, \n```latex\n{node_verbatim}\n```\ndid not match joined verbatim\n"
+                        f"{node.macroname} verbatim, "
+                        f"\n```latex\n{node_verbatim}\n```\ndid not "
+                        f"match joined verbatim\n"
                         f"```latex\n{joined_verbatim_macro}\n```\nignoring..."
                     )
                     return node_verbatim
                 elif len(argnlist) != len_arg_spec:
                     logger.warning(
-                        f"{node.macroname}, {node_verbatim}, did not match argspec len: "
+                        f"{node.macroname}, {node_verbatim}, "
+                        f"did not match argspec len: "
                         f"{len(argnlist)} != {len_arg_spec}"
                     )
                     return node_verbatim
@@ -374,7 +495,9 @@ def markNodes(
                         this_prev_node = arg_node
                         continue
                     if idx == DISTINCTLY_MARKED_MACROS[node.macroname]:
-                        marked_macro.append(recMark(arg_node, node, this_prev_node, parent_counter_keys))
+                        marked_macro.append(
+                            recMark(arg_node, node, this_prev_node, parent_counter_keys)
+                        )
                     else:
                         marked_macro.append(arg_node.latex_verbatim())
                     this_prev_node = arg_node
@@ -405,17 +528,26 @@ def markNodes(
             
             # mark every span in safe envs
             pattern = chars_node_match_regex
-            if prev_node is not None and (prev_node.isNodeType(LatexMacroNode) or prev_node.isNodeType(LatexGroupNode) or prev_node.isNodeType(LatexCommentNode)):
+            if (prev_node is not None
+                and (prev_node.isNodeType(LatexMacroNode)
+                     or prev_node.isNodeType(LatexGroupNode)
+                     or prev_node.isNodeType(LatexCommentNode))
+                ):
                 if parent_is_distinctly_marked_macro:
                     pass
-                elif prev_node.isNodeType(LatexMacroNode) and prev_node.macroname in OTHER_PREV_MACRO_NODE_EXCEPTIONS: 
+                elif (prev_node.isNodeType(LatexMacroNode)
+                      and prev_node.macroname in OTHER_PREV_MACRO_NODE_EXCEPTIONS): 
                     pass
                 else:
                     left = r"[\n\t $(~]"
                     inside = r"[a-zA-Z0-9!?.,'`/;:\-()]+"
                     right = r"[\n\t $)~]"
                     pattern = rf"(?<={left}){inside}(?:(?={right})|$)"
-            marked_str, num_subs = re.subn(pattern, lambda m: markStr(m.group(0), parent_counter_keys), node_verbatim)
+            marked_str, num_subs = re.subn(
+                pattern,
+                lambda m: markStr(m.group(0), parent_counter_keys),
+                node_verbatim
+            )
             return marked_str
         
         elif isinstance(node, LatexGroupNode):
@@ -423,19 +555,24 @@ def markNodes(
                 return node_verbatim
             
             if prev_node is not None:
-                prev_ends_square = re.search(r'[\]\}]\s*$', prev_node.latex_verbatim())
+                prev_ends_square = re.search(
+                    r'[\]\}]\s*$',
+                    prev_node.latex_verbatim()
+                )
                 prev_includes_forbidden_mark_bib_keys = re.search(
                     '|'.join(FORBIDDEN_BIB_KEYS),
                     prev_node.latex_verbatim(),
                     flags=re.IGNORECASE
                 )
                 
-                if in_bib and prev_includes_forbidden_mark_bib_keys is not None:
+                if (in_bib
+                    and prev_includes_forbidden_mark_bib_keys is not None):
                     return node_verbatim
             
-            if (prev_node is not None
+            if ((prev_node is not None
                 and prev_node.isNodeType(LatexCharsNode)
-                and prev_ends_square is None) or parent_is_distinctly_marked_macro:
+                and prev_ends_square is None)
+                or parent_is_distinctly_marked_macro):
                 # every LatexGroupNode has a nodelist                
                 verbatim_contents = joinNodesVerbatim(node.nodelist) 
                 
@@ -445,7 +582,7 @@ def markNodes(
                         f"Group node '{node_verbatim}' in markNode "
                         "was malformed or parsed incorrectly"
                     )
-                    logger.debug(f"{verbatim_contents} != {joined_whole}")                
+                    logger.debug(f"{verbatim_contents} != {joined_whole}")
                     sys.exit(1)
 
                 marked_contents = []
@@ -491,7 +628,8 @@ def markNodes(
 def getPreambleAndDocument(nodelist):
     num_document_envs = sum(
         1 for n in nodelist
-        if n.isNodeType(LatexEnvironmentNode) and n.envname == 'document'
+        if n.isNodeType(LatexEnvironmentNode)
+        and n.envname == 'document'
     )
     if num_document_envs != 1:
         logger.critical(
@@ -514,7 +652,8 @@ def getPreambleAndDocument(nodelist):
 
 def splitPreambleNodes(preamble_nodes: list[LatexNode]):
     for i, node in enumerate(preamble_nodes):
-        if isinstance(node, LatexMacroNode) and node.macroname == 'documentclass':
+        if (isinstance(node, LatexMacroNode)
+            and node.macroname == 'documentclass'):
             return (preamble_nodes[:i+1], preamble_nodes[i+1:])
     logger.critical("\\documentclass command not found")
     sys.exit(1)
@@ -576,26 +715,38 @@ def getWordBoxes(boxpositions_filename: Path):
             
             if key in word_boxes:
                 if label in word_boxes[key] and word_boxes[key][label] != values:
-                    # if the title hbox or position appears more than once with new values from being rewritten
-                    # in the running head, we just ignore said the new values                    
+                    # if the title hbox or position appears more
+                    # than once with new values from being rewritten
+                    # in the running head, we just ignore said
+                    # the new values                    
                     if 'TITLE' in key:
                         line = f.readline().strip()
                         line_no += 1
                         continue
-                    # for some reason, when using the prdlatex format (even with texlive2024), caption boxes will appear twice (or perhaps more times)
-                    # with different box information, but it looks like the second (or last) appearance is correct. This is probably fragile.
+                    # for some reason, when using the prdlatex format
+                    # (even with texlive2024), caption boxes will appear
+                    # twice (or perhaps more times)
+                    # with different box information, but it looks like the
+                    # second (or last) appearance is correct.
+                    # This is probably fragile.
                     if 'CAPTION' in key:
                         word_boxes[key][label] = values
                         line = f.readline().strip()
                         line_no += 1
                         continue                    
-                    # There should be only two labels (and they should each appear at most once):
-                    # Captions are read in twice, so it's okay if a label for a key appears more than once if the values are the same
-                    # 'pwhd' for page, width, height, depth; and 'spxy' for start, page, x pos, y pos
+                    # There should be only two labels (and they should
+                    # each appear at most once):
+                    # Captions are read in twice, so it's okay if a label
+                    # for a key appears more than once if the values
+                    # are the same
+                    # 'pwhd' for page, width, height, depth;
+                    # and 'spxy' for start, page, x pos, y pos
                     # see above comment for when they aren't the same
                     logger.critical(
-                        f"Key '{key}' with label '{label}' was already in '{word_boxes[key]}' and values differed\n"
-                        f"current value:\n```python\n{word_boxes[key][label]}\n```\n"
+                        f"Key '{key}' with label '{label}' was already "
+                        f"in '{word_boxes[key]}' and values differed\n"
+                        f"current value:\n```python\n"
+                        f"{word_boxes[key][label]}\n```\n"
                         f"new value:\n```python\n{values}\n```"
                     )
                     sys.exit(1)
@@ -617,9 +768,13 @@ def getWordBoxes(boxpositions_filename: Path):
             markids_to_delete.add(key)
             continue            
         if len(info) != 2:
-            # all marks should have exactly two fields (except for the ones which don't make it to the page)
+            # all marks should have exactly two fields (except for
+            # the ones which don't make it to the page)
             # the hbox dimensions and the start page and xy positions
-            logger.critical(f"mark id '{key}' in '{boxpositions_filename}' differed from specification")
+            logger.critical(
+                f"mark id '{key}' in '{boxpositions_filename}' "
+                "differed from specification"
+            )
             sys.exit(1)
 
     for mark_id in markids_to_delete:
@@ -627,7 +782,11 @@ def getWordBoxes(boxpositions_filename: Path):
 
     tex_word_boxes = dict()
     for key, info in word_boxes.items():
-        (one_indexed_pageno, rectangle) = boxinfoToPDFRectangle(key, info['pwhd'], info['spxy'])
+        (one_indexed_pageno, rectangle) = boxinfoToPDFRectangle(
+            key,
+            info['pwhd'],
+            info['spxy']
+        )
         pageno = int(one_indexed_pageno) - 1
         if pageno in tex_word_boxes:
             tex_word_boxes[pageno][key] = rectangle
@@ -660,12 +819,18 @@ def readBalancedBraces(idx: int, s: str) -> tuple[str, int]:
     contents = s[start_idx:idx-1]
     return contents, idx - start_idx
 
-def unMarkWithPositions(marked_string: str, deleted_mark_IDs: set[str]) -> tuple[str, dict[str, tuple[int, int]]]:
-    r"""Remove \markbox commands and track positions of marked content.
+def unMarkWithPositions(
+        marked_string: str,
+        deleted_mark_IDs: set[str]
+) -> tuple[str, dict[str, tuple[int, int]]]:
+    r"""Remove \markbox commands and track positions
+    of marked content.
     
     Returns:
-        (unmarked_string, mark_positions) where mark_positions maps mark_id -> (start, end)
-        Positions are in the unmarked string, with end being exclusive.
+        (unmarked_string, mark_positions) where
+    mark_positions maps mark_id -> (start, end)
+        Positions are in the unmarked string,
+    with end being exclusive.
     """
     
     mark_positions = {}
@@ -680,10 +845,10 @@ def unMarkWithPositions(marked_string: str, deleted_mark_IDs: set[str]) -> tuple
         if marked_string[idx:idx+MARKBOX_LEN] == MARKBOX:
             idx += len(MARKBOX)
           
-            mark_id, chars_read = readBalancedBraces(idx, marked_string)
+            (mark_id, chars_read) = readBalancedBraces(idx, marked_string)
             idx += chars_read + 1  # +1 for opening brace of second arg
           
-            content, chars_read = readBalancedBraces(idx, marked_string)
+            (content, chars_read) = readBalancedBraces(idx, marked_string)
             
             # Track position in unmarked string
             start_pos = current_pos
@@ -715,28 +880,51 @@ def markIdToCountInfo(mark_id: str) -> list[dict[str, int]]:
     for count in counts:
         head_and_stem = count.split(';')
         if len(head_and_stem) != 2:
-            raise ValueError(f"A segment of a nested mark, {head_and_stem}, was not delimited into two by a semicolon")
+            raise ValueError(
+                f"A segment of a nested mark '{head_and_stem}' "
+                "was not delimited into two by a semicolon"
+            )
         count_name = alphaComponent(head_and_stem[0])
         head_count = numericComponent(head_and_stem[0])
         stem_count = int(head_and_stem[1])
-        count_info.append({'name': count_name, 'head': head_count, 'stem': stem_count})
+        count_info.append(
+            {'name': count_name,
+             'head': head_count,
+             'stem': stem_count}
+        )
     return count_info
 
-def validateMarkPositions(mark_positions: dict[str, tuple[int, int]], tex_word_boxes: dict[int, dict[str, pymupdf.Rect]]) -> None:
-    """Verify that no mark positions overlap and that the mark position keys are a superset of the document word box keys. Raises ValueError if they do.
-    Also verify that tex_word_boxes.keys() is a subset of in mark_positions.keys()
+def validateMarkPositions(
+        mark_positions: dict[str, tuple[int, int]],
+        tex_word_boxes: dict[int, dict[str, pymupdf.Rect]]
+) -> None:
+    """Verify that no mark positions overlap and that
+    the mark position keys are a superset of the
+    document word box keys. Raises ValueError if they do.
+    
+    Also verify that tex_word_boxes.keys() is
+    a subset of in mark_positions.keys()
+    
     Args:
-        mark_positions: dict mapping mark_id -> (start, end) positions
+        mark_positions:
+    dict mapping mark_id -> (start, end) positions
     Raises:
         ValueError: if any two marks overlap
     """
     # Sort by start position
-    sorted_marks = sorted(mark_positions.items(), key=lambda x: x[1][0])
+    sorted_marks = sorted(
+        mark_positions.items(),
+        key=lambda x: x[1][0]
+    )
 
     for mark_id in mark_positions:
         count_info = markIdToCountInfo(mark_id)
-        if count_info[0]['name'] == 'document' and count_info[0]['head'] != 0:
-            raise ValueError(f"Unexpected mark ID '{mark_id}': document head is greater than 0")
+        if (count_info[0]['name'] == 'document'
+            and count_info[0]['head'] != 0):
+            raise ValueError(
+                f"Unexpected mark ID '{mark_id}': "
+                f"document head is greater than 0"
+            )
     
     # Check each adjacent pair
     for i in range(len(sorted_marks) - 1):
@@ -749,7 +937,8 @@ def validateMarkPositions(mark_positions: dict[str, tuple[int, int]], tex_word_b
                 f"start ({start_i}) >= end ({end_i})"
             )
         
-        # Since sorted by start, only need to check if previous end > next start
+        # Since sorted by start, only need to
+        # check if previous end > next start
         if start_j < end_i:
             raise ValueError(
                 f"Mark positions overlap: "
@@ -771,57 +960,95 @@ def validateMarkPositions(mark_positions: dict[str, tuple[int, int]], tex_word_b
             if mark_id not in mark_positions:
                 raise ValueError(
                     f"mark_id '{mark_id}' not in mark_positions. "
-                    "mark_positions.keys() is not a superset of all mark_ids in tex_word_boxes."
+                    "mark_positions.keys() is not a superset of "
+                    "all mark_ids in tex_word_boxes."
                 )
 
     logger.info("Mark positions are valid.")
 
-def parseLatex(tex_str: str) -> tuple[list[LatexNode]]:
+def parseLatex(
+        tex_str: str
+) -> tuple[list[LatexNode], list[LatexNode], LatexNode, list[LatexNode]]:
     # Set up parser context with recognized commands and environments
     latex_context = LatexContextDb()
-    macro_specs = [std_macro(csname, args_format) for csname, args_format in CSNAMES_ARGSPEC.items()]
-    environment_specs = [std_environment(envname, args_format) for envname, args_format in ENVNAMES_ARGSPEC.items()]
+    macro_specs = [
+        std_macro(csname, args_format)
+        for csname, args_format in CSNAMES_ARGSPEC.items()
+    ]
+    environment_specs = [
+        std_environment(envname, args_format)
+        for envname, args_format in ENVNAMES_ARGSPEC.items()
+    ]
     
-    latex_context.add_context_category('markspec', macros=macro_specs, environments=environment_specs)
+    latex_context.add_context_category(
+        'markspec',
+        macros=macro_specs,
+        environments=environment_specs
+    )
 
     # Add Ignore Parsing
-    custom_macros = [MacroSpec('startignorepylatexenc', args_parser=IgnoreRegionArgsParser())]
-    latex_context.add_context_category('ignore-regions', macros=custom_macros, prepend=True)
+    custom_macros = [
+        MacroSpec(
+            'startignorepylatexenc',
+            args_parser=IgnoreRegionArgsParser(),
+        )
+    ]
+    
+    latex_context.add_context_category(
+        'ignore-regions',
+        macros=custom_macros,
+        prepend=True,
+    )
     
     # Parse LaTeX --> get LaTeX node list 
     (nodelist, _, _) = LatexWalker(tex_str, latex_context=latex_context).get_latex_nodes(pos=0)
 
     if joinNodesVerbatim(nodelist) != tex_str:
-        logger.critical(f"TeX source was not preserved after LatexWalker parsing")
+        logger.critical(
+            f"TeX source was not preserved after LatexWalker parsing"
+        )
         sys.exit(1)
            
-    preamble_nodes, document_node, post_document_nodes = getPreambleAndDocument(nodelist)
+    (preamble_nodes, document_node, post_document_nodes) = getPreambleAndDocument(nodelist)
 
     # update preamble_nodes, exlude docclass
-    docclass_nodes, preamble_nodes = splitPreambleNodes(preamble_nodes)    
+    (docclass_nodes, preamble_nodes) = splitPreambleNodes(preamble_nodes)
 
     return (docclass_nodes, preamble_nodes, document_node, post_document_nodes)
 
-def getInsertedCodeForMarking(boxpositions_filename: str):
-    tex_write_commands = fr"""
-\makeatletter      %% for some reason \leavevmode's expansion of \unhbox\voidb@x is sometimes not read with @ as a letter, resulting in the error
-\let\voidb\voidb@x %% `undefined control sequence \voidb<linebreak>@x`. Should probably be looked into.
-\makeatother
+def getInsertedCodeForMarking(boxpositions_filename: str) -> tuple[str, str]:
+    r"""
+    for some reason \leavevmode's expansion of \unhbox\voidb@x
+    is sometimes not read with @ as a letter, resulting in
+    the error `undefined control sequence \voidb<linebreak>@x`.
+    Should probably be looked into.
 
-\newwrite\markfile
-\immediate\openout\markfile={boxpositions_filename}
+    To get the correct pdfposition, I must leave vmode when marking.
+    Otherwise the position recorded is before the new paragraph
+    """
+    tex_write_commands = textwrap.dedent(
+        rf"""
+        \makeatletter       
+        \let\voidb\voidb@x
+        \makeatother
 
-"""
-    markcs_def = rf'\newcommand{{{MARK_CSNAME}}}' + r"""[2]{%
-  \ifvmode\leavevmode\fi%% to get the correct pdfposition, I must leave vmode when marking. Otherwise the position recorded is before the new paragraph
-  \setbox0=\hbox{#2}%
-  \immediate\write\markfile{#1:pwhd:\the\value{page}:\the\wd0:\the\ht0:\the\dp0}%
-  \pdfsavepos
-  \write\markfile{#1:spxy:\the\value{page}:\the\pdflastxpos:\number\dimexpr\pdfpageheight-\pdflastypos sp\relax:}%
-  #2% 
-}
+        \newwrite\markfile
+        \immediate\openout\markfile={boxpositions_filename}
+        """
+    )
 
-"""
+    markcs_def = textwrap.dedent(
+        rf"""
+        \newcommand{{{MARK_CSNAME}}}[2]{{%
+        \ifvmode\leavevmode\fi%
+        \setbox0=\hbox{{#2}}%
+        \immediate\write\markfile{{#1:pwhd:\the\value{{page}}:\the\wd0:\the\ht0:\the\dp0}}%
+        \pdfsavepos%
+        \write\markfile{{#1:spxy:\the\value{{page}}:\the\pdflastxpos:\number\dimexpr\pdfpageheight-\pdflastypos sp\relax:}}%
+        #2%
+        }}
+        """
+    )
     return (tex_write_commands, markcs_def)
 
 def markLatex(tex_filename: Path, *parse_out, **kwargs):

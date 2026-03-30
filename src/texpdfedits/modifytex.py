@@ -18,6 +18,11 @@ from icecream import ic
 
 MAX_PROGRESSIVE_AUTO_ATTEMPTS = 10
 
+def addStandardLabels(tex_filename: Path):
+    tex_str = utils.sourceAsString(tex_filename)
+    # () = marktex.parseLatex()
+    return 0
+
 def getBetweenLatex(
         prev_pos: int,
         char_pos: int,
