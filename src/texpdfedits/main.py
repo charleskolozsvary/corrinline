@@ -91,11 +91,17 @@ def ProgramBanner():
 
 def main():
     parser = argparse.ArgumentParser(
-        description = r'Writes PDF corrections into the source LaTeX as comments'
+        description = f'Writes PDF corrections into the source LaTeX as comments'
     )
 
     parser.add_argument('annotated_PDF_file')
     parser.add_argument('latex_file', nargs='?', default=None)
+
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}"
+    )
 
     parser.add_argument(
         "-d",
@@ -125,7 +131,7 @@ def main():
     parser.add_argument(
         "--replace",
         action=argparse.BooleanOptionalAction,
-        help='Overwrite latex file comments are deleted successfully; default=True',
+        help='Overwrite latex file when comments are deleted successfully; default=True',
         default=True
     )
     parser.add_argument(
@@ -197,6 +203,10 @@ def main():
         logger.critical("Overlapping snippets must be merged to do autocorrections. Please either allow said merging or do not specify --autocorrect.")
         sys.exit(1)
 
+    if args.comment_format not in formatcomm.RECOGNIZED_FORMATS:
+        logger.critical(f"Unrecognized comment format '{args.comment_format}'")
+        sys.exit(1)
+
     process_files(
         args.annotated_PDF_file,
         latex_file,
@@ -209,9 +219,7 @@ def main():
         comment_format    = args.comment_format,
         delete_comments   = args.delete_comments,
         replace           = args.replace,
-    )    
-    
-    # TODO: add a way of automatically removing the inlined correction comments
+    )
 
 if __name__ == '__main__':    
     main()

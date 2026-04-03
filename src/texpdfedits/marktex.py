@@ -235,25 +235,11 @@ TEX_POINTS_TO_PDF_POINTS_CONVERSION_RATIO = 72 / 72.27
 # PdfTeX outputs the PDF positions in scaled points, so this constant is useful
 SCALED_POINTS_PER_TEX_POINT = 2 ** 16 # 65536
 
-def joinNodesVerbatim(
-        nodelist: list[LatexNode],
-        start: int = 0,
-        end: int | None = None
-) -> str:
-    """
-    return joined verbatim nodes from
-    start to end inclusive
-    """
-    if end is None:
-        return ''.join(
-            node.latex_verbatim()
-            for node in nodelist[start:]
-        )
-    else:
-        return ''.join(
-            node.latex_verbatim()
-            for node in nodelist[start:end+1]
-        )
+def joinNodesVerbatim(nodelist: list[LatexNode]) -> str:
+    return ''.join(
+        node.latex_verbatim()
+        for node in nodelist
+    )
 
 def getEnunciations(preamble_nodes) -> tuple[list[str], str]:
     r"""

@@ -644,7 +644,7 @@ def groupOverlaps(
             continue
         start = keyed_start_ends[k][0]
         end   = keyed_start_ends[k][1]
-        if start < curr_group_end:
+        if start <= curr_group_end:
             current_group.append(k)
             curr_group_end = max(curr_group_end, end)
         else:

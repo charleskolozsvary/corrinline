@@ -18,11 +18,6 @@ from icecream import ic
 
 MAX_PROGRESSIVE_AUTO_ATTEMPTS = 10
 
-def addStandardLabels(tex_filename: Path):
-    tex_str = utils.sourceAsString(tex_filename)
-    # () = marktex.parseLatex()
-    return 0
-
 def getBetweenLatex(
         prev_pos: int,
         char_pos: int,
@@ -177,7 +172,12 @@ def commentSource(
             )
 
         if end_corr_idxs and start_corr_idxs:
-            start_end_callout.append('%%\n')
+            logger.error(
+                f"The start of correction(s) {start_corr_idxs} "
+                f"coincided with the end of correction(s) {end_corr_idxs}"
+                f"grouping of the overlapping snippets failed"
+            )
+            start_end_callout.append('%% double trouble\n')
             
         if start_corr_idxs:
             start_end_callout.append(
@@ -191,10 +191,22 @@ def commentSource(
         description_str = ''.join(corr_descriptions)
         callout_str = ''.join(start_end_callout)
 
-        inserted_comments.append((
-            char_pos,
-            f'%%\n{description_str}{callout_str}'
-        )) 
+        if start_corr_idxs:
+            inserted_comments.append((
+                char_pos,
+                f'%%\n{description_str}{callout_str}'
+            ))
+        elif end_corr_idxs:
+            inserted_comments.append((
+                char_pos,
+                f'%%\n{callout_str}{description_str}'
+            ))
+        else:
+            logger.error(
+                "There were neither start or end "
+                "correction indices?"
+            )
+            
 
     len_tex_str = len(tex_str)
     commented_source = []

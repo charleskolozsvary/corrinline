@@ -6,9 +6,11 @@ import texpdfedits.utils as utils
 
 import re
 
-FORMAT_FRONT = 'front-load'
-FORMAT_SPLIT = 'read-order'
-FORMAT_BACK = 'back-load'
+FORMAT_FRONT = 'before'
+FORMAT_SPLIT = 'split'
+FORMAT_BACK = 'after'
+
+RECOGNIZED_FORMATS = {FORMAT_FRONT, FORMAT_SPLIT, FORMAT_BACK}
 
 DEFAULT_COMMENT_FORMAT = FORMAT_FRONT
 
@@ -38,28 +40,65 @@ DELETE_TAG = 'nocomments'
 
 REMOVE_REGEXES = {
         FORMAT_FRONT: re.compile(
-                rf"""%%\n                                      # leading intro
-                ^%%\ Correction\ [0-9]+,\ page\ [0-9]+ [^\n]*+ \n  # head
-                (?:^% [^\n]*+ \n)+?                            # information
-                ^%{FRONT_OID} [^\n]*+ \n                       # last start with id
-                (.*?)                                          # LaTeX to preserve
-                %%\n                                           # leading exit comment
-                ^%{FRONT_CID} [^\n]*+ \n                       # end with id
+                rf"""
+                %%                                             \n
+                ^%%\ Correction\ [0-9]+,\ page\ [0-9]+ [^\n]*+ \n
+                (?:^% [^\n]*+ \n)+?          
+                ^%{FRONT_OID}                          [^\n]*+ \n
+                (.*?)                                   
+                %%                                             \n                                    
+                ^%{FRONT_CID}                          [^\n]*+ \n
                 ([ \t\r]*\n)?+
                 """,
                 flags=re.VERBOSE | re.DOTALL | re.MULTILINE
         ),
-        FORMAT_SPLIT: re.compile(''), # TODO
-        FORMAT_BACK: re.compile('')   # TODO
+        FORMAT_SPLIT: re.compile(
+                rf"""
+                %%                                             \n
+                ^%%\ Correction\ [0-9]+,\ page\ [0-9]+ [^\n]*+ \n
+                (?:^% [^\n]*+ \n)+?              
+                ^%{SPLIT_OID}                          [^\n]*+ \n
+                (.*?)                    
+                %%                                             \n   
+                ^%{SPLIT_CID}                          [^\n]*+ \n
+                (?: ^%%\ Comment [^\n]*+ \n)++
+                ([ \t\r]*\n)?+
+                """,
+                flags=re.VERBOSE | re.DOTALL | re.MULTILINE
+        ),
+        FORMAT_BACK: re.compile(
+                rf"""
+                %%                        \n                                            
+                ^%{BACK_OID}     [^\n]*+  \n                              
+                (.*?)                                                
+                %%                        \n                                                 
+                ^%{BACK_CID}     [^\n]*+  \n
+                (?:
+                ^%%                       \n
+                ^%%\ Correction\ [^\n]*+  \n
+                ^%%\ Selection:  [^\n]*+  \n
+                ^%%\ Comment:    [^\n]*+  \n
+                (?:^%%\ Replies: [^\n]*+  \n)?+
+                )++
+                ([ \t\r]*\n)?+
+                """,
+                flags=re.VERBOSE | re.DOTALL | re.MULTILINE
+        ),        
 }
 
-def startComment(corr: Correction, format: str, replies: str):
-    c_id = FORMAT_TO_IDENTIFIER[format][0] # [0] since start
 
+def get_replies_and_status(corr: Correction, replies: str):
     if replies:
         replies = f'\n%% Replies: "{replies}"'
 
     status_message = '(auto) [✓]' if corr.is_autocorrected else '[ ]'
+    return (replies, status_message)
+    
+
+def startComment(corr: Correction, format: str, replies: str):
+    # c_id = FORMAT_TO_IDENTIFIER[format][0] # [0] since start
+
+    (replies, status_message) = get_replies_and_status(corr, replies)
 
     if format == FORMAT_FRONT:
         return (
@@ -73,34 +112,31 @@ def startComment(corr: Correction, format: str, replies: str):
         return (
             f"%% Correction {corr.index}, page {corr.pageno+1} {status_message}\n"
             f"%% Selection: \"{utils.sanitizePdfText(corr.pdf_selected_text)}\"{replies}\n"
-            f"%{c_id}\n"
         )
         
     if format == FORMAT_BACK:
         return ''
 
 def endComment(corr: Correction, format: str, replies: str):
-    c_id = FORMAT_TO_IDENTIFIER[format][1]
+    # c_id = FORMAT_TO_IDENTIFIER[format][1]
 
-    if replies:
-        replies = f'\n%% Replies: "{replies}"'    
+    (replies, status_message) = get_replies_and_status(corr, replies)    
         
     if format == FORMAT_FRONT:
         return ''
         
     if format == FORMAT_SPLIT:
         return (
-            f"%{c_id}\n"
             f"%% Comment {corr.index}: "
             f"\"{utils.sanitizePdfText(corr.messages['comment'])}\"\n"
         )
         
     if format == FORMAT_BACK:
         return (
-            f"%{c_id} Correction {corr.index}, page {corr.pageno+1} {status_message}\n"
-            f"%{c_id} Selection: \"{utils.sanitizePdfText(corr.pdf_selected_text)}\"\n"
-            f"%{c_id} Comment:   \"{utils.sanitizePdfText(corr.messages['comment'])}\"{replies}\n"
-            f"%{c_id}\n"
+            f"%%\n"
+            f"%% Correction {corr.index}, page {corr.pageno+1} {status_message}\n"
+            f"%% Selection: \"{utils.sanitizePdfText(corr.pdf_selected_text)}\"\n"
+            f"%% Comment:   \"{utils.sanitizePdfText(corr.messages['comment'])}\"{replies}\n"
         )
 
 def writeCallout(corr_idxs: list[int], start_or_end: str, format: str):
@@ -109,35 +145,48 @@ def writeCallout(corr_idxs: list[int], start_or_end: str, format: str):
     sing_plural = 'correction' if len(corr_idxs) == 1 else 'corrections'
     
     if format == FORMAT_FRONT:
-        return (
-            f'%{c_id} {start_or_end.upper()} of {sing_plural} '
-            + ', '.join(str(idx) for idx in corr_idxs)
-            + '\n'
-        )
+        if start_or_end == 'start':
+            return f'%{c_id}\n'
+        else:
+            return (
+                f'%{c_id} {start_or_end.upper()} of {sing_plural} '
+                + ', '.join(str(idx) for idx in corr_idxs)
+                + '\n'
+            )
     
     if format == FORMAT_SPLIT:
-        return ''
+        return f'%{c_id}\n'
     
     if format == FORMAT_BACK:
-        return (
-            f'%{c_id} {start_or_end.upper()} of {sing_plural} '
-            + ', '.join(str(idx) for idx in corr_idxs)
-            + '\n'
-        )
+        if start_or_end == 'end':
+            return f'%{c_id}\n'
+        else:
+            return (
+                f'%{c_id} {start_or_end.upper()} of {sing_plural} '
+                + ', '.join(str(idx) for idx in corr_idxs)
+                + '\n'
+            )
 
 def deleteComments(tex_file: Path, format: str):
     tex_str = utils.sourceAsString(tex_file)
     comment_regex = REMOVE_REGEXES[format]
+    n_newnew = 0
 
     def doReplace(match):
+        nonlocal n_newnew
         latex = match.group(1)
-        start_next = '\n\n' if match.group(2) is not None else ''
+        if match.group(2) is not None:
+            n_newnew += 1
+            start_next = '\n\n'
+        else:
+            start_next = ''
         return latex + start_next
                         
     nocomments_tex_str, n_subs1 = comment_regex.subn(doReplace, tex_str)
     nocomments_tex_str, n_subs2 = comment_regex.subn(doReplace, nocomments_tex_str)
     
     logger.info(f"Deleted {n_subs1 + n_subs2} comments")
+    logger.debug(f"{n_newnew} double newlines")    
     
     nocomments_file = utils.tagFileStem(tex_file, DELETE_TAG)
     utils.writeStringToFile(nocomments_tex_str, nocomments_file)
