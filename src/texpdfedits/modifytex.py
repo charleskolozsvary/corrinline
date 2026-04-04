@@ -330,7 +330,7 @@ def progressiveAutocorrectAttempt(corr: Correction, **kwargs):
     if len(match) == 0:
         logger.error(
             "No match despite valid tags from "
-            f"`{regex}` on `{annotated_pdf_text}`"
+            f"'{regex}' on '{annotated_pdf_text}'"
         )
         return None
     if len(match) > 1:
@@ -462,12 +462,12 @@ def autocorrectCaret(corr: Correction, **kwargs):
     if len(tagged_and_surr_text) == 0:
         logger.error(
             "No match despite valid tags:"
-            fr"`{regex}` on `{pdf_selection_text}`"
+            fr"'{regex}' on '{pdf_selection_text}'"
         )
         return None
 
     if len(tagged_and_surr_text) > 1:
-        logger.debug(f"Multiple tags in `{pdf_selection_text}`")
+        logger.debug(f"Multiple tags in '{pdf_selection_text}'")
         return None
 
     match = tagged_and_surr_text[0]
@@ -575,13 +575,13 @@ def newCaretAutocorrect(corr: Correction, **kwargs):
     if len(match) == 0:
         logger.error(
             "No match despite valid tags from "
-            f"`{regex}` on `{annotated_pdf_text}`"
+            f"'{regex}' on '{annotated_pdf_text}'"
         )
         return None
     
     if len(match) > 1:
         logger.error(
-            f"More than one caret in PDF selection text `{annotated_pdf_text}`"
+            f"More than one caret in PDF selection text '{annotated_pdf_text}'"
             f"for annot on page {annot.pageno} despite passing tag"
             "validation"
         )
@@ -675,7 +675,7 @@ def correctSnippet(corr: Correction, **kwargs):
         )
         return None
     else:
-        logger.debug(f"`{pdf_selection_text}` is valid!")
+        logger.debug(f"'{pdf_selection_text}' is valid!")
 
     comment_text = corr.messages['comment']
 

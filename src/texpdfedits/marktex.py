@@ -266,6 +266,7 @@ def getEnunciations(preamble_nodes) -> tuple[list[str], str]:
                         f"raised {type(e).__name__}: {e}; "
                         f"node.nodeargs[1] was {arg_one}; ignoring"
                     )
+                    continue
                 enunciations.append({
                     'name': enun_name,
                     'start end': (node.pos, node.pos+node.len),
@@ -273,8 +274,8 @@ def getEnunciations(preamble_nodes) -> tuple[list[str], str]:
                 })
             else:
                 logger.warning(
-                    f"Malformed {node.macroname}, "
-                    f"'{node.latex_verbatim()}', "
+                    f"Malformed {node.macroname} "
+                    f"'{node.latex_verbatim()}' "
                     f"did not match it's argument specification: "
                     f"{CSNAMES_ARGSPEC[node.macroname]}"
                 )
@@ -619,8 +620,7 @@ def getPreambleAndDocument(nodelist):
     )
     if num_document_envs != 1:
         logger.critical(
-            r"Found more (or less) than one `\begin{document}`s"
-            "during getPreambleAndDocument()."
+            fr"\begin{{document}} appeared {num_document_envs} times"
         )
         sys.exit(1)
 
@@ -779,7 +779,7 @@ def getWordBoxes(boxpositions_filename: Path):
         else:
             tex_word_boxes[pageno] = {key:rectangle}
 
-    logger.info(f"Created {len(word_boxes)} marked boxes.")
+    logger.info(f"Created {len(word_boxes)} marked boxes")
     
     return (tex_word_boxes, markids_to_delete)
 
@@ -950,7 +950,7 @@ def validateMarkPositions(
                     "all mark_ids in tex_word_boxes."
                 )
 
-    logger.info("Mark positions are valid.")
+    logger.info("Mark positions are valid")
 
 def parseLatex(
         tex_str: str
@@ -1092,7 +1092,7 @@ def getSyncInfo(tex_filename: str, **kwargs):
     # Parse
     logger.info(f"Parsing {tex_filename}...")    
     parse_out = parseLatex(tex_str)
-    logger.info("Done.")    
+    logger.info("Done")    
 
     # Mark
     logger.info("Inserting marks...")
@@ -1101,7 +1101,7 @@ def getSyncInfo(tex_filename: str, **kwargs):
         *parse_out,
         **kwargs
     )
-    logger.info("Done.")
+    logger.info("Done")
 
     # Compile and diff-pdf
     process1 = utils.compileLatex(tex_filename, compiler = compiler)
@@ -1112,18 +1112,21 @@ def getSyncInfo(tex_filename: str, **kwargs):
     utils.transferTeXFiles(tex_filename, tmp_dir, 'cp')
     utils.transferTeXFiles(marked_filename, tmp_dir, 'mv')    
     moved_boxpositions_filename = (tex_filename.parent/boxpositions_filename).move_into(tmp_dir)
+
+    orig_pdf = utils.pdfFname(tex_filename)
+    marked_pdf = utils.pdfFname(marked_filename)
     
     (process3, _) = utils.runDiffpdf(
-        utils.pdfFname(tex_filename),
-        utils.pdfFname(marked_filename),
+        orig_pdf,
+        marked_pdf,
         tmp_dir
     )
-    logger.info(f"Original and marked sources produce identical PDFs.")    
+    logger.info(f"{orig_pdf} and {marked_pdf} are within tolerance")
 
     # Retrieve box info
     logger.info("Getting word boxes...")
     (tex_word_boxes, deleted_mark_IDs) = getWordBoxes(tmp_dir / boxpositions_filename)
-    logger.info("Done.")    
+    logger.info("Done")    
 
     logger.info("Unmarking LaTeX...")
     # Do not concatenate the inserted code for marking
@@ -1134,10 +1137,10 @@ def getSyncInfo(tex_filename: str, **kwargs):
     (unmarked_str, mark_positions) = unMarkWithPositions(
         docclass_str + marked_preamble + marked_document + post_document_str, deleted_mark_IDs
     )
-    logger.info("Done.")
+    logger.info("Done")
 
     if unmarked_str != tex_str:
-        logger.critical("Unmarked LaTeX does NOT match original LaTeX!")
+        logger.critical("Unmarked LaTeX does not match input LaTeX")
         sys.exit(1)
 
     validateMarkPositions(mark_positions, tex_word_boxes)

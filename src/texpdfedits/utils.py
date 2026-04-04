@@ -252,6 +252,9 @@ def writeStringToFile(string: str, filename: Path, **kwargs) -> int:
 def tagFileStem(file: Path, tag: str) -> Path:
     return file.parent / f"{file.stem}_{tag}{file.suffix}"
 
+def newTaggedFname(file: Path, tag: str, new_suffix: str = '') -> Path:
+    return Path(f"{file.stem}_{tag}{new_suffix if new_suffix else file.suffix}")
+
 def transferTeXFiles(
         tex_filename: Path,
         files_to: Path,
@@ -426,3 +429,5 @@ def compileValidateClean(tex_file1: Path, tex_file2: Path, cwd: Path, **kwargs):
         tex_file2.move(tex_file1)
         logger.info(f"Overwrote {tex_file1} with {tex_file2}")
         
+def plural(num: int):
+    return 's' if num > 1 else ''

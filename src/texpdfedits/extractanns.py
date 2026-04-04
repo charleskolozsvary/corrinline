@@ -812,7 +812,7 @@ def getEdits(filename, **kwargs):
     doc = pymupdf.open(filename)
     robust_annots = getRobustAnnots(filename, **kwargs)
     all_responses = getAllResponses(robust_annots)
-    logger.info("Done.")
+    logger.info("Done")
 
     target_num_edits = 0
     logger.info("Turning annotations into edits...")
@@ -905,8 +905,15 @@ def getEdits(filename, **kwargs):
             bar.addProgress()
     bar.end()
         
-    logger.info(f"Created {len(edits)} edits from {target_num_edits} PDF annotations")
-    logger.info(f"Ignored {num_not_for_comp} annotation(s) deemed not for COMP")
+    logger.info(
+        f"Created {len(edits)} edit{utils.plural(len(edits))} from "
+        f"{target_num_edits} PDF annotations"
+    )
+    logger.info(
+        f"Ignored {num_not_for_comp} "
+        f"annotation{utils.plural(num_not_for_comp)} "
+        "deemed not for COMP"
+    )
     return edits
             
 if __name__ == '__main__':

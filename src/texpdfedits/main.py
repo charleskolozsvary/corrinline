@@ -65,7 +65,7 @@ def process_files(*args, **kwargs) -> int:
 
     logger.info("Doing autocorrections...")
     corrected_snippets = modifytex.getCorrectedSnippets(corrections, overlapping_keys)
-    logger.info("Done.")
+    logger.info("Done")
     
     autocorrected_tex_str = modifytex.commentSource(
         tex_str,
@@ -81,13 +81,13 @@ def process_files(*args, **kwargs) -> int:
     utils.writeStringToFile(autocorrected_tex_str, autocorrected_tex_filename)
 
     logger.info(f"Autocorrected {n_corrected:3d}/{len(corrections):3d} corrections")
-    logger.info(f"Autocorrected source written to {autocorrected_tex_filename}.")
+    logger.info(f"Autocorrected source written to {autocorrected_tex_filename}")
 
     return 0
 
 def ProgramBanner():
     script_name = Path(sys.argv[0]).name
-    return f"This is {script_name} version {__version__}\n"
+    return f"This is {script_name} version {__version__}"
 
 def main():
     parser = argparse.ArgumentParser(
@@ -177,17 +177,27 @@ def main():
     )
     
     args = parser.parse_args()
+
+    log_file = utils.newTaggedFname(
+        Path(args.annotated_PDF_file),
+        'corrinline',
+        new_suffix='.log'
+    )
             
-    _level = logging.DEBUG if args.debug else logging.INFO
-    _level = logging.WARN  if args.quiet else _level
+    logger_level = logging.DEBUG if args.debug else logging.INFO
+    logger_level = logging.WARN  if args.quiet else logger_level
     
     logging.basicConfig(
         encoding='utf-8',
-        level=_level,
-        format='%(levelname)s:%(module)s:%(message)s'
-    )    
+        level=logger_level,
+        format='%(levelname)-8s | %(module)-11s | %(message)s',
+        handlers = [
+            logging.StreamHandler(),
+            logging.FileHandler(log_file, encoding='utf-8', mode='w'),
+        ],
+    )
 
-    print(ProgramBanner())
+    logger.info(ProgramBanner())
 
     if args.latex_file is None and not args.delete_comments:
         logger.critical("Missing latex_file")
@@ -200,11 +210,11 @@ def main():
         latex_file = args.latex_file    
 
     if not args.grp_overlap and args.autocorrect:
-        logger.critical("Overlapping snippets must be merged to do autocorrections. Please either allow said merging or do not specify --autocorrect.")
+        logger.critical("--autocorrect requires --grp-overlap; please enable it or drop --autocorrect")
         sys.exit(1)
 
     if args.comment_format not in formatcomm.RECOGNIZED_FORMATS:
-        logger.critical(f"Unrecognized comment format '{args.comment_format}'")
+        logger.critical(f"Unrecognized comment format: '{args.comment_format}'")
         sys.exit(1)
 
     process_files(
