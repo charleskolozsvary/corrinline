@@ -18,7 +18,7 @@ from icecream import ic
 
 from pathlib import Path
 
-BOXES_Y_EQUIV_RANGE = 6
+VERTICAL_BOX_OVERLAP_PERCENTAGE = 0.5
 
 """
 When a rectangle doesn't intersect any word boxes, we look for
@@ -35,6 +35,31 @@ this buffer). This is used in determining boxes_before and boxes_after.
 We may need to eventually find a new and better way to determine word
 box order if we continue to encounter issues (but I haven't so far).
 """
+
+def sortBoxes(boxes):
+    if not boxes:
+        return []
+
+    by_y = sorted(boxes, key=lambda b: b.y0)
+    lines = [[by_y[0]]]
+
+    for box in by_y[1:]:
+        line = lines[-1]
+        line_y0 = min(b.y0 for b in line)
+        line_y1 = max(b.y1 for b in line)
+        vertical_overlap = max(0, min(line_y1, box.y1) - max(line_y0, box.y0))
+        # if the overlap is at least half (percentage) of the height of the smaller box,
+        # the boxes are on the same line
+        if (vertical_overlap >=
+            VERTICAL_BOX_OVERLAP_PERCENTAGE * min(line_y1 - line_y0, box.y1 - box.y0)):
+            line.append(box)
+        else:
+            lines.append([box])
+
+    result = []
+    for line in lines:
+        result.extend(sorted(line, key=lambda b: b.x0))
+    return result
 
 def categorizeMarkIDs(mark_ids: list[str]) -> int:
     """
@@ -248,19 +273,23 @@ def compareBoxes(a, b):
         else:
             return 1
 
+def getPositionalBoxesBeforeAfter(in_rectangle, page_word_boxes):
+    just_boxes = [box for box in page_word_boxes.values()]
+    just_boxes.append(in_rectangle)
+    
+    sorted_boxes = sortBoxes(just_boxes)
+    inrect_idx = sorted_boxes.index(in_rectangle)
+    
+    boxes_before = sorted_boxes[:inrect_idx]
+    boxes_after  = sorted_boxes[inrect_idx+1:]
+    return (boxes_before, boxes_after)
+    
+
 def useAllIDs(in_rectangle, page_word_boxes, tex_word_boxes, pageno):
     """
     Try to find the before and after boxes by looking at nearby boxes of any kind (not just simple)
     """
-    just_boxes = [box for box in page_word_boxes.values()]
-    just_boxes.append(in_rectangle)
-    sorted_boxes = sorted(
-        just_boxes,
-        key=functools.cmp_to_key(compareBoxes)
-    )
-    inrect_idx = sorted_boxes.index(in_rectangle)
-    boxes_before = sorted_boxes[:inrect_idx]
-    boxes_after  = sorted_boxes[inrect_idx+1:]
+    (boxes_before, boxes_after) = getPositionalBoxesBeforeAfter(in_rectangle, page_word_boxes)
 
     boxes_to_ids = {
         box : id
@@ -295,17 +324,18 @@ def useSimpleIDs(in_rectangle, page_word_boxes, tex_word_boxes, pageno):
     """
     Try to find the before and after boxes by just looking at nearby boxes with simple IDs
     """
+    (all_before, all_after) = getPositionalBoxesBeforeAfter(in_rectangle, page_word_boxes)
     boxes_before = {
         k: rect
-            for k, rect in page_word_boxes.items()
-            if compareBoxes(rect, in_rectangle) < 0 
-            and isSimpleID(k)
+        for k, rect in page_word_boxes.items()
+        if rect in all_before
+        and isSimpleID(k)
     }
     boxes_after = {
         k: rect
-            for k, rect in page_word_boxes.items()
-            if compareBoxes(rect, in_rectangle) > 0 
-            and isSimpleID(k)
+        for k, rect in page_word_boxes.items()
+        if rect in all_after
+        and isSimpleID(k)
     }
 
     logger.debug(f"boxes before: {boxes_before}\n\n")
@@ -418,7 +448,7 @@ def rectangleToLatex(
             logger.warning(
                 f"Cannot extract LaTeX: "
                 f"intersected mark IDs {mark_ids} "
-                "were not compatible."
+                "were not compatible"
             )
             logger.debug(f"Incompatible mark IDs were\n{mark_ids}")
             return (None, None)
@@ -728,7 +758,7 @@ def getCorrections(
         if pageno not in tex_word_boxes:
             logger.warning(
                 f"Could not create correction {progress}: "
-                f"Page '{pageno}' not in `tex_word_boxes` for edit {edit}"
+                f"page '{pageno}' not in tex_word_boxes for edit {edit}"
             )
             continue
         
@@ -741,12 +771,12 @@ def getCorrections(
             mark_positions,
             tex_str
         )
-        logger.debug(f"Done.")
+        logger.debug(f"Done")
         
         if latex_snippet is None:
             logger.warning(
                 f"Could not create correction {progress}: "
-                f"no LaTeX snippet for edit {progress}: {edit}"
+                f"no LaTeX snippet for {edit}"
             )
             continue
 
@@ -757,11 +787,11 @@ def getCorrections(
                 snippet_source_positions
             )
         )
-    logger.info("Done.")
+    logger.info("Done")
 
     logger.info(
         f"Produced {len(corrections)} corrections from "
-        f"{len(edits)} edit annotations."
+        f"{len(edits)} edit annotations"
     )
 
     overlapping_keys = []
@@ -771,12 +801,12 @@ def getCorrections(
             tex_str,
             merge_overlapping_snippets=merge_overlapping_snippets
         )
-        logger.info("Grouped overlapping corrections.")
+        logger.info("Overlapping corrections grouped")
         if merge_overlapping_snippets:
-            logger.info("Overlapping correction snippets merged.")
+            logger.info("Overlapping correction snippets merged")
         else:
-            logger.info("Overlapping correction snippets WERE NOT merged.")
+            logger.info("Overlapping correction snippets NOT merged")
     else:
-        logger.info("Did **NOT** group overlapping corrections.")
+        logger.info("Overlapping corrections NOT grouped")
 
     return corrections, overlapping_keys
