@@ -664,7 +664,7 @@ def unzipPos(stend_xy):
         tuple(map(lambda spts: scaledPointsToPDFpoints(int(spts)), stend_xy[1:-1]))
     )
 
-def boxinfoToPDFRectangle(key: str, hbox, start_xy):
+def boxinfoToPDFRectangle(hbox, start_xy):
     pgA, (width, height, depth) = unzipHbox(hbox)
     pgB, (x0, sy) = unzipPos(start_xy)
     
@@ -672,6 +672,55 @@ def boxinfoToPDFRectangle(key: str, hbox, start_xy):
         pgB,
         pymupdf.Rect(x0, sy - height, x0 + width, sy + depth)
     )
+
+def makeTexPagenoMap(word_boxes: dict[str, dict[str, list]]):
+    """
+    The annotated PDF doesn't care about how the pages are numbered, of course,
+    but we only learn what word_boxes are on what page from the TeX source, and that page number
+    can be ... whatever TeX is set to output. We only "account" for the pages that are numbered with only
+    digits, for now ignoring the roman numeral pages.
+
+    The issue I'm reflecting on now is if we have a roman numeral page of 18 that is marked, 19 that is not marked, and
+    then the main matter starts at 1. Since 19 is not marked, I wouldn't know it exists and an absolute zero-indexed
+    page numbering would result in 17, 18, 19 (which used to be "1") rather than 17, 18, 19, 20 (which used to be "1") as it should
+    be and which would line up with a complete annotated PDF of the document.
+
+    There's probably a simple way around this, but for now I'm just going to ignore the pages that are numbered
+    with roman numerals. There shouldn't be that many corrections for such pages anyway.
+    """
+    roman_pagenos = set()
+    decimal_pagenos = set()
+    other_pagenos = set()
+    for info in word_boxes.values():
+        # tex_pageno is either one-indexed or a roman numeral
+        (tex_pageno, _) = boxinfoToPDFRectangle(
+            info['pwhd'],
+            info['spxy']
+        )
+        if re.match(r"^[ivxlcdm]+$", tex_pageno, flags=re.IGNORECASE):
+            roman_pagenos.add(tex_pageno) # make zero-indexed
+        elif re.match(r"^[0-9]+$", tex_pageno):
+            decimal_pagenos.add(tex_pageno)
+        else:
+            other_pagenos.add(tex_pageno)
+            
+    tex_pageno_map = dict()
+    if len(roman_pagenos) > 0:
+        logger.warning(
+            f"roman page numbers '{roman_pagenos}' ignored"
+        )
+    if len(other_pagenos) > 0:
+        logger.error(
+            f"neither roman or decimal page numbers '{other_pagenos}' ignored"
+        )
+    # make zero indexed
+    tex_pageno_map = dict()
+    for decimal_page in decimal_pagenos:
+        tex_pageno_map[decimal_page] = int(decimal_page)-1
+
+    ignored_pagenos = roman_pagenos.union(other_pagenos)
+    
+    return (ignored_pagenos, tex_pageno_map)
         
 def getWordBoxes(boxpositions_filename: Path):
     word_boxes = dict()
@@ -682,7 +731,7 @@ def getWordBoxes(boxpositions_filename: Path):
         line_no = 1
         while line:
             box_info = re.match(
-                fr"^{not_colon}:(pwhd|spxy):(\d+):{not_colon}:{not_colon}:{not_colon}$",
+                fr"^{not_colon}:(pwhd|spxy):{not_colon}:{not_colon}:{not_colon}:{not_colon}$",
                 line,
                 flags=re.IGNORECASE
             )
@@ -766,20 +815,29 @@ def getWordBoxes(boxpositions_filename: Path):
     for mark_id in markids_to_delete:
         del word_boxes[mark_id]
 
+    (ignored_pagenos, tex_pageno_map) = makeTexPagenoMap(word_boxes)
+
     tex_word_boxes = dict()
     for key, info in word_boxes.items():
-        (one_indexed_pageno, rectangle) = boxinfoToPDFRectangle(
-            key,
+        (tex_pageno, rectangle) = boxinfoToPDFRectangle(
             info['pwhd'],
             info['spxy']
         )
-        pageno = int(one_indexed_pageno) - 1
+        if tex_pageno not in tex_pageno_map:
+            assert tex_pageno in ignored_pagenos, f"{tex_pageno} must be in ignored_pagenos"
+            continue
+        
+        pageno = tex_pageno_map[tex_pageno]
         if pageno in tex_word_boxes:
             tex_word_boxes[pageno][key] = rectangle
         else:
             tex_word_boxes[pageno] = {key:rectangle}
 
-    logger.info(f"Created {len(word_boxes)} marked boxes")
+    num_boxes = sum(
+        len(markids_to_rectangles)
+        for markids_to_rectangles in tex_word_boxes.values()
+    )
+    logger.info(f"Saved {num_boxes} tex word boxes")
     
     return (tex_word_boxes, markids_to_delete)
 
@@ -1028,9 +1086,9 @@ def getInsertedCodeForMarking(boxpositions_filename: str) -> tuple[str, str]:
         \newcommand{{{MARK_CSNAME}}}[2]{{%
         \ifvmode\leavevmode\fi%
         \setbox0=\hbox{{#2}}%
-        \immediate\write\markfile{{#1:pwhd:\the\value{{page}}:\the\wd0:\the\ht0:\the\dp0}}%
+        \immediate\write\markfile{{#1:pwhd:\thepage:\the\wd0:\the\ht0:\the\dp0}}%
         \pdfsavepos%
-        \write\markfile{{#1:spxy:\the\value{{page}}:\the\pdflastxpos:\number\dimexpr\pdfpageheight-\pdflastypos sp\relax:}}%
+        \write\markfile{{#1:spxy:\thepage:\the\pdflastxpos:\number\dimexpr\pdfpageheight-\pdflastypos sp\relax:}}%
         #2%
         }}
         """

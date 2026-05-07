@@ -175,6 +175,16 @@ def main():
         ),
         default=formatcomm.DEFAULT_COMMENT_FORMAT
     )
+    parser.add_argument(
+        "--source-start-page",
+        type=int,
+        help=(
+            f'The page of the source\'s outputted PDF '
+            f'that corresponds to the first page of the '
+            f'annotated PDF (use rendered page number, not absolute)'
+        ),
+        default=1
+    )
     
     args = parser.parse_args()
 
@@ -198,6 +208,10 @@ def main():
     )
 
     logger.info(ProgramBanner())
+
+    if args.source_start_page < 1:
+        logger.critical("The source page cannot be less than one")
+        sys.exit(1)
 
     if args.latex_file is None and not args.delete_comments:
         logger.critical("Missing latex_file")
@@ -229,6 +243,7 @@ def main():
         comment_format    = args.comment_format,
         delete_comments   = args.delete_comments,
         replace           = args.replace,
+        source_offset     = args.source_start_page,
     )
 
 if __name__ == '__main__':    

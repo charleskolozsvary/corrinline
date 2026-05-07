@@ -16,6 +16,8 @@ COMPILER_INFO = {
     'xelatex': (2, 'utf-8', ['--interaction=nonstopmode'])
 }
 
+MAX_ROMAN = 2001
+
 r"""
 The tolerance of 50_000 pixels is a heuristic picked by trial and error.
 Unfortunately, italic correction can still be inserted *before* a markbox, too, which will introduce some pixel differences.
@@ -431,3 +433,30 @@ def compileValidateClean(tex_file1: Path, tex_file2: Path, cwd: Path, **kwargs):
         
 def plural(num: int):
     return 's' if num > 1 else ''
+
+def fromRoman(roman: str):
+    """converts roman numeral to integer"""
+    numerals = roman.upper()
+    roman_to_int = {
+        "I": 1,
+        "V": 5,
+        "X": 10,
+        "L": 50,
+        "C": 100,
+        "D": 500,
+        "M": 1000,
+    }
+    total = 0
+    prev = 0
+
+    for letter in reversed(numerals):
+        curr = roman_to_int[letter]
+        if curr >= prev:
+            total += curr
+        else:
+            total -= curr
+        prev = curr
+    if total < 1 or total > MAX_ROMAN:
+        return -1
+    else:
+        return total

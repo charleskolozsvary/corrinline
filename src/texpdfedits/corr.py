@@ -725,8 +725,73 @@ def groupOverlappingCorrections(
                 corr.updateSnippet((min_start, max_end), containing_snippet)
             corr.group = group
     
-    return groups    
+    return groups
 
+def applySourceOffset(
+        source_offset: int,
+        tex_word_boxes: dict[int, dict[str, pymupdf.Rect]]
+):
+    """
+    Example:
+    tex_word_boxes.keys() = [0, 1, 2, 3, 4]
+    source_offset = 2
+    so
+    
+    tex_word_boxes[0] = tex_word_boxes[2]
+                  [1] =               [3]
+                  [2] =               [4]
+    and indices 3 and 4 are discarded
+    """
+    
+    # print(f"tex_word_boxes: {tex_word_boxes.keys()}\n\n")
+    
+    # with open('debug_file.txt', 'w') as f:
+    #     f.write('BEFORE:\n')
+    #     for pageno in tex_word_boxes:
+    #         for markid in tex_word_boxes[pageno]:
+    #             f.write(f"tex_word_boxes[{pageno}][{markid}] = {tex_word_boxes[pageno][markid]}\n")
+    
+    max_page = max(tex_word_boxes.keys())
+    
+    if source_offset == 0:
+        logger.debug("No source offset applied")
+        return tex_word_boxes
+    
+    if source_offset not in tex_word_boxes:
+        assert source_offset > max_page, "source page offset should be greater than max_page"
+        logger.critical(f"Source offset out of range: {source_offset} > {max(tex_word_boxes.keys())}")
+        sys.exit(1)
+
+    empty_pages = set()
+    # reassign pages from new start
+    for page_no in range(source_offset, max_page+1):
+        if page_no not in tex_word_boxes:
+            empty_pages.add(page_no)
+            continue
+        tex_word_boxes[page_no-source_offset] = tex_word_boxes[page_no]
+
+    # not strictly necessary---we could just overwrite/ignore
+    logger.debug(f"Empty pages: {empty_pages} (zero-indexed)")
+
+    now_empty_pages = set()
+    for page_no in empty_pages:
+        logger.debug(f"Removing originally empty page {page_no:3d} now {page_no - source_offset:3d} with offset")
+        del tex_word_boxes[page_no - source_offset]
+        now_empty_pages.add(page_no - source_offset)
+    
+    for page_no in range(max_page - source_offset + 1, max_page+1):
+        if page_no not in tex_word_boxes:
+            continue
+        del tex_word_boxes[page_no]
+
+    # with open('debug_file.txt', 'a') as f:
+    #     f.write('\n\nAFTER:\n')
+    #     for pageno in tex_word_boxes:
+    #         for markid in tex_word_boxes[pageno]:
+    #             f.write(f"tex_word_boxes[{pageno}][{markid}] = {tex_word_boxes[pageno][markid]}\n")        
+
+    return tex_word_boxes, now_empty_pages
+    
 def getCorrections(
         annot_filename: str,
         latex_filename: str,
@@ -741,12 +806,15 @@ def getCorrections(
     group_overlapping   = kwargs.get('group_overlapping', True)
     compiler            = kwargs.get('compiler', 'pdflatex')
     clean               = kwargs.get('clean', True)
+    source_offset       = kwargs['source_offset'] - 1 # reduce from 1-indexed to zero-indexed
 
     edits = extractanns.getEdits(annot_filename, **kwargs)
     (mark_positions, tex_word_boxes) = marktex.getSyncInfo(
         latex_filename,
         **kwargs
     )
+
+    (tex_word_boxes, now_empty_pages) = applySourceOffset(source_offset, tex_word_boxes)
     
     tex_str = utils.sourceAsString(Path(latex_filename))
 
