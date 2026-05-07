@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file (since version 0.12.0).
 
+## [0.14.0](https://github.com/charleskolozsvary/tex-pdf-edits/commit/3df9af5e7666a4fda4bae4ac02ba3b373c04311e) (2026-04-14)
+### Features
+- New command line option `--source-start-page`: resync the annotated PDF and the source if their pages are not already one-to-one. See [README.md](./README.md) for further details. ([corr.py, marktex.py](https://github.com/charleskolozsvary/tex-pdf-edits/commit/3df9af5e7666a4fda4bae4ac02ba3b373c04311e#diff-76722a2e0598cec992c3f2be48a7e90fd43d2b7e2e8d545dde39e4dfa4577436))
+
 ## [0.13.9](https://github.com/charleskolozsvary/tex-pdf-edits/commit/9cfc37f553ba41792b3ebab66b1f69cdb5dbc9ae) (2026-04-14)
 ### Features
 - The autocorrection heuristic was updated so that a unique match must include at least three total characters (from the selected text and what is to the left or right of it). This was done to reduce autocorrect false positives for single character corrections if the LaTeX snippet did not contain the selection text. ([modifytex.py](https://github.com/charleskolozsvary/tex-pdf-edits/commit/9cfc37f553ba41792b3ebab66b1f69cdb5dbc9ae#diff-ccd051762c8d0d9e1780e47e5453f3072ee1eb805bfb56c4c87b8e119bb4c848))
@@ -29,7 +33,7 @@ All notable changes to this project will be documented in this file (since versi
 - AMS-specific: geometric adjustment of bugged annotation bounding boxes is now supported for the STIX font ([extractanns.py](https://github.com/charleskolozsvary/tex-pdf-edits/commit/057e0a6fa8e02a1bedfcbd886e8219c238bbe040#diff-e339d74da60e0ed06ea1977c9b0b4608dce1b139ba3f8b6b06c068684aaadbfb))
 
 ### Bug fixes
-- Annotation comment text now sanitized (before only selection text for autocorrections) ([corr.py,formatcomm.py](https://github.com/charleskolozsvary/tex-pdf-edits/commit/057e0a6fa8e02a1bedfcbd886e8219c238bbe040#diff-76722a2e0598cec992c3f2be48a7e90fd43d2b7e2e8d545dde39e4dfa4577436))
+- Annotation comment text now sanitized (before only selection text for autocorrections) ([corr.py, formatcomm.py](https://github.com/charleskolozsvary/tex-pdf-edits/commit/057e0a6fa8e02a1bedfcbd886e8219c238bbe040#diff-76722a2e0598cec992c3f2be48a7e90fd43d2b7e2e8d545dde39e4dfa4577436))
 
 ## [0.13.4](https://github.com/charleskolozsvary/tex-pdf-edits/commit/d59f1a4da80015dc1d894846edc40d2f86a81c08) (2026-03-29)
 ### Features

@@ -1,7 +1,9 @@
-# texpdfedits
-The script provided by this python project, `corrinline`, modifies LaTeX source files to aid/automate a correction workflow where copyedits are specified by an annotated PDF.
+# `corrinline`
+## Description
+`corrinline` is a command line tool which modifies LaTeX source files to aid and partially automate a document correction workflow where copyedits are specified by an annotated PDF and changes are made directly to the LaTeX source.
 
-Normal processing of the changes involves reviewing the PDF and finding and fixing the corresponding LaTeX one annotation at a time. There are tools like SyncTeX to speed up the navigation between output and source, but even then the process is time-consuming and tedious.
+### Motivation
+A typical workflow involves viewing the corrections from the annotated PDF in one window and the LaTeX source in another, selecting an annotation, interpreting the copyedit, tracking down where the change needs to be made in the LaTeX source, composing the change, compiling the source, and verifying that the change was made correctly. This is done for every individual annotation one at a time. There are simple ways to save some time in this process: saving the compilation of the source and verification of the changes to the very end, or using [SyncTeX](https://www.tug.org/TUGboat/tb29-3/tb93laurens.pdf) to speed up navigatoin between the source and output, but, even then, the processs is time-consuming and tedious. 
 
 `corrinline` places the corrections directly into the source LaTeX as comments and carries out whatever corrections it can automatically.
 
@@ -17,11 +19,20 @@ If you don't already have a LaTeX distribution, download the latest version of T
 4. Run `./install.sh [binary install directory]`, e.g., `./install.sh /usr/local/bin/`
 
 Verify it is installed properly with `corrinline -h`. You should see the usage message.
-Thereafter, run `corrinline [annotated PDF file] [tex file]` anywhere on your machine.
 
-## Example output
-For example test files, you can try those under [AnnotatedPDFs](./AnnotatedPDFs) with corresponding LaTeX sources in [TeX](./TeX).
+## Usage
+From the shell, run
+```shell
+corrinline ANNOTATED_PDF_FILE LATEX_FILE
+```
+from anywhere on your machine.
 
+When the program is finished, it will have written a new file, `[latex_source]_inlined.tex`. This file has the annotations in `[annotated_PDF]` written directly into the source LaTeX as comments (so the source output is unchanged). There are also many options, including `--auto` to carry out compatible corrections automatically. See [option_usage.md](./notes/option_usage.md) for complete details on how to use them, but hopefully their help descriptions are sufficient.
+
+## Examples
+Example annotated PDFs can be found at `./AnnotatedPDFs` with corresponding LaTeX sources at `./TeX`.
+
+### Results
 Here's part of `arxiv5_inlined.tex`, the output of `corrinline arxiv5_ann.pdf arxiv5.tex`:
 ```latex
 %% Correction 28 [ ]
@@ -80,7 +91,7 @@ Witten's %%
 %% END of correction 29
 ```
 
-For this particular paper, **260/411 corrections were completed automatically!** 
+For this particular paper, **293/422 corrections were completed automatically!** 
 
 Finally, here are two pages side by side, one from `arxiv5_ann.pdf`, the other from `arxiv5_autocorrected.pdf`, demonstrating the result of several automatic corrections.
 
@@ -91,13 +102,7 @@ You might notice that one of the automatic corrections resulted in "satisfyit." 
 
 ## Assumptions and limitations
 ### Unchanged LaTeX
-This script assumes that the LaTeX source is unchanged since the original PDF was generated and annotated. If there is any difference (even of a few words) between the current source and what generated the PDF which was annotated, the script will not work.
+For best results, the LaTeX souce should be unchanged since the PDF it generated was annotated. Even relatively small changes could change the pagination of the document and cause an entire cascade of differences between what the source then renders and the annotated PDF. If the source and and the annotatated PDF are mostly in sync, the `--source-start-page` option might be of use. It, along with the other options, are discussed in [option_usage.md](./notes/option_usage.md).
 
 ### Annotations are precise
-As shown in the above screenshots, the contents of insertion and replacement text are interpreted literally. Additionally, since 'highlight' is too general an annotation, said annotations will never be done automatically, even if they are used in place of a replacement or strikeout annotation. So dedicated annotations must be used for best results.
-
-### Incomplete character mapping to the PDF
-Since text is extracted directly from the PDF for producing the "annotated text," rendered math and other special glyphs will not be translated correctly to
-Unicode (which is what the PDF text is encoded as). For example, even something relatively simple like `''` in the LaTeX source will produce the unicode character `”`. Such a mismatch would prevent a correction like `''.` to `.''` from happening automatically.
-
-A straitforward enhancement would be to specify some of these Unicde to TeX character mappings, but this is not implemented yet.
+As shown in the above screenshots, the contents of insertion and replacement text are interpreted literally. Additionally, since 'highlight' is too general an annotation, they will never be done automatically, even if they are used in place of a replacement or strikeout annotation. So dedicated annotations must be used for best results.
