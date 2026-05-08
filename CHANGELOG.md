@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file (since version 0.12.0).
 
+## [0.14.2](https://github.com/charleskolozsvary/tex-pdf-edits/commit/366dd4f3a455a1b64fa26242583199a7764a81a8) (2026-05-08)
+### Bug Fixes
+- Corrected marking behavior after accent macros to prevent failure cases like those shown in [accents.tex](./tests/fixtures/accents.tex) ([marktex.py](https://github.com/charleskolozsvary/tex-pdf-edits/commit/366dd4f3a455a1b64fa26242583199a7764a81a8#diff-fe2186edfd9be409ce6bb28250628955aed81f0f81a9301e1b72ad4efa589471))
+
 ## [0.14.1](https://github.com/charleskolozsvary/tex-pdf-edits/commit/87934933d51f901e6225fe2b59d2518ab8b500ac) (2026-05-07)
 ### Bug Fixes
 - Added file existence checks for positional arguments ([main.py](https://github.com/charleskolozsvary/tex-pdf-edits/commit/87934933d51f901e6225fe2b59d2518ab8b500ac#diff-f5d4255ff46dd480d9c9f54ed5ca8d1ecb3375f9e7a5dd3a0ba36ebf12402758))
