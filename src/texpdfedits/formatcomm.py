@@ -92,7 +92,7 @@ def get_replies_and_status(corr: Correction, replies: str):
     if replies:
         replies = f'\n%% Replies: "{replies}"'
 
-    status_message = '(AUTO) [ ]' if corr.is_autocorrected else '[ ]'
+    status_message = '(AUTOCORRECTED) [ ]' if corr.is_autocorrected else '[ ]'
     return (replies, status_message)
     
 

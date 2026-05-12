@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file (since version 0.12.0).
 
+## [0.14.3](https://github.com/charleskolozsvary/tex-pdf-edits/commit/144f7b16bdb89425eefd84c11ea1864c5223b4bc) (2026-05-12)
+### Features
+- Removed "not for COMP" heuristic annotation filtering. It is better to insert all the annotations from the PDF into the source. [extractanns.py]()
+- Updated filter for replacement or insertion text which is likely not literal (e.g. to prevent inserting "the au: okay?") [modifytex.py]()
+- Added short versions of command line options and renamed `--source-start-page` to `--tex-start` [main.py]()
+- Removed check mark from status brackets for autocorrected edits. Now they are only indicated by `(AUTOCORRECTED)`
+
 ## [0.14.2](https://github.com/charleskolozsvary/tex-pdf-edits/commit/366dd4f3a455a1b64fa26242583199a7764a81a8) (2026-05-08)
 ### Bug Fixes
 - Corrected marking behavior after accent macros to prevent failure cases like those shown in [accents.tex](./tests/fixtures/accents.tex) ([marktex.py](https://github.com/charleskolozsvary/tex-pdf-edits/commit/366dd4f3a455a1b64fa26242583199a7764a81a8#diff-fe2186edfd9be409ce6bb28250628955aed81f0f81a9301e1b72ad4efa589471))
