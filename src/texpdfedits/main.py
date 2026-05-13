@@ -215,7 +215,7 @@ def main():
 
     logger.info(ProgramBanner())
 
-    if args.source_start_page < 1:
+    if args.tex_start < 1:
         logger.critical("The source page cannot be less than one")
         sys.exit(1)
 
@@ -259,7 +259,7 @@ def main():
         comment_format    = args.comment_format,
         delete_comments   = args.delete_comments,
         replace           = args.replace,
-        source_offset     = args.source_start_page,
+        source_offset     = args.tex_start,
     )
 
 if __name__ == '__main__':    
