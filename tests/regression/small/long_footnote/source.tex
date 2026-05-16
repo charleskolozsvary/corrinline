@@ -1,0 +1,45 @@
+\documentclass{amsart}
+\usepackage[shortlabels]{enumitem}
+\begin{document}
+
+Some text in the document, not in the abstract\dots\footnote[1234567890]{It appears the point of this file is to write a very long footnote and see how the syncing performs. With the original (but messy) marking method, such a long footnote would not be a problem at all, other than if there is displayed text in the footnote and that text is selected by a PDF annotation. Like this:
+\[
+\sum\prod^n_{i = 0} \alpha_i .
+\]
+And an environment like a list inside a footnote isn't an issue either.
+\begin{enumerate}[(i)]
+\item here's one
+\item and another
+\item and the last
+\end{enumerate}
+Thankfully, though, you cannot put a figure in a footnote. You can, however, place a tabular.
+
+\begin{tabular}{|c|c|}
+\hline
+why you would do this & I don't know \\
+\hline
+But if I had to bet, & would say that it has been done \\
+\hline
+\end{tabular}
+
+Now to continue writing some text to pressure test the syncing (eventually for SyncTeX, anyway). Let's just write a good deal of text, why not? Let's go with some text from an arXiv paper.
+
+The definition of an $\mathcal A_\infty$-coalgebra is less standardized in the literature than the definition of an $\mathcal A_\infty$-algebra. To be clear, for us an $\mathcal A_\infty$-coalgebra is a graded vector space $C$ and a degree $-1$ derivation of the \emph{completed} tensor algebra $\smash{\widehat T}(C[-1])$, which squares to zero. This amounts to a collection of maps
+\[
+\left\{ \Delta_n^C: C \longrightarrow C^{\otimes n} \right\}_{n \geq 1}~
+\]
+of degree $n-2$, which satisfy the relations imposed by the fact that the derivation that induces them squares to zero:
+\[
+\sum_{r+s+t = n}
+(-1)^{\,r + s t}\,
+\bigl(
+\mathrm{id}^{\otimes r}
+\otimes \Delta_s^C
+\otimes \mathrm{id}^{\otimes t}
+\bigr)
+\circ \Delta_{\,r+1+t}^C
+\;=\; 0,
+\qquad n \ge 1 .
+\]
+A \emph{strict} morphism between two such coalgebras (as opposed to an $\infty$-morphism) is a homomorphism of graded vector spaces $f: C \longrightarrow C'$, with the property that the induced map $\smash{\widehat T}(C[-1]) \longrightarrow \smash{\widehat T}(C'[-1])$ is a homomorphism of dg algebras with respect to the differentials given by the respective derivations.}
+\end{document}

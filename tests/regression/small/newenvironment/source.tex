@@ -1,0 +1,20 @@
+\documentclass{amsart}
+\newenvironment{dummy}{}{}
+
+\begin{document}
+\begin{dummy}
+Without the \texttt{--extra\_mark\_envs} option specified, {\tt corrinline} could not run successfully on this file. 
+Though, it shouldn't be hard to just scan for {\tt \string\newenvironment} declarations like is already done for {\tt \string\newtheorem}s.
+
+So, by default, if we have an **ERROUR** in this document, and we mark it in the PDF with an annotation, {\tt corrinline} can't do anything 
+because no tex boxes will be created by the marked source since all the text is inside an environment that is not recognized for marking.
+
+Most of the time this isn't an issue because the most frequently used environments which are safe to mark in are already 
+tracked by {\tt ALLOWED\_MARK\_ENVIRONMENTS} in {\tt marktex.py}, and frequently-used document-specific ones are typically 
+from {\tt \string\newtheorem} declarations, which {\tt corrinline} also finds for the given manuscript source.
+
+Again, it would be very reasonable to track environments from {\tt \string\newenvironment} declarations, and, for good measure, {\tt \string\NewDocumentEnvironment}.
+
+Even more reasonable would be finally just use Sync\TeX{} and not need to worry about the marking at all\dots.
+\end{dummy}
+\end{document}
