@@ -1,108 +1,96 @@
 # `corrinline`
-## Description
-`corrinline` is a command line tool which modifies LaTeX source files to aid and partially automate a document correction workflow where copyedits are specified by an annotated PDF and changes are made directly to the LaTeX source.
+## Usage
+`corrinline` is a tool that aids a LaTeX- and PDF-based manuscript correction workflow.[^1] Run 
+```shell
+corrinline pdf_file latex_file
+```
+to write annotations from the PDF as comments at their corresponding locations in a new LaTeX file, `[latex_file]_inlined.tex`.
 
-### Motivation
-A typical workflow involves viewing the corrections from the annotated PDF in one window and the LaTeX source in another, selecting an annotation, interpreting the copyedit, tracking down where the change needs to be made in the LaTeX source, composing the change, compiling the source, and verifying that the change was made correctly. This is done for every individual annotation one at a time. There are simple ways to save some time in this process: saving the compilation of the source and verification of the changes to the very end, or using [SyncTeX](https://www.tug.org/TUGboat/tb29-3/tb93laurens.pdf) to speed up navigatoin between the source and output, but, even then, the processs is time-consuming and tedious. 
+Here's what that looks like
+```latex
+the left we mean the $\infty$-category of $\mathbb E_1$-algebras %%
+%% Correction 6, page 2 [ ]
+%% Selection: "in C[W−1]<Replace> ;</Replace> on the"
+%% Comment:   ";"
+%%
+%⭣ ⭣ ⭣ 
+in $\mathsf C[\mathsf W^{-1}]~;$ on %%
+%⭡ ⭡ ⭡  END of correction 6
+the right, we mean the 1-category of monoid objects in $\mathsf C$,
+```
+A correction index, the page the annotation appears on, the text selected in the PDF by the annotation, and the contents of the annotation text box are all written to the LaTeX file at the corresponding location (delineated by the down and up arrows).[^2] Here's what the PDF that has the annotation looks like.
 
-`corrinline` places the corrections directly into the source LaTeX as comments and carries out whatever corrections it can automatically.
+<img width="1107" height="578" alt="image" src="https://github.com/user-attachments/assets/52c7af9b-0f1b-43f0-be55-83ec2116f1ef"/>
+
+### Autocorrections
+There's an option `--auto` which makes `corrinline` carry out whatever corrections it can. Running
+```shell
+corrinline --auto pdf_file latex_file
+```
+outputs `_autocorrected.tex` (in addition to the same `_inlined.tex` file from before) which for this example looks like
+```latex
+the left we mean the $\infty$-category of $\mathbb E_1$-algebras %%
+%% Correction 6, page 2 (AUTOCORRECTED) [ ]
+%% Selection: "in C[W−1]<Replace> ;</Replace> on the"
+%% Comment:   ";"
+%%
+%⭣ ⭣ ⭣ 
+in $\mathsf C[\mathsf W^{-1}];$ on %%
+%⭡ ⭡ ⭡  END of correction 6
+the right, we mean the 1-category of monoid objects in $\mathsf C$,
+```
+There are several other options, too, that are discussed in [notes/option_usage.md](./notes/option_usage.md). 
+
+Also, the rest of this example and others can be seen in [notes/corrinline_examples.md](./notes/corrinline_examples.md).
 
 ## Installation
 If you don't already have a LaTeX distribution, download the latest version of TeX Live at https://www.tug.org/texlive/.
 ### Linux/Mac
 1. Install pixi (the python package and dependency manager): https://pixi.prefix.dev/latest/installation/
-
 2. Install `diff-pdf` (CL tool for comparing PDFs): https://github.com/vslavik/diff-pdf
-
-3. Clone this repo to your machine
-
-4. Run `./install.sh [binary install directory]`, e.g., `./install.sh /usr/local/bin/`
+3. Clone this repository to your machine
+4. Run `./install.sh [corrinline shell script install directory]`, e.g., `./install.sh /usr/local/bin/` at the top-level directory of the cloned repository
 
 Verify it is installed properly with `corrinline -h`. You should see the usage message.
-
-## Usage
-From the shell, run
-```shell
-corrinline ANNOTATED_PDF_FILE LATEX_FILE
-```
-from anywhere on your machine.
-
-When the program is finished, it will have written a new file, `[latex_source]_inlined.tex`. This file has the annotations in `[annotated_PDF]` written directly into the source LaTeX as comments (so the source output is unchanged). There are also many options, including `--auto` to carry out compatible corrections automatically. See [option_usage.md](./notes/option_usage.md) for complete details on how to use them, but hopefully their help descriptions are sufficient.
-
-## Examples
-Example annotated PDFs can be found at `./AnnotatedPDFs` with corresponding LaTeX sources at `./TeX`.
-
-### Results
-Here's part of `arxiv5_inlined.tex`, the output of `corrinline arxiv5_ann.pdf arxiv5.tex`:
-```latex
-%% Correction 28 [ ]
-%% Annotated text: "fr−2 given by<Remove>:</Remove>"
-%% Comment: "" 
-%% 
-%% START of correction 28
-given by:
-\begin{equation}
-    \label{eq:GD_hier}
-\frac{\partial L}{\partial T_n}=\lambda^{n-1}[(L^{n/r})_+,L],\quad n\geq 1.
-\end{equation}
-
-Denote %%
-%% END of correction 28
-by $L$ the solution of the system specified by the initial %%
-%% Correction 29 [ ]
-%% Annotated text: "x + λ rrx<Replace>,</Replace>"
-%% Comment: "." 
-%% 
-%% START of correction 29
-condition
-\begin{equation}\label{eq:init_cond_L}
-L|_{T_{\geq 2}=0}=\partial_x^r+\lambda^{-r}rx,
-\end{equation}
-Witten's %%
-%% END of correction 29
-```
-
-And here's the same snippet in `arxiv5_autocorrected.tex`, which is outputted when the `--autocorrect` option is present.
-```latex
-%% Correction 28 (auto) [✓]
-%% Annotated text: "fr−2 given by<Remove>:</Remove>"
-%% Comment: "" 
-%% 
-%% START of correction 28
-given by
-\begin{equation}
-    \label{eq:GD_hier}
-\frac{\partial L}{\partial T_n}=\lambda^{n-1}[(L^{n/r})_+,L],\quad n\geq 1.
-\end{equation}
-
-Denote %%
-%% END of correction 28
-by $L$ the solution of the system specified by the initial %%
-%% Correction 29 (auto) [✓]
-%% Annotated text: "x + λ rrx<Replace>,</Replace>"
-%% Comment: "." 
-%% 
-%% START of correction 29
-condition
-\begin{equation}\label{eq:init_cond_L}
-L|_{T_{\geq 2}=0}=\partial_x^r+\lambda^{-r}rx.
-\end{equation}
-Witten's %%
-%% END of correction 29
-```
-
-For this particular paper, **293/422 corrections were completed automatically!** 
-
-Finally, here are two pages side by side, one from `arxiv5_ann.pdf`, the other from `arxiv5_autocorrected.pdf`, demonstrating the result of several automatic corrections.
-
-<img width="408" alt="annotated" src="https://github.com/user-attachments/assets/912e4c1d-efb9-4fa4-a404-0ced2869e2c1" />
-<img width="408" alt="autocorrected" src="https://github.com/user-attachments/assets/4dcc4ff8-d3e1-4300-9262-3c401e3fd1e5" />
-
-You might notice that one of the automatic corrections resulted in "satisfyit." That happened because the contents of the comment for that correction was just "it" (no space before).
+### Windows
+No instructions currently.
 
 ## Assumptions and limitations
 ### Unchanged LaTeX
-For best results, the LaTeX souce should be unchanged since the PDF it generated was annotated. Even relatively small changes could change the pagination of the document and cause an entire cascade of differences between what the source then renders and the annotated PDF. If the source and and the annotatated PDF are mostly in sync, the `--source-start-page` option might be of use. It, along with the other options, are discussed in [option_usage.md](./notes/option_usage.md).
+For best results, the LaTeX file should be unchanged since it generated the PDF which contains the annotations. Even relatively small changes could effect pagination and cause a cascade of differences between what the source now renders and the original PDF, which prevents correct mapping from PDF coordinates to positions in the LaTeX source.
+
+If the PDF the LaTeX renders and the annotated PDF are only out of sync up to a certain page, the `--tex-start` option might be of use. It, along with the other options, are discussed in [option_usage.md](./notes/option_usage.md).
 
 ### Annotations are precise
-As shown in the above screenshots, the contents of insertion and replacement text are interpreted literally. Additionally, since 'highlight' is too general an annotation, they will never be done automatically, even if they are used in place of a replacement or strikeout annotation. So dedicated annotations must be used for best results.
+As shown in [corrinline_examples.md](./notes/corrinline_examples.md), the contents of insertion and replacement text are interpreted literally, so correct autocorrections can only happen if the annotations themselves are correct. Additionally, since 'highlight' is too general an annotation, they will never be done automatically. So accurate, dedicated annotations must be used for best results. For more on this, see [notes/annotation_guidelines.md](./notes/annotation_guidelines.md).
+
+### Edits aren't specified to roman numeral pages
+This should be able to be resolved, but since the mapping technique from the PDF to the LaTeX relies on the page numbers TeX generates and a static PDF doesn't always include the correct page label metadata, `corrinline` cannot currently inline edits to pages that are labelled with roman numerals for their number.
+
+### Incomplete character maps
+Complicated math formulas render beautifully with LaTeX, but their character encoding in the PDF is not great. Take for example this LaTeX
+```latex
+\begin{equation}
+X \mapsto \coprod_{n \geq 0} X^{\otimes n}
+\end{equation}
+```
+it looks like 
+
+<img width="375" height="160" alt="image" src="https://github.com/user-attachments/assets/cc949686-8302-44e1-bfd8-8362b996c5b5" />
+
+in the PDF, but extracting the text from that same PDF only gives
+```text
+X 7→
+ a
+ X ⊗n
+n≥0
+```
+
+Ideally, the text would look something like
+```text
+𝑋 ↦ ∐_{𝑛≥0} 𝑋^{⊗𝑛}
+```
+There might be a way to do this, but I haven't thought about it much, and it would probably be fairly difficult. Such a problem is pretty well outside the scope of the tool and would be a large independent enhancement.
+
+[^1]: For more about the project's context and motivation, see [notes/about.md](./notes/about.md).
+[^2]: Recall that a `~` in LaTeX produces a non-breaking space, but spaces aren't written before punctation like a semicolon, so the edit is to close up that space.
