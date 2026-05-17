@@ -196,6 +196,7 @@ ALLOWED_MARK_ENVIRONMENTS = {
     'bibdiv',
     'bibsection',
     'appendix',
+    'allowdisplaybreaks',
 }
 
 # amsrefs bib keys whose values cannot be marked

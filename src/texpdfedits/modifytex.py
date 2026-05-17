@@ -570,13 +570,14 @@ def correctSnippet(corr: Correction, **kwargs):
     # very likely not literal
     not_literal = '|'.join((
         r'\b(pls|please)\s*link\b',
-        r'<\s*link\s*>',
+        r'<\s*(pls|please)?link\s*>',
         r'\bCOMP\b',
         r'\bAU\b',
         r'\bPE\b',
         r'\bTEG\b',
         r'\bPTG\b',
-    ))
+        r'\bbreak\b',
+    )) 
     
     if re.search(not_literal, comment_text, flags=re.IGNORECASE):
         return None
