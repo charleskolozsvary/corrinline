@@ -94,7 +94,7 @@ def main():
         description = f'Writes PDF corrections into the source LaTeX as comments'
     )
 
-    parser.add_argument('annotated_PDF_file')
+    parser.add_argument('pdf_file')
     parser.add_argument('latex_file', nargs='?', default=None)
 
     parser.add_argument(
@@ -195,9 +195,10 @@ def main():
     args = parser.parse_args()
 
     log_file = utils.newTaggedFname(
-        Path(args.annotated_PDF_file),
+        Path(args.latex_file),
         'corrinline',
-        new_suffix='.log'
+        new_suffix='.log',
+        put_front=True,
     )
             
     logger_level = logging.DEBUG if args.debug else logging.INFO
@@ -224,8 +225,8 @@ def main():
         sys.exit(1)
 
     if args.delete_comments and args.latex_file is None:
-        logger.info(f"Treating {args.annotated_PDF_file} as latex_file")
-        latex_file = args.annotated_PDF_file
+        logger.info(f"Treating {args.pdf_file} as latex_file")
+        latex_file = args.pdf_file
     else:
         latex_file = args.latex_file    
 
@@ -237,10 +238,10 @@ def main():
         logger.critical(f"Unrecognized comment format: '{args.comment_format}'")
         sys.exit(1)
 
-    annotated_PDF_file = args.annotated_PDF_file
+    pdf_file = args.pdf_file
 
-    if not Path(annotated_PDF_file).exists():
-        logger.critical(f"{annotated_PDF_file} does not exist")
+    if not Path(pdf_file).exists():
+        logger.critical(f"{pdf_file} does not exist")
         sys.exit(1)
         
     if not Path(latex_file).exists():
@@ -248,7 +249,7 @@ def main():
         sys.exit(1)
 
     process_files(
-        annotated_PDF_file,
+        pdf_file,
         latex_file,
         group_overlapping = args.grp_overlap,
         compiler          = args.compiler,        

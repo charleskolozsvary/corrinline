@@ -254,8 +254,16 @@ def writeStringToFile(string: str, filename: Path, **kwargs) -> int:
 def tagFileStem(file: Path, tag: str) -> Path:
     return file.parent / f"{file.stem}_{tag}{file.suffix}"
 
-def newTaggedFname(file: Path, tag: str, new_suffix: str = '') -> Path:
-    return Path(f"{file.stem}_{tag}{new_suffix if new_suffix else file.suffix}")
+def newTaggedFname(
+        file: Path,
+        tag: str,
+        new_suffix: str = '',
+        put_front: bool = False,        
+) -> Path:
+    if put_front:
+        return Path(f"{tag}_{file.stem}{new_suffix if new_suffix else file.suffix}")
+    else:
+        return Path(f"{file.stem}_{tag}{new_suffix if new_suffix else file.suffix}")
 
 def transferTeXFiles(
         tex_filename: Path,
