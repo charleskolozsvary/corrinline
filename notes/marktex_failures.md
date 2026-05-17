@@ -1,4 +1,4 @@
-segmentsource.py fails if a `\textit{...}`'s contents include a displayed equation, `\[\]`. Which really shouldn't happen, but anyway.... This came up when origianlly running on arxiv2.
+marking fails if a `\textit{...}`'s contents include a displayed equation, `\[\]`. Which really shouldn't happen, but anyway.... This came up when origianlly running on arxiv2.
 
 Just a reminder: segmentsource assumes the contents are flattened (no external latex) which they should be since the papers are already cleaned....
 

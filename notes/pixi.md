@@ -4,7 +4,7 @@ Install pixi following the steps here: https://pixi.prefix.dev/latest/installati
 Here's what I did to set up the project environment. It's extremely simple.
 ```shell
 pixi init [project name] --format pyproject
-pixi add python=3.12
+pixi add python=3.14
 pixi add [conda-forge available package]
 pixi add --pypi [only-PyPi available package]
 ```
