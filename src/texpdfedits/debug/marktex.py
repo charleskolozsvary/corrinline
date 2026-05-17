@@ -1,6 +1,6 @@
 from texpdfedits.marktex import getSyncInfo, getWordBoxes, unMarkWithPositions
 from texpdfedits.corr import rectangleToLatex
-from texpdfedits.utils import sourceAsString, DEFAULT_LATEX_COMPILER
+from texpdfedits.utils import sourceAsString, DEFAULT_LATEX_COMPILER, TextProgressBar
 
 import logging
 logger = logging.getLogger(__name__)
@@ -22,7 +22,9 @@ def parse_rectangle(s):
 
 def drawWordBoxes(pdf_filename, document_word_boxes, output_dir):
     save_file_name = Path(output_dir) / f'{Path(pdf_filename).stem}_word_boxes.pdf'
-    logging.info(f"Drawing word boxes on {pdf_filename} to {save_file_name}... (this can take a while)")
+    logging.info(f"Drawing word boxes on {pdf_filename} to {save_file_name}...")
+    bar = TextProgressBar(len(document_word_boxes))
+    bar.showSize()
     doc = pymupdf.open(pdf_filename)
     for pg_no in document_word_boxes:
         page = doc[pg_no]
@@ -33,8 +35,9 @@ def drawWordBoxes(pdf_filename, document_word_boxes, output_dir):
                 box.update()
             except Exception as e:
                 logging.warning(f"Could not draw word box ('{key}', '{rectangle}'); skipping")
-                
-            
+        bar.addProgress()
+    bar.end()
+                            
     doc.save(save_file_name)
     logging.info("Done.")
     return 0

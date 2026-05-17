@@ -21,7 +21,6 @@ def drawAnnots(filename, output_dir, unique_ending = 'orig_annots'):
     """draw bounding boxes of original annotations in annotated PDF"""
     doc = pymupdf.open(filename)
     save_filename = shipPdfFilename(filename, output_dir, unique_ending)
-    logging.info(f"Drawing original annotations to {save_filename}...")
     for page in doc:
         for annot in page.annots():
             if annot.type[0] == Annot.TEXT:
@@ -30,31 +29,30 @@ def drawAnnots(filename, output_dir, unique_ending = 'orig_annots'):
             box.set_border(width=.5)
             box.update()
     doc.save(save_filename)
-    logging.info(f"Done. Results saved to {save_filename}.")
+    logging.info(f"Original annotation drawings saved to {save_filename}.")
 
 
 def drawRobustAnnots(filename, robust_annots, output_dir, unique_ending = 'robust_annots'):
     """draw bounding boxes of robust annotations"""
     doc = pymupdf.open(filename)
     save_filename = shipPdfFilename(filename, output_dir, unique_ending)    
-    logging.info(f"Drawing robust annotations to {save_filename}...")    
-    for pageno,page in enumerate(doc):
-        for annot in annots[pageno]:
+    for pageno, page in enumerate(doc):
+        for annot in robust_annots[pageno]:
             if annot.type[0] == Annot.TEXT:
                 continue
             box = page.add_freetext_annot(annot.rect, '', text_color=(1,0,1))
             box.set_border(width=.5)
             box.update()
     doc.save(save_filename)
-    logging.info(f"Done. Results saved to {save_filename}")
+    logging.info(f"Robust annotation drawings saved to {save_filename}")
 
 def drawCharacters(filename, output_dir, unique_ending = 'pymupdf_characters', **kwargs):
-    logging.info(f"Drawing character boxes in {filename}...")
     pymupdf.TOOLS.set_small_glyph_heights(True)
     doc = pymupdf.open(filename)
     save_filename = shipPdfFilename(filename, output_dir, unique_ending)
 
     draw_page = kwargs.get('chars_draw_page', 1)
+    logging.info(f"Drawing character boxes in {filename} on (absolute) page {draw_page}...")    
     
     for i, page in enumerate(doc):
         if i != draw_page:
@@ -86,7 +84,7 @@ def drawCharacters(filename, output_dir, unique_ending = 'pymupdf_characters', *
                             
                 bar.addProgress()
         bar.end()
-        logging.info(f"Drew character rectangles on page {i:3d} of {filename}")
+        # logging.info(f"Drew character rectangles on page {i:3d} of {filename}")
         break
     doc.save(save_filename)
     logging.info(f"Done. Results saved to {save_filename}.")
@@ -131,6 +129,8 @@ def drawEdits(filename, output_dir, edits, unique_ending = 'edit_selections'):
     singlepage_file_names = []
 
     logging.info("Drawing edit selections on PDF...")
+    bar = utils.TextProgressBar(len(edits))
+    bar.showSize()               
     for i, edit in enumerate(edits):
         doc = pymupdf.open(filename)
         page_count = doc.page_count
@@ -152,7 +152,7 @@ def drawEdits(filename, output_dir, edits, unique_ending = 'edit_selections'):
             elif len(bbs) == 3:
                 colors = [(1,.25,.25), (.25,1,.25), (.25,.25,1)]
             else:
-                logging.warning("an individual selection bb did not have two or three members when drawing...; continuing")
+                # logging.warning("an individual selection bb did not have two or three members when drawing...; continuing")
                 continue
             for j, bb in enumerate(bbs):
                 if bb.width == 0:
@@ -171,10 +171,12 @@ def drawEdits(filename, output_dir, edits, unique_ending = 'edit_selections'):
         doc.save(single_save)
         
         singlepage_file_names.append(single_save)
-        logging.info(f'Drew edit selection {i+1:3d}/{len(edits):3d}')
+        bar.addProgress()
+        # logging.info(f'Drew edit selection {i+1:3d}/{len(edits):3d}')
 
-    logging.info(f'Done. Intermediate files written to {output_dir}.')
-    logging.info("Combining intermediate files...")
+    bar.end()
+    logging.debug(f'Done. Intermediate files written to {output_dir}.')
+    logging.debug("Combining intermediate files...")
     combined_doc = pymupdf.open(filename)
     ## silly, but I'm not aware of a simpler way
     combined_doc.delete_pages(from_page=0, to_page=combined_doc.page_count-1)
@@ -184,7 +186,7 @@ def drawEdits(filename, output_dir, edits, unique_ending = 'edit_selections'):
 
     combined_doc_filename = shipPdfFilename(filename, output_dir, unique_ending)
     combined_doc.save(combined_doc_filename)
-    logging.info(f"Done. Combined document saved to {combined_doc_filename}.")
+    logging.info(f"Edit drawings saved to {combined_doc_filename}.")
     
     logging.debug("Deleting intermediate PDFs...")
     os.system(f"rm {single_fname_prefix}_*.pdf")
@@ -227,15 +229,14 @@ def main():
 
     if args.draw_annots:
         drawAnnots(filename, bb_dir)
-
         doc = pymupdf.open(filename)
-        annots = getRobustAnnots(filename, adjust_annots=args.adjust_annots) # from extract.py    
+        annots = getRobustAnnots(filename, adjust_annots=args.adjust_annots)
         drawRobustAnnots(filename, annots, bb_dir)
 
 
-    logging.info(f'Running getEdits({filename})...')
+    # logging.info(f'Running getEdits({filename})...')
     edits = getEdits(filename, adjust_annots=args.adjust_annots)
-    logging.info("Done.")
+    # logging.info("Done.")
         
     if args.draw_edits:    
         drawEdits(filename, bb_dir, edits)
