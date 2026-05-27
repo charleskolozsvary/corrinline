@@ -378,8 +378,8 @@ def _assemble_with_comments(
         comment_body = ''.join(corr.as_comment() for corr in group)
         end_callout = formatcomm.write_callout(corr_idxs, 'end')
         
-        commented_source.append(start_callout)
         commented_source.append(comment_body)
+        commented_source.append(start_callout)
         commented_source.append(snippet)
         commented_source.append(end_callout)
 

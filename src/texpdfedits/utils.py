@@ -364,6 +364,37 @@ def compile_latex(
         logger.critical(f"Could not find output of LaTeX compilation '{output_file}'")
         raise RuntimeError("Expected LaTeX output does not exist")
 
+    isnt_pdf_workflow = re.search(
+        '|'.join(PDF_WORKFLOW),
+        tex_file.name,
+        flags = re.IGNORECASE
+    ) is None
+    
+    if compiler == 'prdlatex' and isnt_pdf_workflow:
+        as_pdf = f"{tex_file.stem}.pdf"
+        as_dvi = f"{tex_file.stem}.dvi"
+        pubprint_command = ['pubprint', '-pdf', '-o', as_pdf, as_dvi]
+        logger.info(f"Running `{' '.join(pubprint_command)}`...")
+        try:
+            process = subprocess.run(
+                pubprint_command,
+                cwd=tex_file_dir,
+                capture_output=True,
+                text=True,
+            )
+        except FileNotFoundError as e:
+            raise RuntimeError(f"pubprint command not found") from e
+        except subprocess.TimeoutError as e:
+            raise RuntimeError(f"pubprint timed out") from e
+        if process.returncode != 0:
+            raise RuntimeError(f'pubprint returned nonzero ({process.returncode}): {process.stderr}')
+        pubprint_out = _exchange_suffix(tex_file, 'pdf')
+        if not pubprint_out.exists():
+            raise RuntimeError(f"pubprint succeeded but it's expected output file doesn't exist: {pubprint_out}")
+        return pubprint_out        
+    else:
+        logger.debug(f"Not running pubprint for PDF workflow article {tex_file.name}")
+
     return output_file
 
 def run_diff_pdf(

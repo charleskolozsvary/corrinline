@@ -241,17 +241,17 @@ def _adjust_caret_rect(caret_rect: pymupdf.Rect, page):
     y0 = y1 - span['size']
     return pymupdf.Rect(caret_rect.x0, y0, caret_rect.x1, y1)
 
-def get_annots(filename: Path, adjust_annots: bool) -> dict[int, list[Annot]]:
+def get_annots(pdf_file: Path, adjust_annots: bool) -> dict[int, list[Annot]]:
     """
     Convert PyMuPDF annotations to our Annot class,
     normalizing rectangles in the process for
     selection text retrieval later
     """
-    doc = pymupdf.open(filename)
+    doc = pymupdf.open(pdf_file)
     if adjust_annots:
         uses_stix = re.search(
             '|'.join(utils.PDF_WORKFLOW),
-            filename,
+            pdf_file.name,
             flags=re.IGNORECASE
         ) 
         if uses_stix is not None:
@@ -851,12 +851,12 @@ def _is_replace_annot(
     
     return True, other_ann    
 
-def get_edits(filename: Path, adjust_annots: bool) -> list[Edit]:
+def get_edits(pdf_file: Path, adjust_annots: bool) -> list[Edit]:
     """return a list of Edits. See class Edit."""
     logger.info("Loading PDF annotations...")
     
-    doc = pymupdf.open(filename)
-    annots = get_annots(filename, adjust_annots)
+    doc = pymupdf.open(pdf_file)
+    annots = get_annots(pdf_file, adjust_annots)
     all_responses = _get_all_responses(annots)
     
     logger.info("Done")
