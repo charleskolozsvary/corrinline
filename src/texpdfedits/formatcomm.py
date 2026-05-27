@@ -55,13 +55,13 @@ def write_callout(corr_idxs: list[int], start_or_end: str):
         return f'%{c_id}\n'
     else:
         return (
-            f'%{c_id} {start_or_end.upper()} of {sing_plural} '
+            f'%{c_id}{start_or_end.upper()} of {sing_plural} '
             + ', '.join(str(idx) for idx in corr_idxs)
             + '\n'
         )
 
 def delete_comments(tex_file: Path, replace: bool) -> Path:
-    tex_str = utils.sourceAsString(tex_file)
+    tex_str = utils.source_as_string(tex_file)
     comment_regex = REMOVE_REGEX
     n_newnew = 0
 
@@ -81,8 +81,8 @@ def delete_comments(tex_file: Path, replace: bool) -> Path:
     logger.info(f"Deleted {n_subs1 + n_subs2} comments")
     logger.debug(f"{n_newnew} double newlines")    
     
-    nocomments_file = utils.tagFileStem(tex_file, DELETE_TAG)
-    utils.writeStringToFile(nocomments_tex_str, nocomments_file)
+    nocomments_file = utils.tag_file_stem(tex_file, DELETE_TAG)
+    utils.write_string_to_file(nocomments_tex_str, nocomments_file)
 
     if replace:
         # overwrite first file with second 

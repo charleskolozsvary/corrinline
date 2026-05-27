@@ -9,6 +9,7 @@ import texpdfedits.extract as extract
 import texpdfedits.corr as corr
 import texpdfedits.modify as modify
 import texpdfedits.utils as utils
+import texpdfedits.formatcomm as formatcomm
 
 from importlib.metadata import version
 __version__ = version('texpdfedits')

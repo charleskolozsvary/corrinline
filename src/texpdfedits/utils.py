@@ -236,8 +236,8 @@ class TextProgressBar:
 def sanitize_pdf_text(text: str):
     return unicode_to_tex(replace_newlines(text))
 
-def _pdf_fname(tex_fname: Path):
-    return f"{tex_fname.stem}.pdf"        
+def _pdf_fname(tex_fname: Path) -> Path:
+    return Path(f"{tex_fname.stem}.pdf")
 
 def source_as_string(filename: Path, **kwargs) -> str:
     enc = kwargs.get('encoding', 'utf-8')    
@@ -460,7 +460,7 @@ def unicode_to_tex(s: str) -> str:
         for char in s
     )
 
-def compile_validate_clean(tex_file1: Path, tex_file2: Path, cwd: Path, **kwargs):
+def compile_validate_clean(tex_file1: Path, tex_file2: Path, *, cwd: Path = Path('.'), **kwargs):
     compiler = kwargs.get('compiler', DEFAULT_LATEX_COMPILER)
     validate = kwargs.get('validate', True)
     clean    = kwargs.get('clean', True)
