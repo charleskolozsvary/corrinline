@@ -200,9 +200,12 @@ def main():
     
     args = parser.parse_args()
 
+    if args.latex_file is None:
+        file_log_based_on = args.pdf_file
+
     script_name = Path(sys.argv[0]).name    
     log_file = utils.newTaggedFname(
-        Path(args.latex_file),
+        Path(file_log_based_on),
         script_name,
         new_suffix='.log',
         put_front=True,
