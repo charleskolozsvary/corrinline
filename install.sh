@@ -17,7 +17,7 @@ if ! command -v pixi &> /dev/null; then
     exit 1
 fi  
 
-echo "This script should only be run while inside the top-level corrinline directory."
+echo "This script should only be run while inside the top-level $script_name directory."
 read -p "Would you like to proceed? (yes/no): " answer
 
 if [ "$answer" != "yes" ]; then

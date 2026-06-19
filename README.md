@@ -1,12 +1,16 @@
-# `corrinline`
+# `annin`
 ## Usage
-`corrinline` is a tool that aids a LaTeX- and PDF-based manuscript correction workflow.[^1] Run 
+`annin` is a tool that aids a LaTeX- and PDF-based manuscript correction workflow.[^1] Run 
 ```shell
-corrinline pdf_file latex_file
+annin pdf_file latex_file
 ```
 to write annotations from the PDF as comments at their corresponding locations in a new LaTeX file, `[latex_file]_inlined.tex`.
 
-Here's what that looks like
+Here's an example PDF annotation
+
+<img width="1107" height="578" alt="image" src="https://github.com/user-attachments/assets/52c7af9b-0f1b-43f0-be55-83ec2116f1ef"/>
+
+And this is how its information is written to the LaTeX
 ```latex
 the left we mean the $\infty$-category of $\mathbb E_1$-algebras %%
 %% Correction 6, page 2 [ ]
@@ -18,14 +22,17 @@ in $\mathsf C[\mathsf W^{-1}]~;$ on %%
 %⭡ ⭡ ⭡  END of correction 6
 the right, we mean the 1-category of monoid objects in $\mathsf C$,
 ```
-A correction index, the page the annotation appears on, the text selected in the PDF by the annotation, and the contents of the annotation text box are all written to the LaTeX file at the corresponding location (delineated by the down and up arrows).[^2] Here's what the PDF that has the annotation looks like.
-
-<img width="1107" height="578" alt="image" src="https://github.com/user-attachments/assets/52c7af9b-0f1b-43f0-be55-83ec2116f1ef"/>
+A general index, the page the annotation appears on, the text selected in the PDF by the annotation, and the contents of the annotation text box are all written to the LaTeX file at the corresponding location (delineated by the down and up arrows).[^2]
 
 ### Autocorrections
-There's an option `--auto` which makes `corrinline` carry out whatever corrections it can. Running
+`annin` tries to automatically carry out three types of annotations if the `--auto` option is supplied
+1. Replace
+2. Strikeout (remove)
+3. Insert (caret)
+
+Running
 ```shell
-corrinline --auto pdf_file latex_file
+annin --auto pdf_file latex_file
 ```
 outputs `_autocorrected.tex` (in addition to the same `_inlined.tex` file from before) which for this example looks like
 ```latex
@@ -39,9 +46,10 @@ in $\mathsf C[\mathsf W^{-1}];$ on %%
 %⭡ ⭡ ⭡  END of correction 6
 the right, we mean the 1-category of monoid objects in $\mathsf C$,
 ```
-There are several other options, too, that are discussed in [notes/option_usage.md](notes/option_usage.md). 
 
-Also, the rest of this example and others can be seen in [notes/corrinline_examples.md](notes/corrinline_examples.md).
+<!-- There are several other options, too, that are discussed in [notes/option_usage.md](notes/option_usage.md).  -->
+
+<!-- Also, the rest of this example and others can be seen in [notes/annin_examples.md](notes/annin_examples.md). -->
 
 ## Installation
 If you don't already have a LaTeX distribution, download the latest version of TeX Live at https://www.tug.org/texlive/.
@@ -49,23 +57,25 @@ If you don't already have a LaTeX distribution, download the latest version of T
 1. Install pixi (the python package and dependency manager): https://pixi.prefix.dev/latest/installation/
 2. Install `diff-pdf` (CL tool for comparing PDFs): https://github.com/vslavik/diff-pdf
 3. Clone this repository to your machine
-4. Run `./install.sh [corrinline shell script install directory]`, e.g., `./install.sh /usr/local/bin/` at the top-level directory of the cloned repository
+4. Run `./install.sh [annin shell script install directory]`, e.g., `./install.sh /usr/local/bin/` at the top-level directory of the cloned repository
 
-Verify it is installed properly with `corrinline -h`. You should see the usage message.
+Verify it is installed properly with `annin -h`. You should see the usage message.
 ### Windows
 No instructions currently.
 
 ## Assumptions and limitations
 ### Unchanged LaTeX
-For best results, the LaTeX file should be unchanged since it generated the PDF which contains the annotations. Even relatively small changes could effect pagination and cause a cascade of differences between what the source now renders and the original PDF, which prevents correct mapping from PDF coordinates to positions in the LaTeX source.
+For the tool to work as intended, the LaTeX file should be unchanged since it generated the PDF which was then annotated. Even relatively small changes could effect pagination and cause a cascade of differences between what the source now renders and the original PDF, which prevents correct mapping from PDF coordinates to positions in the LaTeX source.
 
-If the PDF the LaTeX renders and the annotated PDF are only out of sync up to a certain page, the `--tex-start` option might be of use. It, along with the other options, are discussed in [option_usage.md](notes/option_usage.md).
+If the PDF the current LaTeX generates and the annotated PDF are only out of sync up to a certain page, the `--tex-start` option might be of use. It, along with the other options, are discussed in [option_usage.md](notes/option_usage.md) (incomplete).
 
 ### Annotations are precise
-As shown in [corrinline_examples.md](notes/corrinline_examples.md), the contents of insertion and replacement text are interpreted literally, so correct autocorrections can only happen if the annotations themselves are correct. Additionally, since 'highlight' is too general an annotation, they will never be done automatically. So accurate, dedicated annotations must be used for best results. For more on this, see [notes/annotation_guidelines.md](notes/annotation_guidelines.md).
+As shown in [annin_examples.md](notes/annin_examples.md), the contents of insertion and replacement text are interpreted literally, so correct autocorrections can only happen if the annotations themselves are correct. Additionally, since 'highlight' is too general an annotation, they will never be done automatically. So accurate, dedicated annotations must be used for best results. For more on this, see [notes/annotation_guidelines.md](notes/annotation_guidelines.md).
 
-### Edits aren't specified to roman numeral pages
-This should be able to be resolved, but since the mapping technique from the PDF to the LaTeX relies on the page numbers TeX generates and a static PDF doesn't always include the correct page label metadata, `corrinline` cannot currently inline edits to pages that are labelled with roman numerals for their number.
+<!-- ### Annotated PDF has correct page label metadata (if there are roman numeral pages) -->
+
+<!-- ### Edits aren't specified to roman numeral pages -->
+<!-- This should be able to be resolved, but since the mapping technique from the PDF to the LaTeX relies on the page numbers TeX generates and a static PDF doesn't always include the correct page label metadata, `annin` cannot currently inline edits to pages that are labelled with roman numerals for their number. -->
 
 ### Incomplete character maps
 Complicated math formulas render beautifully with LaTeX, but their character encoding in the PDF is not great. Take for example this LaTeX

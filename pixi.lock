@@ -1941,7 +1941,7 @@ packages:
 - pypi: ./
   name: texpdfedits
   version: 0.14.3
-  sha256: 514ced86c4cfbe002962b6a8f49f48b5ccc42e1e48d761bbab31ec924133a9be
+  sha256: bee2d28641ac4daaa934fcf33e8266322c491a2f7aa84b9dfbe58987e503910f
   requires_dist:
   - pymupdf>=1.26.7,<2
   - pylatexenc>=2.10,<3
