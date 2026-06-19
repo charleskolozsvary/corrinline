@@ -4,7 +4,7 @@ TO DO
 Example annotated PDFs can be found at `./AnnotatedPDFs` with corresponding LaTeX sources at `./TeX`.
 
 ## Results
-Here's part of `arxiv5_inlined.tex`, the output of `corrinline arxiv5_ann.pdf arxiv5.tex`:
+Here's part of `arxiv5_inlined.tex`, the output of `annin arxiv5_ann.pdf arxiv5.tex`:
 ```latex
 %% Correction 28 [ ]
 %% Annotated text: "fr−2 given by<Remove>:</Remove>"

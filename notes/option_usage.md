@@ -17,11 +17,11 @@ TO DO
 ## `-cf`, `--comment-format COMMENT_FORMAT`
 
 ## `-ts`, `--tex-start TEX_START`
-If there isn't a one-to-one correspondence between the annotated PDF and what the `.tex` file outputs, typically `corrinline` won't work. However, if the PDF the source renders matches up with the annotated PDF starting at a particular page, then `corrinline` can successfully map PDF coordinates LaTeX source positions if this option is provided correctly. 
+If there isn't a one-to-one correspondence between the annotated PDF and what the `.tex` file outputs, typically `annin` won't work. However, if the PDF the source renders matches up with the annotated PDF starting at a particular page, then `annin` can successfully map PDF coordinates LaTeX source positions if this option is provided correctly. 
 
 Suppose the first page of an annotated PDF corresponds to what is **marked** as the 71st page of the PDF rendered by the LaTeX source. Then
 ```shell
-corrinline --tex-start=71 pdf_file latex_file
+annin --tex-start=71 pdf_file latex_file
 ```
 will treat the 71st page of the PDF outputted by the LaTeX file as the first page of the annotated PDF, and the annotations will be inlined correctly.
 
