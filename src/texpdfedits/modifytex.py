@@ -319,7 +319,7 @@ def matchingText(regex, string):
     return string[m.start():m.end()]
 
 def progressiveAutocorrectAttempt(corr: Correction, **kwargs):
-    tag_name = corr.type[1]
+    tag_name = utils.SELECTION_TAG
     annotated_pdf_text = corr.pdf_selected_text
 
     existing_snippet = kwargs.get('snippet', None)

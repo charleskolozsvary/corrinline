@@ -637,10 +637,11 @@ def newGetSelectionText(annot: Annot, page_rawdict, page_words):
             # last char of the page in selection            
             close_tag_transitions.add(i)
         prev_in = curr_in
-            
+
+    tag_name = utils.SELECTION_TAG
     annot_tags = {
-        'open': rf'<{annot.type[1]}>',
-        'close': rf'</{annot.type[1]}>'
+        'open': rf'<{tag_name}>',
+        'close': rf'</{tag_name}>'
     }
     
     annotated_pdf_text = []

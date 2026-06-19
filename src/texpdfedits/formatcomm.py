@@ -77,7 +77,7 @@ REMOVE_REGEXES = {
                 (?:
                 ^%%                       \n
                 ^%%\ Correction\ [^\n]*+  \n
-                ^%%\ Selection:  [^\n]*+  \n
+                ^%%\ [a-zA-Z]+:  [^\n]*+  \n
                 ^%%\ Comment:    [^\n]*+  \n
                 (?:^%%\ Replies: [^\n]*+  \n)?+
                 )++
@@ -98,13 +98,14 @@ def get_replies_and_status(corr: Correction, replies: str):
 
 def startComment(corr: Correction, format: str, replies: str):
     # c_id = FORMAT_TO_IDENTIFIER[format][0] # [0] since start
+    corr_tid, corr_type = corr.type    
 
     (replies, status_message) = get_replies_and_status(corr, replies)
 
     if format == FORMAT_FRONT:
         return (
             f"%% Correction {corr.index}, page {corr.pageno+1} {status_message}\n"
-            f"%% Selection: \"{utils.sanitizePdfText(corr.pdf_selected_text)}\"\n"
+            f"%% {corr_type}: \"{utils.sanitizePdfText(corr.pdf_selected_text)}\"\n"
             f"%% Comment:   \"{utils.sanitizePdfText(corr.messages['comment'])}\"{replies}\n"
             f"%%\n"
         )
@@ -112,7 +113,7 @@ def startComment(corr: Correction, format: str, replies: str):
     if format == FORMAT_SPLIT:
         return (
             f"%% Correction {corr.index}, page {corr.pageno+1} {status_message}\n"
-            f"%% Selection: \"{utils.sanitizePdfText(corr.pdf_selected_text)}\"{replies}\n"
+            f"%% {corr_type}: \"{utils.sanitizePdfText(corr.pdf_selected_text)}\"{replies}\n"
         )
         
     if format == FORMAT_BACK:
@@ -120,6 +121,7 @@ def startComment(corr: Correction, format: str, replies: str):
 
 def endComment(corr: Correction, format: str, replies: str):
     # c_id = FORMAT_TO_IDENTIFIER[format][1]
+    corr_tid, corr_type = corr.type
 
     (replies, status_message) = get_replies_and_status(corr, replies)    
         
@@ -136,7 +138,7 @@ def endComment(corr: Correction, format: str, replies: str):
         return (
             f"%%\n"
             f"%% Correction {corr.index}, page {corr.pageno+1} {status_message}\n"
-            f"%% Selection: \"{utils.sanitizePdfText(corr.pdf_selected_text)}\"\n"
+            f"%% {corr_type}: \"{utils.sanitizePdfText(corr.pdf_selected_text)}\"\n"
             f"%% Comment:   \"{utils.sanitizePdfText(corr.messages['comment'])}\"{replies}\n"
         )
 

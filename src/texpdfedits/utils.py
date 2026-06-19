@@ -28,7 +28,7 @@ DIFFPDF_PER_PAGE_PIXEL_TOLERANCE = 50_000
 
 INTERMEDIATE_EXTENSIONS_TO_DELETE = set(
     ".aux .out .log .toc .bbl .blg .thm "
-    ".synctex.gz .synctex .brf .pdf"
+    ".synctex.gz .synctex .brf .pdf .dvi"
     .split()
 )
 
@@ -38,6 +38,8 @@ PDF_WORKFLOW = [
     'stml',
     'amstext',
 ]
+
+SELECTION_TAG = 'SEL'
 
 UNICODE2TEX = {
     # COMMON PUNCTUATION
