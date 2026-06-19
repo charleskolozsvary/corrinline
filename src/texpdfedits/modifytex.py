@@ -391,7 +391,7 @@ def progressiveAutocorrectAttempt(corr: Correction, **kwargs):
             m_left = rf'({l_regex})({between_tags_lregex})'
             auto_left, ns_left = re.subn(
                 m_left,
-                rf'\1{comment_text}',
+                rf'\g<1>{comment_text}',
                 latex_snippet,
             )
             if ns_left == 1:
@@ -404,7 +404,7 @@ def progressiveAutocorrectAttempt(corr: Correction, **kwargs):
             m_right = rf'({between_tags_lregex})({r_regex})'
             auto_right, ns_right = re.subn(
                 m_right,
-                rf'{comment_text}\2',
+                rf'{comment_text}\g<2>',
                 latex_snippet,
             )
             if ns_right == 1:
@@ -418,7 +418,7 @@ def progressiveAutocorrectAttempt(corr: Correction, **kwargs):
             m_ambi = rf'({l_regex})({between_tags_lregex})({r_regex})'
             auto_ambi, ns_ambi = re.subn(
                 m_ambi,
-                rf'\1{comment_text}\3',
+                rf'\g<1>{comment_text}\g<3>',
                 latex_snippet,
             )
             if ns_ambi == 1:
@@ -491,7 +491,7 @@ def newCaretAutocorrect(corr: Correction, **kwargs):
             m_left = rf'({l_regex})'
             auto_left, ns_left = re.subn(
                 m_left,
-                rf'\1{insert_text}',
+                rf'\g<1>{insert_text}',
                 latex_snippet,
             )
             if ns_left == 1:
@@ -503,7 +503,7 @@ def newCaretAutocorrect(corr: Correction, **kwargs):
             m_right = rf'({r_regex})'
             auto_right, ns_right = re.subn(
                 m_right,
-                rf'{insert_text}\1',
+                rf'{insert_text}\g<1>',
                 latex_snippet,
             )
             if ns_right == 1:
@@ -516,7 +516,7 @@ def newCaretAutocorrect(corr: Correction, **kwargs):
             m_ambi = rf'({l_regex})({r_regex})'
             auto_ambi, ns_ambi = re.subn(
                 m_ambi,
-                rf'\1{insert_text}\2',
+                rf'\g<1>{insert_text}\g<2>',
                 latex_snippet,
             )
             if ns_ambi == 1:
