@@ -29,11 +29,7 @@ PAGE_GET_TEXT_VERT_BEFORE_AFTER = 15
 CMR10_ADJUST = 2.75 # in points
 STIX_ADJUST = 4
 
-USE_STIX = [
-    'cams',
-    'gsm',
-    'stml',
-]
+USE_STIX = utils.PDF_WORKFLOW
 
 class Annot:
     """

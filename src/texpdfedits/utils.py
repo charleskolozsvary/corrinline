@@ -11,9 +11,9 @@ DEFAULT_LATEX_COMPILER = 'pdflatex'
 DIFF_PDF_DPI = 175
 
 COMPILER_INFO = {
-    'pdflatex': (2, 'latin-1', ['--interaction=nonstopmode']),
-    'prdlatex': (1, 'latin-1', ['-pdf', '-nonstopmode']),
-    'xelatex': (2, 'utf-8', ['--interaction=nonstopmode'])
+    'pdflatex': (2, 'latin-1', ['--interaction=nonstopmode'], 'pdf'),
+    'prdlatex': (1, 'latin-1', ['-nonstopmode'], 'dvi'),
+    'xelatex': (2, 'utf-8', ['--interaction=nonstopmode'], 'pdf')
 }
 
 MAX_ROMAN = 2001
@@ -31,6 +31,13 @@ INTERMEDIATE_EXTENSIONS_TO_DELETE = set(
     ".synctex.gz .synctex .brf .pdf"
     .split()
 )
+
+PDF_WORKFLOW = [
+    'cams',
+    'gsm',
+    'stml',
+    'amstext',
+]
 
 UNICODE2TEX = {
     # COMMON PUNCTUATION
@@ -305,6 +312,10 @@ def removeDir(directory: Path):
         f.unlink()
     directory.rmdir()
 
+def exchangeExtension(file: Path, extension: str) -> Path:
+    no_extension = file.parent / file.stem
+    return Path(f"{no_extension}.{extension}")    
+
 def compileLatex(
         tex_filename: Path,
         compiler: str = DEFAULT_LATEX_COMPILER
@@ -313,11 +324,20 @@ def compileLatex(
     
     result = None
     tex_filename_dir = tex_filename.parent
+
+    is_pdf_workflow = re.search(
+        '|'.join(PDF_WORKFLOW),
+        tex_filename.name,
+        flags = re.IGNORECASE
+    ) is not None
     
-    (num_runs, encoding, compile_options) = COMPILER_INFO.get(
+    num_runs, encoding, compile_options, output_extension = COMPILER_INFO.get(
         compiler,
-        (2, 'latin-1', ['--interaction=nonstopmode'])
+        (2, 'latin-1', ['--interaction=nonstopmode'], 'pdf')
     )
+    if is_pdf_workflow:
+        output_extension = 'pdf'
+        
     command = [compiler, *compile_options, tex_filename.name]    
     for i in range(num_runs):
         logger.info(
@@ -334,13 +354,38 @@ def compileLatex(
         )
         
         if result.returncode != 0:
-            logger.error(
+            logger.critical(
                 f"{compiler} failed on pass {i+1} of "
                 f"{tex_filename.name}: {result.stderr}."
                 f"Output: {result.stdout}"
             )
             sys.exit(1)
-        
+            
+    output_file = exchangeExtension(tex_filename, output_extension)
+    if not output_file.exists():
+        logger.critical(f"Could not find expected output of LaTeX compilation '{output_file}'")
+        sys.exit(1)
+
+    if not is_pdf_workflow and compiler == 'prdlatex':
+        as_pdf = exchangeExtension(tex_filename, 'pdf')
+        as_dvi = exchangeExtension(tex_filename, 'dvi')
+        pubprint_command = ['pubprint', '-pdf', '-o', as_pdf.name, as_dvi.name]
+        logger.info(f"Running `{' '.join(pubprint_command)}`...")
+        process = subprocess.run(
+            pubprint_command,
+            cwd=tex_filename_dir,
+            capture_output=True,
+            text=True,
+        )
+        if process.returncode != 0:
+            logger.critical(f"pubprint returned nonzero: {process.stderr}")
+            sys.exit(1)
+        if not as_pdf.exists():
+            logger.critical(f"pubprint returned zero but it's expected output file doesn't exist: {as_pdf}")
+            sys.exit(1)
+        else:
+            logger.debug(f"Not running pubprint for PDF workflow article {tex_filename.name}")
+            
     return result
 
 def runDiffpdf(
