@@ -10,9 +10,9 @@ All notable changes to this project will be documented in this file (since versi
 - Improved marking (and hence snippet identification) for characters after accents [d89a177](https://github.com/charleskolozsvary/annin/commit/d89a177be3e4680af35e8951751f99be7865c4e5)
 
 ### Bug Fixes
-- Discrepancies between `prdlatex -pdf` and `prdlatex` -> `pubprint` now resolved by running `pubprint` by default for any compiler that doesn't generate a PDF [](https://github.com/charleskolozsvary/annin/commit/b4efce8f390bac0cf01ebd8814f7959e71ee87c4)
-- `annin -dc latex_file` now works as intended (you don't need to supply `pdf_file` if just deleting comments) [](https://github.com/charleskolozsvary/annin/commit/e13af39257adc1a52753b13c0152d38ab68838d0)
-- Fixed `re.subn` replacement string bug if interpolated text in `\1{left}` started with digit (`\1` and the like to `\g<1>`) [](https://github.com/charleskolozsvary/annin/commit/c3b36288d59fbfbff73253ee0a3c47763a1f4388)
+- Discrepancies between `prdlatex -pdf` and `prdlatex` -> `pubprint` now resolved by running `pubprint` by default for any compiler that doesn't generate a PDF [b4efce8](https://github.com/charleskolozsvary/annin/commit/b4efce8f390bac0cf01ebd8814f7959e71ee87c4)
+- `annin -dc latex_file` now works as intended (you don't need to supply `pdf_file` if just deleting comments) [e13af39](https://github.com/charleskolozsvary/annin/commit/e13af39257adc1a52753b13c0152d38ab68838d0)
+- Fixed `re.subn` replacement string bug if interpolated text in `\1{left}` started with digit (`\1` and the like to `\g<1>`) [c3b3628](https://github.com/charleskolozsvary/annin/commit/c3b36288d59fbfbff73253ee0a3c47763a1f4388)
 
 ## [0.14.3](https://github.com/charleskolozsvary/tex-pdf-edits/commit/144f7b16bdb89425eefd84c11ea1864c5223b4bc) (2026-05-12)
 ### Features
