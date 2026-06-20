@@ -2,6 +2,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 from pathlib import Path
+from datetime import datetime
 import subprocess
 import sys
 import re
@@ -11,9 +12,9 @@ DEFAULT_LATEX_COMPILER = 'pdflatex'
 DIFF_PDF_DPI = 175
 
 COMPILER_INFO = {
-    'pdflatex': (2, 'latin-1', ['--interaction=nonstopmode'], 'pdf'),
-    'prdlatex': (1, 'latin-1', ['-nonstopmode'], 'dvi'),
-    'xelatex': (2, 'utf-8', ['--interaction=nonstopmode'], 'pdf')
+    'pdflatex': (2, 'latin-1', ['--interaction=nonstopmode']),
+    'prdlatex': (1, 'latin-1', ['-nonstopmode']),
+    'xelatex': (2, 'utf-8', ['--interaction=nonstopmode'])
 }
 
 MAX_ROMAN = 2001
@@ -323,22 +324,15 @@ def compileLatex(
         compiler: str = DEFAULT_LATEX_COMPILER
 ) -> subprocess.CompletedProcess:
     """Compile .tex file with provided compiler"""
+    before_comp_time = datetime.now()
     
     result = None
     tex_filename_dir = tex_filename.parent
-
-    is_pdf_workflow = re.search(
-        '|'.join(PDF_WORKFLOW),
-        tex_filename.name,
-        flags = re.IGNORECASE
-    ) is not None
     
-    num_runs, encoding, compile_options, output_extension = COMPILER_INFO.get(
+    num_runs, encoding, compile_options = COMPILER_INFO.get(
         compiler,
-        (2, 'latin-1', ['--interaction=nonstopmode'], 'pdf')
+        (2, 'latin-1', ['--interaction=nonstopmode'])
     )
-    if is_pdf_workflow:
-        output_extension = 'pdf'
         
     command = [compiler, *compile_options, tex_filename.name]    
     for i in range(num_runs):
@@ -362,31 +356,36 @@ def compileLatex(
                 f"Output: {result.stdout}"
             )
             sys.exit(1)
+
+    as_pdf = exchangeExtension(tex_filename, 'pdf')
+    if as_pdf.exists():
+        pdf_modtime = datetime.fromtimestamp(as_pdf.stat().st_mtime)
+        # if we already have a .pdf and it's modification is after compilation we'll use it        
+        if before_comp_time < pdf_modtime:
+            return result
+
+    as_dvi = exchangeExtension(tex_filename, 'dvi')
             
-    output_file = exchangeExtension(tex_filename, output_extension)
-    if not output_file.exists():
-        logger.critical(f"Could not find expected output of LaTeX compilation '{output_file}'")
+    if not as_dvi.exists():
+        logger.critical(f"Could not find {as_pdf} or {as_dvi} after compiling '{tex_filename}'")
         sys.exit(1)
 
-    if not is_pdf_workflow and compiler == 'prdlatex':
-        as_pdf = exchangeExtension(tex_filename, 'pdf')
-        as_dvi = exchangeExtension(tex_filename, 'dvi')
-        pubprint_command = ['pubprint', '-pdf', '-o', as_pdf.name, as_dvi.name]
-        logger.info(f"Running `{' '.join(pubprint_command)}`...")
-        process = subprocess.run(
-            pubprint_command,
-            cwd=tex_filename_dir,
-            capture_output=True,
-            text=True,
-        )
-        if process.returncode != 0:
-            logger.critical(f"pubprint returned nonzero: {process.stderr}")
-            sys.exit(1)
-        if not as_pdf.exists():
-            logger.critical(f"pubprint returned zero but it's expected output file doesn't exist: {as_pdf}")
-            sys.exit(1)
-        else:
-            logger.debug(f"Not running pubprint for PDF workflow article {tex_filename.name}")
+    pubprint_command = ['pubprint', '-pdf', '-o', as_pdf.name, as_dvi.name]
+    logger.info(f"Running `{' '.join(pubprint_command)}`...")
+    process = subprocess.run(
+        pubprint_command,
+        cwd=tex_filename_dir,
+        capture_output=True,
+        text=True,
+    )
+    
+    if process.returncode != 0:
+        logger.critical(f"pubprint returned nonzero: {process.stderr}")
+        sys.exit(1)
+            
+    if not as_pdf.exists():
+        logger.critical(f"pubprint returned zero but it's expected output file doesn't exist: {as_pdf}")
+        sys.exit(1)
             
     return result
 
