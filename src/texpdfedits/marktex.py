@@ -552,31 +552,45 @@ def markNodes(
             
             # mark every span in safe envs
             pattern = chars_node_match_regex
-            if (prev_node is not None
-                and (prev_node.isNodeType(LatexMacroNode)
-                     or prev_node.isNodeType(LatexGroupNode)
-                     or prev_node.isNodeType(LatexCommentNode))
-                ):
-                
-                if prev_node.isNodeType(LatexMacroNode) and prev_node.macroname in ACCENT_MACROS:
-                    return node_verbatim
-                
-                if parent_is_distinctly_marked_macro:
-                    pass
-                elif (prev_node.isNodeType(LatexMacroNode)
-                      and prev_node.macroname in OTHER_PREV_MACRO_NODE_EXCEPTIONS): 
-                    pass
-                else:
+            maybe_restrict_pattern_or_node_verbatim = (
+                prev_node is not None and
+                (prev_node.isNodeType(LatexMacroNode)
+                 or prev_node.isNodeType(LatexGroupNode)
+                 or prev_node.isNodeType(LatexCommentNode))
+            )
+            untouched_start = ''
+            if maybe_restrict_pattern_or_node_verbatim:
+                # restrict node verbatim
+                prev_is_accent_macro = (
+                    prev_node.isNodeType(LatexMacroNode)
+                    and prev_node.macroname in ACCENT_MACROS
+                )
+                if prev_is_accent_macro:
+                    m = re.search(r'^\s*\S+(?=\s)', node_verbatim)
+                    if m is None:
+                        return node_verbatim
+                    m_start, m_end = m.span()
+                    untouched_start = node_verbatim[:m_end]
+                    node_verbatim = node_verbatim[m_end:]
+                # restrict pattern
+                allow_left_match_begin = (
+                    parent_is_distinctly_marked_macro or
+                    (prev_node.isNodeType(LatexMacroNode) and
+                     prev_node.macroname in OTHER_PREV_MACRO_NODE_EXCEPTIONS)
+                )
+                if not allow_left_match_begin:
                     left = r"[\n\t $(~]"
                     inside = r"[a-zA-Z0-9!?.,'`/;:\-()@]+"
                     right = r"[\n\t $)~]"
+                    # otherwise, pattern is rf"(?:(?<={left})|^){inside}(?:(?={right})|$)"
                     pattern = rf"(?<={left}){inside}(?:(?={right})|$)"
+                    
             marked_str, num_subs = re.subn(
                 pattern,
                 lambda m: markStr(m.group(0), parent_counter_keys),
                 node_verbatim
-            )
-            return marked_str
+            )                
+            return untouched_start + marked_str
         
         elif isinstance(node, LatexGroupNode):
             if is_in_only_mark_caption_env:
