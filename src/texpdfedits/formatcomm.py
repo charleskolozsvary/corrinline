@@ -106,7 +106,7 @@ def startComment(corr: Correction, format: str, replies: str):
         return (
             f"%% Annotation {corr.index}, page {corr.pageno+1} {status_message}\n"
             f"%% {corr_type}: \"{utils.sanitizePdfText(corr.pdf_selected_text)}\"\n"
-            f"%% Comment:   \"{utils.sanitizePdfText(corr.messages['comment'])}\"{replies}\n"
+            f"%% Comment: \"{utils.sanitizePdfText(corr.messages['comment'])}\"{replies}\n"
             f"%%\n"
         )
         
@@ -139,7 +139,7 @@ def endComment(corr: Correction, format: str, replies: str):
             f"%%\n"
             f"%% Annotation {corr.index}, page {corr.pageno+1} {status_message}\n"
             f"%% {corr_type}: \"{utils.sanitizePdfText(corr.pdf_selected_text)}\"\n"
-            f"%% Comment:   \"{utils.sanitizePdfText(corr.messages['comment'])}\"{replies}\n"
+            f"%% Comment: \"{utils.sanitizePdfText(corr.messages['comment'])}\"{replies}\n"
         )
 
 def writeCallout(corr_idxs: list[int], start_or_end: str, format: str):
