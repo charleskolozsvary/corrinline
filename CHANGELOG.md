@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file (since version 0.12.0).
 
+## [0.16.0](https://github.com/charleskolozsvary/annin/commit/1a009115b30007890baf4eb39c6248f589ae0129) (2026-06-26)
+### Features
+- New option `--svn`: performs svn operations (default=True) [c0dfb22](https://github.com/charleskolozsvary/annin/commit/c0dfb22f86dc349aae337e47ae9e598a4179cd98)
+- New option `--no-validate`: does not check for visual differences (default=False) [c0dfb22](https://github.com/charleskolozsvary/annin/commit/c0dfb22f86dc349aae337e47ae9e598a4179cd98)
+- Updated option `--replace`: latex_file is replaced by _inlined or _autocorrected (default=True) [c0dfb22](https://github.com/charleskolozsvary/annin/commit/c0dfb22f86dc349aae337e47ae9e598a4179cd98)
+
 ## [0.15.0](https://github.com/charleskolozsvary/annin/commit/f9e1ff3aca3b3263486019b610e113f4f8a266fc) (2026-06-20)
 ### Features
 - Script name changed from `corrinline` to `annin` (after updating, rerun `./install.sh` like during original installation) [3f782f8](https://github.com/charleskolozsvary/annin/commit/3f782f84f91e73e184432b701569f3514ec77e5c)
